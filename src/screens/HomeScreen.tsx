@@ -12,11 +12,13 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useThemeStore } from '../stores/themeStore';
 import { useAuthStore } from '../stores/authStore';
+import { useNavigation } from '@react-navigation/native';
 import { Game, Court, GameFormat, SkillLevel, GameStatus, CourtType, CourtSurface } from '../types';
 
 const HomeScreen: React.FC = () => {
   const { theme } = useThemeStore();
   const { user } = useAuthStore();
+  const navigation = useNavigation();
 
   // Mock data for demo
   const recentGames: Game[] = [
@@ -77,6 +79,18 @@ const HomeScreen: React.FC = () => {
     },
   ];
 
+  const handleCreateGame = () => {
+    navigation.navigate('CreateGame' as never);
+  };
+
+  const handleFindGame = () => {
+    navigation.navigate('Games' as never);
+  };
+
+  const handleFindCourt = () => {
+    navigation.navigate('Map' as never);
+  };
+
   const styles = createStyles(theme);
 
   return (
@@ -97,7 +111,7 @@ const HomeScreen: React.FC = () => {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Quick Actions</Text>
           <View style={styles.quickActions}>
-            <TouchableOpacity style={styles.actionButton}>
+            <TouchableOpacity style={styles.actionButton} onPress={handleCreateGame}>
               <LinearGradient
                 colors={[theme.colors.primary, theme.colors.secondary]}
                 style={styles.actionGradient}
@@ -107,7 +121,7 @@ const HomeScreen: React.FC = () => {
               </LinearGradient>
             </TouchableOpacity>
             
-            <TouchableOpacity style={styles.actionButton}>
+            <TouchableOpacity style={styles.actionButton} onPress={handleFindGame}>
               <LinearGradient
                 colors={[theme.colors.success, '#059669']}
                 style={styles.actionGradient}
@@ -117,7 +131,7 @@ const HomeScreen: React.FC = () => {
               </LinearGradient>
             </TouchableOpacity>
             
-            <TouchableOpacity style={styles.actionButton}>
+            <TouchableOpacity style={styles.actionButton} onPress={handleFindCourt}>
               <LinearGradient
                 colors={[theme.colors.warning, '#D97706']}
                 style={styles.actionGradient}
@@ -133,13 +147,17 @@ const HomeScreen: React.FC = () => {
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Recent Games</Text>
-            <TouchableOpacity>
+            <TouchableOpacity onPress={handleFindGame}>
               <Text style={styles.seeAllText}>See All</Text>
             </TouchableOpacity>
           </View>
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
             {recentGames.map((game) => (
-              <TouchableOpacity key={game.id} style={styles.gameCard}>
+              <TouchableOpacity 
+                key={game.id} 
+                style={styles.gameCard}
+                onPress={() => navigation.navigate('GameDetails' as never, { gameId: game.id } as never)}
+              >
                 <View style={styles.gameCardHeader}>
                   <Text style={styles.gameTitle}>{game.title}</Text>
                   <View style={[styles.gameStatus, { backgroundColor: theme.colors.success }]}>
@@ -173,12 +191,16 @@ const HomeScreen: React.FC = () => {
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Nearby Courts</Text>
-            <TouchableOpacity>
+            <TouchableOpacity onPress={handleFindCourt}>
               <Text style={styles.seeAllText}>See All</Text>
             </TouchableOpacity>
           </View>
           {nearbyCourts.map((court) => (
-            <TouchableOpacity key={court.id} style={styles.courtCard}>
+            <TouchableOpacity 
+              key={court.id} 
+              style={styles.courtCard}
+              onPress={() => navigation.navigate('CourtDetails' as never, { courtId: court.id } as never)}
+            >
               <View style={styles.courtInfo}>
                 <Text style={styles.courtName}>{court.name}</Text>
                 <Text style={styles.courtType}>{court.type}</Text>
