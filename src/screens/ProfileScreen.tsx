@@ -1,29 +1,665 @@
-import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  TextInput,
+  Alert,
+  Image,
+  Switch,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
+import * as ImagePicker from 'expo-image-picker';
 import { useThemeStore } from '../stores/themeStore';
+import { useAuthStore } from '../stores/authStore';
+import { SkillLevel, Hand } from '../types';
 
 const ProfileScreen: React.FC = () => {
   const { theme } = useThemeStore();
+  const { user, updateUser } = useAuthStore();
+  
+  const [isEditing, setIsEditing] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [profileData, setProfileData] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    city: '',
+    country: '',
+    skillLevel: SkillLevel.INTERMEDIATE,
+    hand: Hand.RIGHT,
+    photo: '',
+  });
+
   const styles = createStyles(theme);
+
+  useEffect(() => {
+    if (user) {
+      setProfileData({
+        firstName: user.firstName || '',
+        lastName: user.lastName || '',
+        email: user.email || '',
+        city: user.city || '',
+        country: user.country || '',
+        skillLevel: user.skillLevel || SkillLevel.INTERMEDIATE,
+        hand: user.hand || Hand.RIGHT,
+        photo: user.photo || '',
+      });
+    }
+  }, [user]);
+
+  const handleSave = async () => {
+    if (!profileData.firstName.trim() || !profileData.lastName.trim()) {
+      Alert.alert('Error', 'First name and last name are required');
+      return;
+    }
+
+    setIsLoading(true);
+    
+    try {
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Update user in store
+      updateUser({
+        firstName: profileData.firstName.trim(),
+        lastName: profileData.lastName.trim(),
+        city: profileData.city.trim(),
+        country: profileData.country.trim(),
+        skillLevel: profileData.skillLevel,
+        hand: profileData.hand,
+        photo: profileData.photo,
+      });
+
+      setIsEditing(false);
+      Alert.alert('Success', 'Profile updated successfully!');
+    } catch (error) {
+      Alert.alert('Error', 'Failed to update profile. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleCancel = () => {
+    if (user) {
+      setProfileData({
+        firstName: user.firstName || '',
+        lastName: user.lastName || '',
+        email: user.email || '',
+        city: user.city || '',
+        country: user.country || '',
+        skillLevel: user.skillLevel || SkillLevel.INTERMEDIATE,
+        hand: user.hand || Hand.RIGHT,
+        photo: user.photo || '',
+      });
+    }
+    setIsEditing(false);
+  };
+
+  const pickImage = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.8,
+    });
+
+    if (!result.canceled && result.assets[0]) {
+      setProfileData(prev => ({ ...prev, photo: result.assets[0].uri }));
+    }
+  };
+
+  const takePhoto = async () => {
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert('Permission needed', 'Camera permission is required to take photos');
+      return;
+    }
+
+    const result = await ImagePicker.launchCameraAsync({
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.8,
+    });
+
+    if (!result.canceled && result.assets[0]) {
+      setProfileData(prev => ({ ...prev, photo: result.assets[0].uri }));
+    }
+  };
+
+  const showImagePickerOptions = () => {
+    Alert.alert(
+      'Profile Picture',
+      'Choose an option',
+      [
+        { text: 'Take Photo', onPress: takePhoto },
+        { text: 'Choose from Library', onPress: pickImage },
+        { text: 'Cancel', style: 'cancel' },
+      ]
+    );
+  };
+
+  const getSkillLevelColor = (level: SkillLevel) => {
+    switch (level) {
+      case SkillLevel.BEGINNER: return theme.colors.success;
+      case SkillLevel.INTERMEDIATE: return theme.colors.warning;
+      case SkillLevel.ADVANCED: return theme.colors.info;
+      case SkillLevel.EXPERT: return theme.colors.primary;
+      case SkillLevel.PROFESSIONAL: return theme.colors.secondary;
+      default: return theme.colors.textSecondary;
+    }
+  };
+
+  const getHandIcon = (hand: Hand) => {
+    switch (hand) {
+      case Hand.LEFT: return 'hand-left';
+      case Hand.RIGHT: return 'hand-right';
+      case Hand.AMBIDEXTROUS: return 'hand-right';
+      default: return 'hand-right';
+    }
+  };
+
+  if (!user) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.errorContainer}>
+          <Ionicons name="person-circle" size={64} color={theme.colors.error} />
+          <Text style={[styles.errorTitle, { color: theme.colors.text }]}>User Not Found</Text>
+          <Text style={[styles.errorText, { color: theme.colors.textSecondary }]}>
+            Please log in to view your profile.
+          </Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.content}>
-        <Ionicons name="person" size={64} color={theme.colors.primary} />
-        <Text style={styles.title}>Profile</Text>
-        <Text style={styles.subtitle}>Manage your account and preferences</Text>
-      </View>
+      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+        {/* Header */}
+        <View style={styles.header}>
+          <LinearGradient
+            colors={[theme.colors.primary, theme.colors.secondary]}
+            style={styles.headerGradient}
+          >
+            <View style={styles.headerContent}>
+              <Text style={styles.headerTitle}>Profile</Text>
+              <Text style={styles.headerSubtitle}>Manage your account and preferences</Text>
+            </View>
+          </LinearGradient>
+        </View>
+
+        {/* Profile Picture Section */}
+        <View style={styles.photoSection}>
+          <TouchableOpacity 
+            style={styles.photoContainer}
+            onPress={isEditing ? showImagePickerOptions : undefined}
+            disabled={!isEditing}
+          >
+            {profileData.photo ? (
+              <Image source={{ uri: profileData.photo }} style={styles.profilePhoto} />
+            ) : (
+              <View style={[styles.profilePhoto, styles.photoPlaceholder]}>
+                <Ionicons name="person" size={48} color={theme.colors.textSecondary} />
+              </View>
+            )}
+            {isEditing && (
+              <View style={styles.photoEditOverlay}>
+                <Ionicons name="camera" size={20} color="white" />
+              </View>
+            )}
+          </TouchableOpacity>
+          
+          {isEditing && (
+            <TouchableOpacity 
+              style={styles.changePhotoButton}
+              onPress={showImagePickerOptions}
+            >
+              <Text style={styles.changePhotoText}>Change Photo</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+
+        {/* Profile Form */}
+        <View style={styles.form}>
+          {/* Personal Information */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Personal Information</Text>
+            
+            <View style={styles.inputRow}>
+              <View style={[styles.inputGroup, { flex: 1, marginRight: 8 }]}>
+                <Text style={styles.label}>First Name *</Text>
+                <TextInput
+                  style={[styles.input, !isEditing && styles.inputDisabled]}
+                  value={profileData.firstName}
+                  onChangeText={(text) => setProfileData(prev => ({ ...prev, firstName: text }))}
+                  placeholder="Enter first name"
+                  placeholderTextColor={theme.colors.textSecondary}
+                  editable={isEditing}
+                />
+              </View>
+              
+              <View style={[styles.inputGroup, { flex: 1, marginLeft: 8 }]}>
+                <Text style={styles.label}>Last Name *</Text>
+                <TextInput
+                  style={[styles.input, !isEditing && styles.inputDisabled]}
+                  value={profileData.lastName}
+                  onChangeText={(text) => setProfileData(prev => ({ ...prev, lastName: text }))}
+                  placeholder="Enter last name"
+                  placeholderTextColor={theme.colors.textSecondary}
+                  editable={isEditing}
+                />
+              </View>
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Email</Text>
+              <TextInput
+                style={[styles.input, styles.inputDisabled]}
+                value={profileData.email}
+                editable={false}
+                placeholderTextColor={theme.colors.textSecondary}
+              />
+              <Text style={styles.helpText}>Email cannot be changed</Text>
+            </View>
+
+            <View style={styles.inputRow}>
+              <View style={[styles.inputGroup, { flex: 1, marginRight: 8 }]}>
+                <Text style={styles.label}>City</Text>
+                <TextInput
+                  style={[styles.input, !isEditing && styles.inputDisabled]}
+                  value={profileData.city}
+                  onChangeText={(text) => setProfileData(prev => ({ ...prev, city: text }))}
+                  placeholder="Enter city"
+                  placeholderTextColor={theme.colors.textSecondary}
+                  editable={isEditing}
+                />
+              </View>
+              
+              <View style={[styles.inputGroup, { flex: 1, marginLeft: 8 }]}>
+                <Text style={styles.label}>Country</Text>
+                <TextInput
+                  style={[styles.input, !isEditing && styles.inputDisabled]}
+                  value={profileData.country}
+                  onChangeText={(text) => setProfileData(prev => ({ ...prev, country: text }))}
+                  placeholder="Enter country"
+                  placeholderTextColor={theme.colors.textSecondary}
+                  editable={isEditing}
+                />
+              </View>
+            </View>
+          </View>
+
+          {/* Game Preferences */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Game Preferences</Text>
+            
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Skill Level</Text>
+              <View style={styles.pickerContainer}>
+                {Object.values(SkillLevel).map((level) => (
+                  <TouchableOpacity
+                    key={level}
+                    style={[
+                      styles.skillLevelChip,
+                      profileData.skillLevel === level && { backgroundColor: getSkillLevelColor(level) }
+                    ]}
+                    onPress={() => isEditing && setProfileData(prev => ({ ...prev, skillLevel: level }))}
+                    disabled={!isEditing}
+                  >
+                    <Text style={[
+                      styles.skillLevelText,
+                      profileData.skillLevel === level && { color: 'white' }
+                    ]}>
+                      {level}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Playing Hand</Text>
+              <View style={styles.pickerContainer}>
+                {Object.values(Hand).map((hand) => (
+                  <TouchableOpacity
+                    key={hand}
+                    style={[
+                      styles.handChip,
+                      profileData.hand === hand && { backgroundColor: theme.colors.primary }
+                    ]}
+                    onPress={() => isEditing && setProfileData(prev => ({ ...prev, hand }))}
+                    disabled={!isEditing}
+                  >
+                    <Ionicons 
+                      name={getHandIcon(hand) as any} 
+                      size={16} 
+                      color={profileData.hand === hand ? 'white' : theme.colors.textSecondary} 
+                    />
+                    <Text style={[
+                      styles.handText,
+                      profileData.hand === hand && { color: 'white' }
+                    ]}>
+                      {hand}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+          </View>
+
+          {/* Account Information */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Account Information</Text>
+            
+            <View style={styles.infoRow}>
+              <Ionicons name="calendar" size={20} color={theme.colors.textSecondary} />
+              <Text style={styles.infoLabel}>Member since</Text>
+              <Text style={styles.infoValue}>
+                {user.createdAt.toLocaleDateString()}
+              </Text>
+            </View>
+
+            <View style={styles.infoRow}>
+              <Ionicons name="time" size={20} color={theme.colors.textSecondary} />
+              <Text style={styles.infoLabel}>Last online</Text>
+              <Text style={styles.infoValue}>
+                {user.lastOnlineTime ? user.lastOnlineTime.toLocaleDateString() : 'Never'}
+              </Text>
+            </View>
+
+            <View style={styles.infoRow}>
+              <Ionicons 
+                name={user.isOnline ? "radio-button-on" : "radio-button-off"} 
+                size={20} 
+                color={user.isOnline ? theme.colors.success : theme.colors.textSecondary} 
+              />
+              <Text style={styles.infoLabel}>Status</Text>
+              <Text style={[styles.infoValue, { color: user.isOnline ? theme.colors.success : theme.colors.textSecondary }]}>
+                {user.isOnline ? 'Online' : 'Offline'}
+              </Text>
+            </View>
+          </View>
+        </View>
+
+        {/* Action Buttons */}
+        <View style={styles.actionsSection}>
+          {isEditing ? (
+            <View style={styles.editActions}>
+              <TouchableOpacity 
+                style={[styles.actionButton, styles.cancelButton]}
+                onPress={handleCancel}
+                disabled={isLoading}
+              >
+                <Text style={styles.cancelButtonText}>Cancel</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity 
+                style={[styles.actionButton, styles.saveButton]}
+                onPress={handleSave}
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <Text style={styles.saveButtonText}>Saving...</Text>
+                ) : (
+                  <Text style={styles.saveButtonText}>Save Changes</Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <TouchableOpacity 
+              style={[styles.actionButton, styles.editButton]}
+              onPress={() => setIsEditing(true)}
+            >
+              <Ionicons name="create-outline" size={20} color="white" />
+              <Text style={styles.editButtonText}>Edit Profile</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+      </ScrollView>
     </SafeAreaView>
   );
 };
 
 const createStyles = (theme: any) => StyleSheet.create({
-  container: { flex: 1, backgroundColor: theme.colors.background },
-  content: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  title: { fontSize: 24, fontWeight: '600', color: theme.colors.text, marginTop: 16, marginBottom: 8 },
-  subtitle: { fontSize: 16, color: theme.colors.textSecondary, textAlign: 'center' },
+  container: {
+    flex: 1,
+    backgroundColor: theme.colors.background,
+  },
+  scrollView: {
+    flex: 1,
+  },
+  header: {
+    marginBottom: theme.spacing.lg,
+  },
+  headerGradient: {
+    padding: theme.spacing.lg,
+    borderBottomLeftRadius: 24,
+    borderBottomRightRadius: 24,
+  },
+  headerContent: {
+    alignItems: 'center',
+  },
+  headerTitle: {
+    fontSize: 28,
+    fontWeight: '700',
+    color: 'white',
+    marginBottom: 8,
+  },
+  headerSubtitle: {
+    fontSize: 16,
+    color: 'rgba(255, 255, 255, 0.8)',
+    textAlign: 'center',
+  },
+  photoSection: {
+    alignItems: 'center',
+    marginBottom: theme.spacing.xl,
+  },
+  photoContainer: {
+    position: 'relative',
+    marginBottom: theme.spacing.md,
+  },
+  profilePhoto: {
+    width: 120,
+    height: 120,
+    borderRadius: 60,
+  },
+  photoPlaceholder: {
+    backgroundColor: theme.colors.surface,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: theme.colors.border,
+    borderStyle: 'dashed',
+  },
+  photoEditOverlay: {
+    position: 'absolute',
+    bottom: 0,
+    right: 0,
+    backgroundColor: theme.colors.primary,
+    borderRadius: 20,
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 3,
+    borderColor: 'white',
+  },
+  changePhotoButton: {
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: theme.spacing.sm,
+    backgroundColor: theme.colors.surface,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+  },
+  changePhotoText: {
+    color: theme.colors.primary,
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  form: {
+    paddingHorizontal: theme.spacing.lg,
+  },
+  section: {
+    marginBottom: theme.spacing.xl,
+  },
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: theme.colors.text,
+    marginBottom: theme.spacing.md,
+  },
+  inputRow: {
+    flexDirection: 'row',
+    marginBottom: theme.spacing.md,
+  },
+  inputGroup: {
+    marginBottom: theme.spacing.md,
+  },
+  label: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: theme.colors.text,
+    marginBottom: theme.spacing.sm,
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    borderRadius: 12,
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: theme.spacing.md,
+    fontSize: 16,
+    color: theme.colors.text,
+    backgroundColor: theme.colors.surface,
+  },
+  inputDisabled: {
+    backgroundColor: theme.colors.background,
+    color: theme.colors.textSecondary,
+  },
+  helpText: {
+    fontSize: 12,
+    color: theme.colors.textSecondary,
+    marginTop: 4,
+    fontStyle: 'italic',
+  },
+  pickerContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: theme.spacing.sm,
+  },
+  skillLevelChip: {
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: theme.spacing.sm,
+    borderRadius: 20,
+    backgroundColor: theme.colors.surface,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+  },
+  skillLevelText: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: theme.colors.text,
+  },
+  handChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: theme.spacing.sm,
+    borderRadius: 20,
+    backgroundColor: theme.colors.surface,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    gap: 6,
+  },
+  handText: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: theme.colors.text,
+  },
+  infoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: theme.spacing.sm,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.colors.border,
+  },
+  infoLabel: {
+    flex: 1,
+    fontSize: 16,
+    color: theme.colors.textSecondary,
+    marginLeft: theme.spacing.sm,
+  },
+  infoValue: {
+    fontSize: 16,
+    color: theme.colors.text,
+    fontWeight: '500',
+  },
+  actionsSection: {
+    paddingHorizontal: theme.spacing.lg,
+    paddingBottom: theme.spacing.xl,
+  },
+  editActions: {
+    flexDirection: 'row',
+    gap: theme.spacing.md,
+  },
+  actionButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: theme.spacing.md,
+    borderRadius: 12,
+    gap: 8,
+  },
+  editButton: {
+    backgroundColor: theme.colors.primary,
+  },
+  editButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  saveButton: {
+    backgroundColor: theme.colors.success,
+  },
+  saveButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  cancelButton: {
+    backgroundColor: theme.colors.surface,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+  },
+  cancelButtonText: {
+    color: theme.colors.text,
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: theme.spacing.xl,
+  },
+  errorTitle: {
+    fontSize: 24,
+    fontWeight: '600',
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  errorText: {
+    fontSize: 16,
+    color: theme.colors.textSecondary,
+    textAlign: 'center',
+    lineHeight: 24,
+  },
 });
 
 export default ProfileScreen;
