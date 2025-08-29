@@ -1,7 +1,7 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { MainTabParamList, GamesStackParamList, TournamentsStackParamList } from '../types';
+import { MainTabParamList, GamesStackParamList, TournamentsStackParamList, FriendsStackParamList } from '../types';
 import { Ionicons } from '@expo/vector-icons';
 import { useThemeStore } from '../stores/themeStore';
 
@@ -13,10 +13,13 @@ import GameDetailsScreen from '../screens/GameDetailsScreen';
 import TournamentsScreen from '../screens/TournamentsScreen';
 import TournamentDetailsScreen from '../screens/TournamentDetailsScreen';
 import ProfileScreen from '../screens/ProfileScreen';
+import FriendsScreen from '../screens/FriendsScreen';
+import AddFriendsScreen from '../screens/AddFriendsScreen';
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
 const GamesStack = createNativeStackNavigator<GamesStackParamList>();
 const TournamentsStack = createNativeStackNavigator<TournamentsStackParamList>();
+const FriendsStack = createNativeStackNavigator<FriendsStackParamList>();
 
 // Games Stack Navigator
 const GamesStackNavigator: React.FC = () => {
@@ -78,6 +81,36 @@ const TournamentsStackNavigator: React.FC = () => {
   );
 };
 
+// Friends Stack Navigator
+const FriendsStackNavigator: React.FC = () => {
+  const { theme } = useThemeStore();
+  
+  return (
+    <FriendsStack.Navigator
+      screenOptions={{
+        headerStyle: {
+          backgroundColor: theme.colors.surface,
+        },
+        headerTintColor: theme.colors.text,
+        headerTitleStyle: {
+          fontWeight: '600',
+        },
+      }}
+    >
+      <FriendsStack.Screen 
+        name="FriendsList" 
+        component={FriendsScreen}
+        options={{ title: 'Friends' }}
+      />
+      <FriendsStack.Screen 
+        name="AddFriends" 
+        component={AddFriendsScreen}
+        options={{ title: 'Add Friends' }}
+      />
+    </FriendsStack.Navigator>
+  );
+};
+
 const MainTabNavigator: React.FC = () => {
   const { theme } = useThemeStore();
 
@@ -99,6 +132,9 @@ const MainTabNavigator: React.FC = () => {
               break;
             case 'Tournaments':
               iconName = focused ? 'trophy' : 'trophy-outline';
+              break;
+            case 'Friends':
+              iconName = focused ? 'people' : 'people-outline';
               break;
             case 'Profile':
               iconName = focused ? 'person' : 'person-outline';
@@ -140,6 +176,11 @@ const MainTabNavigator: React.FC = () => {
         name="Tournaments" 
         component={TournamentsStackNavigator}
         options={{ title: 'Tournaments' }}
+      />
+      <Tab.Screen 
+        name="Friends" 
+        component={FriendsStackNavigator}
+        options={{ title: 'Friends' }}
       />
       <Tab.Screen 
         name="Profile" 

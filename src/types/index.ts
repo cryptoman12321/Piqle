@@ -272,6 +272,7 @@ export interface MainTabParamList extends ParamListBase {
   Map: undefined;
   Games: undefined;
   Tournaments: undefined;
+  Friends: undefined;
   Profile: undefined;
 }
 
@@ -283,4 +284,9 @@ export interface GamesStackParamList extends ParamListBase {
 export interface TournamentsStackParamList extends ParamListBase {
   TournamentsList: undefined;
   TournamentDetails: { tournamentId: string };
+}
+
+export interface FriendsStackParamList extends ParamListBase {
+  FriendsList: undefined;
+  AddFriends: undefined;
 }
