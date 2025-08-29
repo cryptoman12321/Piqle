@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Platform } from 'react-native';
 
 export interface NotificationSettings {
   gameInvites: boolean;
@@ -301,7 +302,7 @@ export const useSettingsStore = create<SettingsStore>()(
     }),
     {
       name: 'piqle-settings',
-      storage: createJSONStorage(() => AsyncStorage),
+      storage: Platform.OS === 'web' ? undefined : createJSONStorage(() => AsyncStorage),
       partialize: (state) => ({
         notifications: state.notifications,
         privacy: state.privacy,
