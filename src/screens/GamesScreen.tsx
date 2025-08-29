@@ -16,13 +16,21 @@ import { useThemeStore } from '../stores/themeStore';
 import { useGameStore } from '../stores/gameStore';
 import { useAuthStore } from '../stores/authStore';
 import { useNavigation } from '@react-navigation/native';
-import { Game, GameFormat, SkillLevel, GameStatus } from '../types';
+import { CompositeNavigationProp } from '@react-navigation/native';
+import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { Game, GameFormat, SkillLevel, GameStatus, MainTabParamList, GamesStackParamList } from '../types';
+
+type GamesScreenNavigationProp = CompositeNavigationProp<
+  BottomTabNavigationProp<MainTabParamList, 'Games'>,
+  NativeStackNavigationProp<GamesStackParamList>
+>;
 
 const GamesScreen: React.FC = () => {
   const { theme } = useThemeStore();
   const { games, loadGames, joinGame, isLoading, error } = useGameStore();
   const { user } = useAuthStore();
-  const navigation = useNavigation();
+  const navigation = useNavigation<GamesScreenNavigationProp>();
   
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFormat, setSelectedFormat] = useState<GameFormat | 'ALL'>('ALL');
@@ -64,17 +72,17 @@ const GamesScreen: React.FC = () => {
     joinGame(game.id, user.id);
     
     // Navigate to the game lobby/details
-    navigation.navigate('GameDetails' as never, { gameId: game.id } as never);
+    navigation.navigate('GameDetails', { gameId: game.id });
   };
 
   const handleCreateGame = () => {
-    navigation.navigate('CreateGame' as never);
+    navigation.navigate('CreateGame' as any);
   };
 
   const renderGameCard = ({ item: game }: { item: Game }) => (
     <TouchableOpacity 
       style={styles.gameCard}
-      onPress={() => navigation.navigate('GameDetails' as never, { gameId: game.id } as never)}
+      onPress={() => navigation.navigate('GameDetails', { gameId: game.id })}
     >
       <View style={styles.gameCardHeader}>
         <Text style={styles.gameTitle}>{game.title}</Text>

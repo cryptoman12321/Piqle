@@ -1,3 +1,5 @@
+import { ParamListBase } from '@react-navigation/native';
+
 export interface User {
   id: string;
   email: string;
@@ -254,7 +256,7 @@ export enum MatchStatus {
   CANCELLED = 'CANCELLED'
 }
 
-export interface RootStackParamList {
+export interface RootStackParamList extends ParamListBase {
   Auth: undefined;
   Main: undefined;
   CourtDetails: { courtId: string };
@@ -262,26 +264,22 @@ export interface RootStackParamList {
   CreateGame: undefined;
   CreateTournament: undefined;
   CreateClub: undefined;
-  [key: string]: undefined | { [key: string]: any };
 }
 
-export interface MainTabParamList {
+export interface MainTabParamList extends ParamListBase {
   Home: undefined;
   Map: undefined;
   Games: undefined;
   Tournaments: undefined;
   Profile: undefined;
-  [key: string]: undefined | { [key: string]: any };
 }
 
-export interface GamesStackParamList {
+export interface GamesStackParamList extends ParamListBase {
   GamesList: undefined;
   GameDetails: { gameId: string };
-  [key: string]: undefined | { [key: string]: any };
 }
 
-export interface TournamentsStackParamList {
+export interface TournamentsStackParamList extends ParamListBase {
   TournamentsList: undefined;
   TournamentDetails: { tournamentId: string };
-  [key: string]: undefined | { [key: string]: any };
 }

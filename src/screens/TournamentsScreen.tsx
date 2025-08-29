@@ -28,7 +28,7 @@ const TournamentsScreen: React.FC = () => {
   const { theme } = useThemeStore();
   const { tournaments, loadTournaments, registerForTournament, isLoading, error } = useTournamentStore();
   const { user } = useAuthStore();
-  const navigation = useNavigation();
+  const navigation = useNavigation<any>();
   
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFormat, setSelectedFormat] = useState<TournamentFormat | 'ALL'>('ALL');
@@ -77,11 +77,11 @@ const TournamentsScreen: React.FC = () => {
     registerForTournament(tournament.id, user.id);
     
     // Navigate to the tournament lobby/details
-    navigation.navigate('TournamentDetails' as never, { tournamentId: tournament.id } as never);
+    navigation.navigate('TournamentDetails', { tournamentId: tournament.id });
   };
 
   const handleCreateTournament = () => {
-    navigation.navigate('CreateTournament' as never);
+    navigation.navigate('CreateTournament');
   };
 
   const getStatusColor = (status: TournamentStatus) => {
@@ -154,7 +154,7 @@ const TournamentsScreen: React.FC = () => {
   const renderTournamentCard = ({ item: tournament }: { item: Tournament }) => (
     <TouchableOpacity 
       style={styles.tournamentCard}
-      onPress={() => navigation.navigate('TournamentDetails' as never, { tournamentId: tournament.id } as never)}
+      onPress={() => navigation.navigate('TournamentDetails', { tournamentId: tournament.id })}
     >
       <View style={styles.tournamentCardHeader}>
         <Text style={styles.tournamentTitle}>{tournament.name}</Text>

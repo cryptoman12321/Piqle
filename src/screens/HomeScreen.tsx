@@ -22,7 +22,7 @@ const HomeScreen: React.FC = () => {
   const { user } = useAuthStore();
   const { games, getUpcomingGames } = useGameStore();
   const { tournaments, getUpcomingTournaments } = useTournamentStore();
-  const navigation = useNavigation();
+  const navigation = useNavigation<any>();
 
   // Get recent games and tournaments from stores
   const recentGames = getUpcomingGames().slice(0, 2);
