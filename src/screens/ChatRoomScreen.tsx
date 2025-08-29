@@ -137,6 +137,10 @@ const ChatRoomScreen: React.FC = () => {
     setEditingText('');
   };
 
+  const handleBackToChatList = () => {
+    navigation.navigate('ChatList');
+  };
+
   const handleTyping = (text: string) => {
     setMessageText(text);
     
@@ -270,7 +274,7 @@ const ChatRoomScreen: React.FC = () => {
           <View style={styles.headerContent}>
             <TouchableOpacity
               style={styles.backButton}
-              onPress={() => navigation.goBack()}
+              onPress={handleBackToChatList}
             >
               <Ionicons name="arrow-back" size={24} color="white" />
             </TouchableOpacity>

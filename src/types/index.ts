@@ -293,3 +293,9 @@ export interface FriendsStackParamList extends ParamListBase {
   FriendsList: undefined;
   AddFriends: undefined;
 }
+
+export interface ChatStackParamList extends ParamListBase {
+  ChatList: undefined;
+  ChatRoom: { conversationId: string };
+  NewConversation: undefined;
+}

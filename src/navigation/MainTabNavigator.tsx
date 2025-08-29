@@ -1,7 +1,7 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { MainTabParamList, GamesStackParamList, TournamentsStackParamList, FriendsStackParamList } from '../types';
+import { MainTabParamList, GamesStackParamList, TournamentsStackParamList, FriendsStackParamList, ChatStackParamList } from '../types';
 import { Ionicons } from '@expo/vector-icons';
 import { useThemeStore } from '../stores/themeStore';
 
@@ -17,12 +17,15 @@ import FriendsScreen from '../screens/FriendsScreen';
 import AddFriendsScreen from '../screens/AddFriendsScreen';
 import AchievementsScreen from '../screens/AchievementsScreen';
 import ChatListScreen from '../screens/ChatListScreen';
+import ChatRoomScreen from '../screens/ChatRoomScreen';
+import NewConversationScreen from '../screens/NewConversationScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
 const GamesStack = createNativeStackNavigator<GamesStackParamList>();
 const TournamentsStack = createNativeStackNavigator<TournamentsStackParamList>();
 const FriendsStack = createNativeStackNavigator<FriendsStackParamList>();
+const ChatStack = createNativeStackNavigator<ChatStackParamList>();
 
 // Games Stack Navigator
 const GamesStackNavigator: React.FC = () => {
@@ -114,6 +117,41 @@ const FriendsStackNavigator: React.FC = () => {
   );
 };
 
+// Chat Stack Navigator
+const ChatStackNavigator: React.FC = () => {
+  const { theme } = useThemeStore();
+  
+  return (
+    <ChatStack.Navigator
+      screenOptions={{
+        headerStyle: {
+          backgroundColor: theme.colors.surface,
+        },
+        headerTintColor: theme.colors.text,
+        headerTitleStyle: {
+          fontWeight: '600',
+        },
+      }}
+    >
+      <ChatStack.Screen 
+        name="ChatList" 
+        component={ChatListScreen}
+        options={{ title: 'Chat' }}
+      />
+      <ChatStack.Screen 
+        name="ChatRoom" 
+        component={ChatRoomScreen}
+        options={{ title: 'Chat' }}
+      />
+      <ChatStack.Screen 
+        name="NewConversation" 
+        component={NewConversationScreen}
+        options={{ title: 'New Conversation' }}
+      />
+    </ChatStack.Navigator>
+  );
+};
+
 const MainTabNavigator: React.FC = () => {
   const { theme } = useThemeStore();
 
@@ -196,7 +234,7 @@ const MainTabNavigator: React.FC = () => {
       />
       <Tab.Screen 
         name="Chat" 
-        component={ChatListScreen}
+        component={ChatStackNavigator}
         options={{ title: 'Chat' }}
       />
       <Tab.Screen 

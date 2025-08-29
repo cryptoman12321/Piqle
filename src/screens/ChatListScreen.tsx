@@ -56,6 +56,10 @@ const ChatListScreen: React.FC = () => {
     navigation.navigate('ChatRoom', { conversationId: conversation.id });
   };
 
+  const handleNewConversation = () => {
+    navigation.navigate('NewConversation');
+  };
+
   const handleDeleteConversation = (conversation: Conversation) => {
     Alert.alert(
       'Delete Conversation',
@@ -412,7 +416,7 @@ const ChatListScreen: React.FC = () => {
         </View>
 
         {/* New Chat Button */}
-        <TouchableOpacity style={styles.newChatButton}>
+        <TouchableOpacity style={styles.newChatButton} onPress={handleNewConversation}>
           <LinearGradient
             colors={[theme.colors.primary, theme.colors.secondary]}
             style={styles.newChatGradient}
