@@ -161,6 +161,7 @@ const CreateTournamentScreen: React.FC = () => {
         registrationDeadline: tournamentData.registrationDeadline,
         maxParticipants: tournamentData.maxParticipants,
         currentParticipants: 1, // Creator is automatically added
+        players: [user?.id || 'currentUser'], // Creator is automatically added as first player
         skillLevel: tournamentData.skillLevel,
         entryFee: tournamentData.entryFee ? parseFloat(tournamentData.entryFee) : undefined,
         prizes: tournamentData.prizes,

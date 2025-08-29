@@ -65,10 +65,12 @@ export const useTournamentStore = create<TournamentStore>((set, get) => ({
       tournaments: state.tournaments.map((tournament) => {
         if (tournament.id === tournamentId && 
             tournament.currentParticipants < tournament.maxParticipants &&
-            tournament.status === TournamentStatus.REGISTRATION_OPEN) {
+            tournament.status === TournamentStatus.REGISTRATION_OPEN &&
+            !tournament.players.includes(userId)) {
           return {
             ...tournament,
             currentParticipants: tournament.currentParticipants + 1,
+            players: [...tournament.players, userId],
           };
         }
         return tournament;
@@ -83,6 +85,7 @@ export const useTournamentStore = create<TournamentStore>((set, get) => ({
           return {
             ...tournament,
             currentParticipants: Math.max(0, tournament.currentParticipants - 1),
+            players: tournament.players.filter((id) => id !== userId),
           };
         }
         return tournament;
@@ -111,6 +114,7 @@ export const useTournamentStore = create<TournamentStore>((set, get) => ({
           registrationDeadline: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000),
           maxParticipants: 32,
           currentParticipants: 24,
+          players: ['user1', 'user2', 'user3', 'user4', 'user5', 'user6', 'user7', 'user8', 'user9', 'user10', 'user11', 'user12', 'user13', 'user14', 'user15', 'user16', 'user17', 'user18', 'user19', 'user20', 'user21', 'user22', 'user23', 'user24'],
           skillLevel: SkillLevel.INTERMEDIATE,
           entryFee: 50,
           prizes: [
@@ -136,6 +140,7 @@ export const useTournamentStore = create<TournamentStore>((set, get) => ({
           registrationDeadline: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000),
           maxParticipants: 16,
           currentParticipants: 16,
+          players: ['user1', 'user2', 'user3', 'user4', 'user5', 'user6', 'user7', 'user8', 'user9', 'user10', 'user11', 'user12', 'user13', 'user14', 'user15', 'user16'],
           skillLevel: SkillLevel.PROFESSIONAL,
           entryFee: 200,
           prizes: [
@@ -160,6 +165,7 @@ export const useTournamentStore = create<TournamentStore>((set, get) => ({
           registrationDeadline: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
           maxParticipants: 20,
           currentParticipants: 12,
+          players: ['user1', 'user2', 'user3', 'user4', 'user5', 'user6', 'user7', 'user8', 'user9', 'user10', 'user11', 'user12'],
           skillLevel: SkillLevel.BEGINNER,
           entryFee: 0,
           prizes: [
@@ -183,6 +189,7 @@ export const useTournamentStore = create<TournamentStore>((set, get) => ({
           registrationDeadline: new Date(Date.now() + 25 * 24 * 60 * 60 * 1000),
           maxParticipants: 100,
           currentParticipants: 67,
+          players: Array.from({ length: 67 }, (_, i) => `user${i + 1}`),
           skillLevel: SkillLevel.ADVANCED,
           entryFee: 25,
           prizes: [

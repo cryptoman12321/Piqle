@@ -24,9 +24,9 @@ import {
 
 const TournamentDetailsScreen: React.FC = () => {
   const { theme } = useThemeStore();
-  const { getTournamentById, unregisterFromTournament } = useTournamentStore();
+  const { getTournamentById, unregisterFromTournament, registerForTournament } = useTournamentStore();
   const { user } = useAuthStore();
-  const navigation = useNavigation();
+  const navigation = useNavigation<any>();
   const route = useRoute();
   
   const tournamentId = (route.params as any)?.tournamentId;
@@ -56,7 +56,8 @@ const TournamentDetailsScreen: React.FC = () => {
           style: 'destructive',
           onPress: () => {
             unregisterFromTournament(tournament.id, user.id);
-            navigation.goBack();
+            // Navigate back to Tournaments list instead of just going back
+            navigation.navigate('Tournaments' as any);
           },
         },
       ]
@@ -175,7 +176,9 @@ const TournamentDetailsScreen: React.FC = () => {
     );
   }
 
-  const isPlayerRegistered = true; // For demo purposes, assume user is registered
+  // Check if the current user is registered for this tournament
+  // For demo purposes, assume current user is 'user1' and check if they're in the players list
+  const isPlayerRegistered = tournament.players ? tournament.players.includes(user?.id || 'user1') : false;
   const canRegister = tournament.status === TournamentStatus.REGISTRATION_OPEN && 
                      tournament.currentParticipants < tournament.maxParticipants;
 
@@ -356,9 +359,12 @@ const TournamentDetailsScreen: React.FC = () => {
               <TouchableOpacity 
                 style={[styles.actionButton, styles.registerButton]}
                 onPress={() => {
-                  // This would typically navigate back to the tournaments list
-                  // where the user can register, but for demo purposes we'll just go back
-                  navigation.goBack();
+                  if (tournament && user?.id) {
+                    // Actually register for the tournament using the store
+                    registerForTournament(tournament.id, user.id);
+                    // Navigate back to Tournaments list to show updated state
+                    navigation.navigate('Tournaments' as any);
+                  }
                 }}
               >
                 <Ionicons name="enter-outline" size={20} color="white" />
