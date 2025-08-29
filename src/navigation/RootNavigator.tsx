@@ -4,12 +4,10 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useAuthStore } from '../stores/authStore';
 import { RootStackParamList } from '../types';
 
-// Import screens (we'll create these next)
+// Import screens
 import AuthScreen from '../screens/AuthScreen';
 import MainTabNavigator from './MainTabNavigator';
-import GameDetailsScreen from '../screens/GameDetailsScreen';
 import CourtDetailsScreen from '../screens/CourtDetailsScreen';
-import TournamentDetailsScreen from '../screens/TournamentDetailsScreen';
 import ClubDetailsScreen from '../screens/ClubDetailsScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import CreateGameScreen from '../screens/CreateGameScreen';
@@ -37,19 +35,9 @@ const RootNavigator: React.FC = () => {
           <>
             <Stack.Screen name="Main" component={MainTabNavigator} />
             <Stack.Screen 
-              name="GameDetails" 
-              component={GameDetailsScreen}
-              options={{ headerShown: true, title: 'Game Details' }}
-            />
-            <Stack.Screen 
               name="CourtDetails" 
               component={CourtDetailsScreen}
               options={{ headerShown: true, title: 'Court Details' }}
-            />
-            <Stack.Screen 
-              name="TournamentDetails" 
-              component={TournamentDetailsScreen}
-              options={{ headerShown: true, title: 'Tournament Details' }}
             />
             <Stack.Screen 
               name="ClubDetails" 

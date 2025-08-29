@@ -13,97 +13,26 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useThemeStore } from '../stores/themeStore';
+import { useGameStore } from '../stores/gameStore';
+import { useAuthStore } from '../stores/authStore';
 import { useNavigation } from '@react-navigation/native';
 import { Game, GameFormat, SkillLevel, GameStatus } from '../types';
 
 const GamesScreen: React.FC = () => {
   const { theme } = useThemeStore();
+  const { games, loadGames, joinGame, isLoading, error } = useGameStore();
+  const { user } = useAuthStore();
   const navigation = useNavigation();
   
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFormat, setSelectedFormat] = useState<GameFormat | 'ALL'>('ALL');
   const [selectedSkillLevel, setSelectedSkillLevel] = useState<SkillLevel | 'ALL'>('ALL');
   const [refreshing, setRefreshing] = useState(false);
-  const [games, setGames] = useState<Game[]>([]);
 
-  // Mock data - in real app this would come from API
+  // Load games when component mounts
   useEffect(() => {
     loadGames();
   }, []);
-
-  const loadGames = async () => {
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    const mockGames: Game[] = [
-      {
-        id: '1',
-        title: 'Morning Pickleball',
-        description: 'Early morning doubles game at Central Park',
-        format: GameFormat.DOUBLES,
-        maxPlayers: 4,
-        currentPlayers: 3,
-        skillLevel: SkillLevel.INTERMEDIATE,
-        location: { latitude: 40.7128, longitude: -74.0060, city: 'New York' },
-        startTime: new Date(Date.now() + 2 * 60 * 60 * 1000),
-        isPrivate: false,
-        createdBy: 'user1',
-        players: [],
-        status: GameStatus.UPCOMING,
-        createdAt: new Date(),
-      },
-      {
-        id: '2',
-        title: 'Weekend Tournament',
-        description: 'Competitive singles tournament for advanced players',
-        format: GameFormat.SINGLES,
-        maxPlayers: 16,
-        currentPlayers: 12,
-        skillLevel: SkillLevel.ADVANCED,
-        location: { latitude: 40.7128, longitude: -74.0060, city: 'New York' },
-        startTime: new Date(Date.now() + 24 * 60 * 60 * 1000),
-        isPrivate: false,
-        createdBy: 'user2',
-        players: [],
-        status: GameStatus.UPCOMING,
-        createdAt: new Date(),
-      },
-      {
-        id: '3',
-        title: 'Open Play Session',
-        description: 'Casual open play for all skill levels',
-        format: GameFormat.OPEN_PLAY,
-        maxPlayers: 20,
-        currentPlayers: 8,
-        skillLevel: SkillLevel.BEGINNER,
-        location: { latitude: 40.7128, longitude: -74.0060, city: 'New York' },
-        startTime: new Date(Date.now() + 4 * 60 * 60 * 1000),
-        isPrivate: false,
-        createdBy: 'user3',
-        players: [],
-        status: GameStatus.UPCOMING,
-        createdAt: new Date(),
-      },
-      {
-        id: '4',
-        title: 'Evening Doubles',
-        description: 'Relaxed evening game under the lights',
-        format: GameFormat.DOUBLES,
-        maxPlayers: 4,
-        currentPlayers: 2,
-        skillLevel: SkillLevel.INTERMEDIATE,
-        location: { latitude: 40.7128, longitude: -74.0060, city: 'New York' },
-        startTime: new Date(Date.now() + 6 * 60 * 60 * 1000),
-        isPrivate: false,
-        createdBy: 'user4',
-        players: [],
-        status: GameStatus.UPCOMING,
-        createdAt: new Date(),
-      },
-    ];
-    
-    setGames(mockGames);
-  };
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -126,8 +55,16 @@ const GamesScreen: React.FC = () => {
       return;
     }
     
-    // Simulate joining
-    alert(`You've joined "${game.title}"!`);
+    if (!user?.id) {
+      alert('Please log in to join games');
+      return;
+    }
+    
+    // Join the game using the store
+    joinGame(game.id, user.id);
+    
+    // Navigate to the game lobby/details
+    navigation.navigate('GameDetails' as never, { gameId: game.id } as never);
   };
 
   const handleCreateGame = () => {
@@ -285,17 +222,50 @@ const GamesScreen: React.FC = () => {
         </View>
       </ScrollView>
 
+      {/* Loading State */}
+      {isLoading && !refreshing && (
+        <View style={styles.loadingContainer}>
+          <Text style={styles.loadingText}>Loading games...</Text>
+        </View>
+      )}
+
+      {/* Error State */}
+      {error && (
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorText}>Error: {error}</Text>
+          <TouchableOpacity style={styles.retryButton} onPress={loadGames}>
+            <Text style={styles.retryButtonText}>Retry</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+
       {/* Games List */}
-      <FlatList
-        data={filteredGames}
-        renderItem={renderGameCard}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.gamesList}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        }
-        showsVerticalScrollIndicator={false}
-      />
+      {!isLoading && !error && (
+        <FlatList
+          data={filteredGames}
+          renderItem={renderGameCard}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={styles.gamesList}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }
+          showsVerticalScrollIndicator={false}
+          ListEmptyComponent={
+            <View style={styles.emptyContainer}>
+              <Ionicons name="game-controller-outline" size={64} color={theme.colors.textSecondary} />
+              <Text style={styles.emptyTitle}>No games found</Text>
+              <Text style={styles.emptySubtitle}>
+                {searchQuery || selectedFormat !== 'ALL' || selectedSkillLevel !== 'ALL' 
+                  ? 'Try adjusting your search or filters'
+                  : 'Be the first to create a game!'}
+              </Text>
+              <TouchableOpacity style={styles.createFirstGameButton} onPress={handleCreateGame}>
+                <Text style={styles.createFirstGameButtonText}>Create First Game</Text>
+              </TouchableOpacity>
+            </View>
+          }
+        />
+      )}
     </SafeAreaView>
   );
 };
@@ -371,7 +341,7 @@ const createStyles = (theme: any) => StyleSheet.create({
   filterOption: {
     paddingHorizontal: theme.spacing.sm,
     paddingVertical: theme.spacing.xs,
-    borderRadius: theme.borderRadius.sm,
+    borderRadius: theme.borderRadius.md,
     borderWidth: 1,
     borderColor: theme.colors.border,
   },
@@ -386,6 +356,38 @@ const createStyles = (theme: any) => StyleSheet.create({
   },
   filterOptionTextSelected: {
     color: 'white',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: theme.spacing.xxl,
+  },
+  loadingText: {
+    fontSize: 16,
+    color: theme.colors.textSecondary,
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: theme.spacing.xxl,
+    gap: theme.spacing.md,
+  },
+  errorText: {
+    fontSize: 16,
+    color: theme.colors.error,
+    textAlign: 'center',
+  },
+  retryButton: {
+    backgroundColor: theme.colors.primary,
+    paddingHorizontal: theme.spacing.lg,
+    paddingVertical: theme.spacing.md,
+    borderRadius: theme.borderRadius.md,
+  },
+  retryButtonText: {
+    color: 'white',
+    fontWeight: '600',
   },
   gamesList: {
     paddingHorizontal: theme.spacing.lg,
@@ -463,6 +465,36 @@ const createStyles = (theme: any) => StyleSheet.create({
   },
   shareButton: {
     padding: theme.spacing.sm,
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: theme.spacing.xxl,
+    gap: theme.spacing.md,
+  },
+  emptyTitle: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: theme.colors.text,
+  },
+  emptySubtitle: {
+    fontSize: 16,
+    color: theme.colors.textSecondary,
+    textAlign: 'center',
+    maxWidth: 300,
+  },
+  createFirstGameButton: {
+    backgroundColor: theme.colors.primary,
+    paddingHorizontal: theme.spacing.lg,
+    paddingVertical: theme.spacing.md,
+    borderRadius: theme.borderRadius.md,
+    marginTop: theme.spacing.md,
+  },
+  createFirstGameButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
   },
 });
 

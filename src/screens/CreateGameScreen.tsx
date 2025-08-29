@@ -13,11 +13,15 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useThemeStore } from '../stores/themeStore';
+import { useGameStore } from '../stores/gameStore';
+import { useAuthStore } from '../stores/authStore';
 import { GameFormat, SkillLevel, GameStatus } from '../types';
 import { useNavigation } from '@react-navigation/native';
 
 const CreateGameScreen: React.FC = () => {
   const { theme } = useThemeStore();
+  const { addGame } = useGameStore();
+  const { user } = useAuthStore();
   const navigation = useNavigation();
   
   const [gameData, setGameData] = useState({
@@ -47,13 +51,35 @@ const CreateGameScreen: React.FC = () => {
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1500));
       
+      // Create the game using the store
+      const newGame = {
+        title: gameData.title,
+        description: gameData.description,
+        format: gameData.format,
+        maxPlayers: gameData.maxPlayers,
+        currentPlayers: 1, // Creator is automatically added
+        skillLevel: gameData.skillLevel,
+        location: { 
+          latitude: 40.7128, // Default coordinates for demo
+          longitude: -74.0060,
+          city: gameData.location 
+        },
+        startTime: gameData.startTime,
+        isPrivate: gameData.isPrivate,
+        createdBy: user?.id || 'currentUser',
+        players: [user?.id || 'currentUser'], // Creator is first player
+        status: GameStatus.UPCOMING,
+      };
+
+      addGame(newGame);
+      
       Alert.alert(
         'Success!', 
         'Your game has been created and is now visible to other players!',
         [
           {
             text: 'OK',
-            onPress: () => navigation.goBack()
+            onPress: () => navigation.navigate('Games' as never)
           }
         ]
       );

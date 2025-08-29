@@ -1,4 +1,3 @@
-// User Types
 export interface User {
   id: string;
   email: string;
@@ -14,25 +13,6 @@ export interface User {
   createdAt: Date;
 }
 
-export enum SkillLevel {
-  BEGINNER = 'BEGINNER',
-  INTERMEDIATE = 'INTERMEDIATE',
-  ADVANCED = 'ADVANCED',
-  EXPERT = 'EXPERT'
-}
-
-export enum Hand {
-  RIGHT = 'RIGHT',
-  LEFT = 'LEFT'
-}
-
-export enum Gender {
-  MALE = 'MALE',
-  FEMALE = 'FEMALE',
-  OTHER = 'OTHER'
-}
-
-// Game Types
 export interface Game {
   id: string;
   title: string;
@@ -43,12 +23,155 @@ export interface Game {
   skillLevel: SkillLevel;
   location: Location;
   startTime: Date;
-  endTime?: Date;
   isPrivate: boolean;
   createdBy: string;
-  players: GamePlayer[];
+  players: string[];
   status: GameStatus;
   createdAt: Date;
+}
+
+export interface Court {
+  id: string;
+  name: string;
+  location: Location;
+  type: CourtType;
+  surface: CourtSurface;
+  isIndoor: boolean;
+  isAvailable: boolean;
+  amenities: string[];
+  photos: string[];
+}
+
+export interface Location {
+  latitude: number;
+  longitude: number;
+  city: string;
+  address?: string;
+}
+
+export interface Club {
+  id: string;
+  name: string;
+  description: string;
+  location: Location;
+  logo?: string;
+  coverPhoto?: string;
+  members: ClubMember[];
+  admins: string[];
+  events: string[];
+  createdAt: Date;
+}
+
+export interface ClubMember {
+  userId: string;
+  role: ClubRole;
+  joinedAt: Date;
+  isVerified: boolean;
+}
+
+export interface Tournament {
+  id: string;
+  name: string;
+  description: string;
+  format: TournamentFormat;
+  clubId: string;
+  location: Location;
+  startDate: Date;
+  endDate: Date;
+  registrationDeadline: Date;
+  maxParticipants: number;
+  currentParticipants: number;
+  skillLevel: SkillLevel;
+  entryFee?: number;
+  prizes?: Prize[];
+  brackets: TournamentBracket[];
+  status: TournamentStatus;
+  isDUPR: boolean;
+  createdBy: string;
+  createdAt: Date;
+}
+
+export interface TournamentBracket {
+  id: string;
+  name: string;
+  type: BracketType;
+  participants: string[];
+  matches: TournamentMatch[];
+  winner?: string;
+}
+
+export interface TournamentMatch {
+  id: string;
+  player1: string;
+  player2: string;
+  score1?: number;
+  score2?: number;
+  winner?: string;
+  status: MatchStatus;
+  scheduledTime?: Date;
+  courtId?: string;
+}
+
+export interface Prize {
+  place: number;
+  amount: number;
+  description: string;
+}
+
+export interface UserProfile {
+  id: string;
+  userId: string;
+  bio?: string;
+  duprRating?: number;
+  achievements: Achievement[];
+  stats: UserStats;
+  preferences: UserPreferences;
+}
+
+export interface Achievement {
+  id: string;
+  name: string;
+  description: string;
+  icon: string;
+  unlockedAt: Date;
+}
+
+export interface UserStats {
+  gamesPlayed: number;
+  gamesWon: number;
+  tournamentsWon: number;
+  totalPoints: number;
+  averageScore: number;
+}
+
+export interface UserPreferences {
+  preferredGameTime: string[];
+  preferredLocations: string[];
+  skillLevelRange: SkillLevel[];
+  notificationSettings: NotificationSettings;
+}
+
+export interface NotificationSettings {
+  gameInvites: boolean;
+  tournamentUpdates: boolean;
+  friendRequests: boolean;
+  clubUpdates: boolean;
+  pushNotifications: boolean;
+  emailNotifications: boolean;
+}
+
+export enum SkillLevel {
+  BEGINNER = 'BEGINNER',
+  INTERMEDIATE = 'INTERMEDIATE',
+  ADVANCED = 'ADVANCED',
+  EXPERT = 'EXPERT',
+  PROFESSIONAL = 'PROFESSIONAL'
+}
+
+export enum Hand {
+  LEFT = 'LEFT',
+  RIGHT = 'RIGHT',
+  AMBIDEXTROUS = 'AMBIDEXTROUS'
 }
 
 export enum GameFormat {
@@ -64,28 +187,9 @@ export enum GameStatus {
   CANCELLED = 'CANCELLED'
 }
 
-export interface GamePlayer {
-  userId: string;
-  joinedAt: Date;
-  isConfirmed: boolean;
-}
-
-// Court Types
-export interface Court {
-  id: string;
-  name: string;
-  location: Location;
-  type: CourtType;
-  surface: CourtSurface;
-  isIndoor: boolean;
-  isAvailable: boolean;
-  pricePerHour?: number;
-  amenities: string[];
-  photos: string[];
-}
-
 export enum CourtType {
   PICKLEBALL = 'PICKLEBALL',
+  TENNIS = 'TENNIS',
   PADEL = 'PADEL',
   MULTI_SPORT = 'MULTI_SPORT'
 }
@@ -93,38 +197,9 @@ export enum CourtType {
 export enum CourtSurface {
   CONCRETE = 'CONCRETE',
   ASPHALT = 'ASPHALT',
-  GRASS = 'GRASS',
+  ARTIFICIAL_TURF = 'ARTIFICIAL_TURF',
   CLAY = 'CLAY',
-  ARTIFICIAL_TURF = 'ARTIFICIAL_TURF'
-}
-
-// Location Types
-export interface Location {
-  latitude: number;
-  longitude: number;
-  address?: string;
-  city?: string;
-  state?: string;
-  country?: string;
-}
-
-// Club Types
-export interface Club {
-  id: string;
-  name: string;
-  description?: string;
-  logo?: string;
-  coverPhoto?: string;
-  location: Location;
-  members: ClubMember[];
-  events: ClubEvent[];
-  createdAt: Date;
-}
-
-export interface ClubMember {
-  userId: string;
-  role: ClubRole;
-  joinedAt: Date;
+  GRASS = 'GRASS'
 }
 
 export enum ClubRole {
@@ -134,73 +209,42 @@ export enum ClubRole {
   OWNER = 'OWNER'
 }
 
-export interface ClubEvent {
-  id: string;
-  title: string;
-  description?: string;
-  startTime: Date;
-  endTime?: Date;
-  type: EventType;
-  maxParticipants?: number;
-  currentParticipants: number;
-  isPrivate: boolean;
-}
-
-export enum EventType {
-  TOURNAMENT = 'TOURNAMENT',
-  OPEN_PLAY = 'OPEN_PLAY',
-  TRAINING = 'TRAINING',
-  SOCIAL = 'SOCIAL'
-}
-
-// Tournament Types
-export interface Tournament {
-  id: string;
-  name: string;
-  description?: string;
-  format: TournamentFormat;
-  startDate: Date;
-  endDate: Date;
-  maxParticipants: number;
-  currentParticipants: number;
-  skillLevels: SkillLevel[];
-  prizes?: string[];
-  registrationDeadline: Date;
-  status: TournamentStatus;
-  clubId?: string;
-  brackets?: TournamentBracket[];
-}
-
 export enum TournamentFormat {
+  // Major League Pickleball (MiLP)
+  MILP = 'MILP',
+  // Single elimination formats
+  SINGLES_KNOCKOUT = 'SINGLES_KNOCKOUT',
+  DOUBLES_KNOCKOUT = 'DOUBLES_KNOCKOUT',
+  // Round robin formats
+  SINGLES_ROUND_ROBIN = 'SINGLES_ROUND_ROBIN',
+  DOUBLES_ROUND_ROBIN = 'DOUBLES_ROUND_ROBIN',
+  RANDOM_TEAMS_ROUND_ROBIN = 'RANDOM_TEAMS_ROUND_ROBIN',
+  // Ladder formats
+  INDIVIDUAL_LADDER = 'INDIVIDUAL_LADDER',
+  LADDER_LEAGUE = 'LADDER_LEAGUE',
+  // Additional formats mentioned in description
+  SWISS_SYSTEM = 'SWISS_SYSTEM',
+  CONSOLATION_BRACKET = 'CONSOLATION_BRACKET',
+  DOUBLE_ELIMINATION = 'DOUBLE_ELIMINATION',
+  ROUND_ROBIN_PLUS_KNOCKOUT = 'ROUND_ROBIN_PLUS_KNOCKOUT',
+  TEAM_FORMAT = 'TEAM_FORMAT'
+}
+
+export enum BracketType {
   SINGLE_ELIMINATION = 'SINGLE_ELIMINATION',
   DOUBLE_ELIMINATION = 'DOUBLE_ELIMINATION',
   ROUND_ROBIN = 'ROUND_ROBIN',
-  LADDER = 'LADDER'
+  SWISS_SYSTEM = 'SWISS_SYSTEM',
+  LADDER = 'LADDER',
+  CONSOLATION = 'CONSOLATION'
 }
 
 export enum TournamentStatus {
-  REGISTRATION = 'REGISTRATION',
+  REGISTRATION_OPEN = 'REGISTRATION_OPEN',
+  REGISTRATION_CLOSED = 'REGISTRATION_CLOSED',
   IN_PROGRESS = 'IN_PROGRESS',
   COMPLETED = 'COMPLETED',
   CANCELLED = 'CANCELLED'
-}
-
-export interface TournamentBracket {
-  id: string;
-  name: string;
-  matches: TournamentMatch[];
-  participants: string[];
-}
-
-export interface TournamentMatch {
-  id: string;
-  player1Id: string;
-  player2Id: string;
-  score1?: number;
-  score2?: number;
-  winnerId?: string;
-  status: MatchStatus;
-  scheduledTime?: Date;
 }
 
 export enum MatchStatus {
@@ -210,92 +254,34 @@ export enum MatchStatus {
   CANCELLED = 'CANCELLED'
 }
 
-// Navigation Types
-export type RootStackParamList = {
+export interface RootStackParamList {
   Auth: undefined;
   Main: undefined;
-  GameDetails: { gameId: string };
   CourtDetails: { courtId: string };
-  TournamentDetails: { tournamentId: string };
   ClubDetails: { clubId: string };
-  Profile: { userId: string };
   CreateGame: undefined;
   CreateTournament: undefined;
   CreateClub: undefined;
-};
+  [key: string]: undefined | { [key: string]: any };
+}
 
-export type MainTabParamList = {
+export interface MainTabParamList {
   Home: undefined;
   Map: undefined;
   Games: undefined;
   Tournaments: undefined;
   Profile: undefined;
-};
-
-// API Types
-export interface ApiResponse<T> {
-  data: T;
-  message?: string;
-  success: boolean;
+  [key: string]: undefined | { [key: string]: any };
 }
 
-export interface PaginatedResponse<T> {
-  data: T[];
-  total: number;
-  page: number;
-  limit: number;
-  hasMore: boolean;
+export interface GamesStackParamList {
+  GamesList: undefined;
+  GameDetails: { gameId: string };
+  [key: string]: undefined | { [key: string]: any };
 }
 
-// UI Types
-export interface Theme {
-  colors: {
-    primary: string;
-    secondary: string;
-    background: string;
-    surface: string;
-    text: string;
-    textSecondary: string;
-    border: string;
-    error: string;
-    success: string;
-    warning: string;
-    info: string;
-  };
-  spacing: {
-    xs: number;
-    sm: number;
-    md: number;
-    lg: number;
-    xl: number;
-    xxl: number;
-  };
-  borderRadius: {
-    sm: number;
-    md: number;
-    lg: number;
-    xl: number;
-  };
-  typography: {
-    h1: {
-      fontSize: number;
-      fontWeight: string;
-    };
-    h2: {
-      fontSize: number;
-      fontWeight: string;
-    };
-    h3: {
-      fontSize: number;
-      fontWeight: string;
-    };
-    body: {
-      fontSize: number;
-      fontWeight: string;
-    };
-    caption: {
-      fontSize: number;
-      fontWeight: string;
-    };
-  };
+export interface TournamentsStackParamList {
+  TournamentsList: undefined;
+  TournamentDetails: { tournamentId: string };
+  [key: string]: undefined | { [key: string]: any };
 }

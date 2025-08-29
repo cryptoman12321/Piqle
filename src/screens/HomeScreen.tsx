@@ -12,48 +12,23 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useThemeStore } from '../stores/themeStore';
 import { useAuthStore } from '../stores/authStore';
+import { useGameStore } from '../stores/gameStore';
+import { useTournamentStore } from '../stores/tournamentStore';
 import { useNavigation } from '@react-navigation/native';
-import { Game, Court, GameFormat, SkillLevel, GameStatus, CourtType, CourtSurface } from '../types';
+import { Game, Court, GameFormat, SkillLevel, GameStatus, CourtType, CourtSurface, Tournament, TournamentFormat, TournamentStatus } from '../types';
 
 const HomeScreen: React.FC = () => {
   const { theme } = useThemeStore();
   const { user } = useAuthStore();
+  const { games, getUpcomingGames } = useGameStore();
+  const { tournaments, getUpcomingTournaments } = useTournamentStore();
   const navigation = useNavigation();
 
-  // Mock data for demo
-  const recentGames: Game[] = [
-    {
-      id: '1',
-      title: 'Morning Pickleball',
-      format: GameFormat.DOUBLES,
-      maxPlayers: 4,
-      currentPlayers: 3,
-      skillLevel: SkillLevel.INTERMEDIATE,
-      location: { latitude: 40.7128, longitude: -74.0060, city: 'New York' },
-      startTime: new Date(Date.now() + 2 * 60 * 60 * 1000), // 2 hours from now
-      isPrivate: false,
-      createdBy: 'user1',
-      players: [],
-      status: GameStatus.UPCOMING,
-      createdAt: new Date(),
-    },
-    {
-      id: '2',
-      title: 'Weekend Tournament',
-      format: GameFormat.SINGLES,
-      maxPlayers: 16,
-      currentPlayers: 12,
-      skillLevel: SkillLevel.ADVANCED,
-      location: { latitude: 40.7128, longitude: -74.0060, city: 'New York' },
-      startTime: new Date(Date.now() + 24 * 60 * 60 * 1000), // 1 day from now
-      isPrivate: false,
-      createdBy: 'user2',
-      players: [],
-      status: GameStatus.UPCOMING,
-      createdAt: new Date(),
-    },
-  ];
+  // Get recent games and tournaments from stores
+  const recentGames = getUpcomingGames().slice(0, 2);
+  const recentTournaments = getUpcomingTournaments().slice(0, 2);
 
+  // Mock data for courts (in real app this would come from a court store)
   const nearbyCourts: Court[] = [
     {
       id: '1',
@@ -83,8 +58,16 @@ const HomeScreen: React.FC = () => {
     navigation.navigate('CreateGame' as never);
   };
 
+  const handleCreateTournament = () => {
+    navigation.navigate('CreateTournament' as never);
+  };
+
   const handleFindGame = () => {
     navigation.navigate('Games' as never);
+  };
+
+  const handleFindTournament = () => {
+    navigation.navigate('Tournaments' as never);
   };
 
   const handleFindCourt = () => {
@@ -121,6 +104,16 @@ const HomeScreen: React.FC = () => {
               </LinearGradient>
             </TouchableOpacity>
             
+            <TouchableOpacity style={styles.actionButton} onPress={handleCreateTournament}>
+              <LinearGradient
+                colors={[theme.colors.warning, '#D97706']}
+                style={styles.actionGradient}
+              >
+                <Ionicons name="trophy" size={24} color="white" />
+                <Text style={styles.actionText}>Create Tournament</Text>
+              </LinearGradient>
+            </TouchableOpacity>
+            
             <TouchableOpacity style={styles.actionButton} onPress={handleFindGame}>
               <LinearGradient
                 colors={[theme.colors.success, '#059669']}
@@ -133,7 +126,7 @@ const HomeScreen: React.FC = () => {
             
             <TouchableOpacity style={styles.actionButton} onPress={handleFindCourt}>
               <LinearGradient
-                colors={[theme.colors.warning, '#D97706']}
+                colors={[theme.colors.info, '#2563EB']}
                 style={styles.actionGradient}
               >
                 <Ionicons name="map" size={24} color="white" />
@@ -151,40 +144,111 @@ const HomeScreen: React.FC = () => {
               <Text style={styles.seeAllText}>See All</Text>
             </TouchableOpacity>
           </View>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            {recentGames.map((game) => (
-              <TouchableOpacity 
-                key={game.id} 
-                style={styles.gameCard}
-                onPress={() => navigation.navigate('GameDetails' as never, { gameId: game.id } as never)}
-              >
-                <View style={styles.gameCardHeader}>
-                  <Text style={styles.gameTitle}>{game.title}</Text>
-                  <View style={[styles.gameStatus, { backgroundColor: theme.colors.success }]}>
-                    <Text style={styles.gameStatusText}>{game.status}</Text>
+          {recentGames.length > 0 ? (
+            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+              {recentGames.map((game) => (
+                <TouchableOpacity 
+                  key={game.id} 
+                  style={styles.gameCard}
+                  onPress={() => navigation.navigate('GameDetails' as never, { gameId: game.id } as never)}
+                >
+                  <View style={styles.gameCardHeader}>
+                    <Text style={styles.gameTitle}>{game.title}</Text>
+                    <View style={[styles.gameStatus, { backgroundColor: theme.colors.success }]}>
+                      <Text style={styles.gameStatusText}>{game.status}</Text>
+                    </View>
                   </View>
-                </View>
-                <View style={styles.gameDetails}>
-                  <View style={styles.gameDetail}>
-                    <Ionicons name="people" size={16} color={theme.colors.textSecondary} />
-                    <Text style={styles.gameDetailText}>
-                      {game.currentPlayers}/{game.maxPlayers} players
-                    </Text>
+                  <View style={styles.gameDetails}>
+                    <View style={styles.gameDetail}>
+                      <Ionicons name="people" size={16} color={theme.colors.textSecondary} />
+                      <Text style={styles.gameDetailText}>
+                        {game.currentPlayers}/{game.maxPlayers} players
+                      </Text>
+                    </View>
+                    <View style={styles.gameDetail}>
+                      <Ionicons name="time" size={16} color={theme.colors.textSecondary} />
+                      <Text style={styles.gameDetailText}>
+                        {game.startTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </Text>
+                    </View>
+                    <View style={styles.gameDetail}>
+                      <Ionicons name="location" size={16} color={theme.colors.textSecondary} />
+                      <Text style={styles.gameDetailText}>{game.location.city}</Text>
+                    </View>
                   </View>
-                  <View style={styles.gameDetail}>
-                    <Ionicons name="time" size={16} color={theme.colors.textSecondary} />
-                    <Text style={styles.gameDetailText}>
-                      {game.startTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                    </Text>
-                  </View>
-                  <View style={styles.gameDetail}>
-                    <Ionicons name="location" size={16} color={theme.colors.textSecondary} />
-                    <Text style={styles.gameDetailText}>{game.location.city}</Text>
-                  </View>
-                </View>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          ) : (
+            <View style={styles.emptySection}>
+              <Ionicons name="game-controller-outline" size={48} color={theme.colors.textSecondary} />
+              <Text style={styles.emptySectionText}>No games yet</Text>
+              <TouchableOpacity style={styles.emptySectionButton} onPress={handleCreateGame}>
+                <Text style={styles.emptySectionButtonText}>Create Your First Game</Text>
               </TouchableOpacity>
-            ))}
-          </ScrollView>
+            </View>
+          )}
+        </View>
+
+        {/* Recent Tournaments */}
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Recent Tournaments</Text>
+            <TouchableOpacity onPress={handleFindTournament}>
+              <Text style={styles.seeAllText}>See All</Text>
+            </TouchableOpacity>
+          </View>
+          {recentTournaments.length > 0 ? (
+            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+              {recentTournaments.map((tournament) => (
+                <TouchableOpacity 
+                  key={tournament.id} 
+                  style={styles.tournamentCard}
+                  onPress={() => navigation.navigate('TournamentDetails' as never, { tournamentId: tournament.id } as never)}
+                >
+                  <View style={styles.tournamentCardHeader}>
+                    <Text style={styles.tournamentTitle}>{tournament.name}</Text>
+                    <View style={[styles.tournamentStatus, { backgroundColor: theme.colors.warning }]}>
+                      <Text style={styles.tournamentStatusText}>{tournament.status}</Text>
+                    </View>
+                  </View>
+                  <View style={styles.tournamentDetails}>
+                    <View style={styles.tournamentDetail}>
+                      <Ionicons name="trophy" size={16} color={theme.colors.textSecondary} />
+                      <Text style={styles.tournamentDetailText}>
+                        {tournament.format === TournamentFormat.DOUBLES_KNOCKOUT ? 'Doubles KO' : 
+                         tournament.format === TournamentFormat.DOUBLES_ROUND_ROBIN ? 'Doubles RR' : 'Tournament'}
+                      </Text>
+                    </View>
+                    <View style={styles.tournamentDetail}>
+                      <Ionicons name="people" size={16} color={theme.colors.textSecondary} />
+                      <Text style={styles.tournamentDetailText}>
+                        {tournament.currentParticipants}/{tournament.maxParticipants} players
+                      </Text>
+                    </View>
+                    <View style={styles.tournamentDetail}>
+                      <Ionicons name="calendar" size={16} color={theme.colors.textSecondary} />
+                      <Text style={styles.tournamentDetailText}>
+                        {tournament.startDate.toLocaleDateString()}
+                      </Text>
+                    </View>
+                    <View style={styles.tournamentDetail}>
+                      <Ionicons name="location" size={16} color={theme.colors.textSecondary} />
+                      <Text style={styles.tournamentDetailText}>{tournament.location.city}</Text>
+                    </View>
+                  </View>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          ) : (
+            <View style={styles.emptySection}>
+              <Ionicons name="trophy-outline" size={48} color={theme.colors.textSecondary} />
+              <Text style={styles.emptySectionText}>No tournaments yet</Text>
+              <TouchableOpacity style={styles.emptySectionButton} onPress={handleCreateTournament}>
+                <Text style={styles.emptySectionButtonText}>Create Your First Tournament</Text>
+              </TouchableOpacity>
+            </View>
+          )}
         </View>
 
         {/* Nearby Courts */}
@@ -275,10 +339,11 @@ const createStyles = (theme: any) => StyleSheet.create({
   },
   quickActions: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: theme.spacing.md,
   },
   actionButton: {
-    flex: 1,
+    width: '48%',
     borderRadius: theme.borderRadius.md,
     overflow: 'hidden',
     ...theme.shadows?.md,
@@ -335,6 +400,69 @@ const createStyles = (theme: any) => StyleSheet.create({
   gameDetailText: {
     fontSize: 14,
     color: theme.colors.textSecondary,
+  },
+  tournamentCard: {
+    backgroundColor: theme.colors.surface,
+    borderRadius: theme.borderRadius.lg,
+    padding: theme.spacing.md,
+    marginRight: theme.spacing.md,
+    width: 280,
+    ...theme.shadows?.sm,
+  },
+  tournamentCardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: theme.spacing.sm,
+  },
+  tournamentTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: theme.colors.text,
+    flex: 1,
+  },
+  tournamentStatus: {
+    paddingHorizontal: theme.spacing.sm,
+    paddingVertical: theme.spacing.xs,
+    borderRadius: theme.borderRadius.sm,
+  },
+  tournamentStatusText: {
+    color: 'white',
+    fontSize: 12,
+    fontWeight: '500',
+    textTransform: 'uppercase',
+  },
+  tournamentDetails: {
+    gap: theme.spacing.xs,
+  },
+  tournamentDetail: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing.xs,
+  },
+  tournamentDetailText: {
+    fontSize: 14,
+    color: theme.colors.textSecondary,
+  },
+  emptySection: {
+    alignItems: 'center',
+    paddingVertical: theme.spacing.xl,
+    gap: theme.spacing.md,
+  },
+  emptySectionText: {
+    fontSize: 16,
+    color: theme.colors.textSecondary,
+  },
+  emptySectionButton: {
+    backgroundColor: theme.colors.primary,
+    paddingHorizontal: theme.spacing.lg,
+    paddingVertical: theme.spacing.md,
+    borderRadius: theme.borderRadius.md,
+  },
+  emptySectionButtonText: {
+    color: 'white',
+    fontSize: 14,
+    fontWeight: '600',
   },
   courtCard: {
     backgroundColor: theme.colors.surface,

@@ -1,17 +1,82 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { MainTabParamList } from '../types';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { MainTabParamList, GamesStackParamList, TournamentsStackParamList } from '../types';
 import { Ionicons } from '@expo/vector-icons';
 import { useThemeStore } from '../stores/themeStore';
 
-// Import screens (we'll create these next)
+// Import screens
 import HomeScreen from '../screens/HomeScreen';
 import MapScreen from '../screens/MapScreen';
 import GamesScreen from '../screens/GamesScreen';
+import GameDetailsScreen from '../screens/GameDetailsScreen';
 import TournamentsScreen from '../screens/TournamentsScreen';
+import TournamentDetailsScreen from '../screens/TournamentDetailsScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
+const GamesStack = createNativeStackNavigator<GamesStackParamList>();
+const TournamentsStack = createNativeStackNavigator<TournamentsStackParamList>();
+
+// Games Stack Navigator
+const GamesStackNavigator: React.FC = () => {
+  const { theme } = useThemeStore();
+  
+  return (
+    <GamesStack.Navigator
+      screenOptions={{
+        headerStyle: {
+          backgroundColor: theme.colors.surface,
+        },
+        headerTintColor: theme.colors.text,
+        headerTitleStyle: {
+          fontWeight: '600',
+        },
+      }}
+    >
+      <GamesStack.Screen 
+        name="GamesList" 
+        component={GamesScreen}
+        options={{ title: 'Games' }}
+      />
+      <GamesStack.Screen 
+        name="GameDetails" 
+        component={GameDetailsScreen}
+        options={{ title: 'Game Details' }}
+      />
+    </GamesStack.Navigator>
+  );
+};
+
+// Tournaments Stack Navigator
+const TournamentsStackNavigator: React.FC = () => {
+  const { theme } = useThemeStore();
+  
+  return (
+    <TournamentsStack.Navigator
+      screenOptions={{
+        headerStyle: {
+          backgroundColor: theme.colors.surface,
+        },
+        headerTintColor: theme.colors.text,
+        headerTitleStyle: {
+          fontWeight: '600',
+        },
+      }}
+    >
+      <TournamentsStack.Screen 
+        name="TournamentsList" 
+        component={TournamentsScreen}
+        options={{ title: 'Tournaments' }}
+      />
+      <TournamentsStack.Screen 
+        name="TournamentDetails" 
+        component={TournamentDetailsScreen}
+        options={{ title: 'Tournament Details' }}
+      />
+    </TournamentsStack.Navigator>
+  );
+};
 
 const MainTabNavigator: React.FC = () => {
   const { theme } = useThemeStore();
@@ -53,13 +118,7 @@ const MainTabNavigator: React.FC = () => {
           paddingTop: 8,
           height: 88,
         },
-        headerStyle: {
-          backgroundColor: theme.colors.surface,
-        },
-        headerTintColor: theme.colors.text,
-        headerTitleStyle: {
-          fontWeight: '600',
-        },
+        headerShown: false, // Hide headers since stack navigators handle them
       })}
     >
       <Tab.Screen 
@@ -74,12 +133,12 @@ const MainTabNavigator: React.FC = () => {
       />
       <Tab.Screen 
         name="Games" 
-        component={GamesScreen}
+        component={GamesStackNavigator}
         options={{ title: 'Games' }}
       />
       <Tab.Screen 
         name="Tournaments" 
-        component={TournamentsScreen}
+        component={TournamentsStackNavigator}
         options={{ title: 'Tournaments' }}
       />
       <Tab.Screen 
