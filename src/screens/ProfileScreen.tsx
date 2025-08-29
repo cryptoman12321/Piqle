@@ -101,44 +101,65 @@ const ProfileScreen: React.FC = () => {
   };
 
   const pickImage = async () => {
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 0.8,
-    });
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.8,
+        base64: false,
+      });
 
-    if (!result.canceled && result.assets[0]) {
-      setProfileData(prev => ({ ...prev, photo: result.assets[0].uri }));
+      if (!result.canceled && result.assets[0]) {
+        setProfileData(prev => ({ ...prev, photo: result.assets[0].uri }));
+      }
+    } catch (error) {
+      Alert.alert('Error', 'Failed to pick image. Please try again.');
     }
   };
 
   const takePhoto = async () => {
-    const { status } = await ImagePicker.requestCameraPermissionsAsync();
-    if (status !== 'granted') {
-      Alert.alert('Permission needed', 'Camera permission is required to take photos');
-      return;
-    }
+    try {
+      const { status } = await ImagePicker.requestCameraPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission needed', 'Camera permission is required to take photos');
+        return;
+      }
 
-    const result = await ImagePicker.launchCameraAsync({
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 0.8,
-    });
+      const result = await ImagePicker.launchCameraAsync({
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.8,
+        base64: false,
+      });
 
-    if (!result.canceled && result.assets[0]) {
-      setProfileData(prev => ({ ...prev, photo: result.assets[0].uri }));
+      if (!result.canceled && result.assets[0]) {
+        setProfileData(prev => ({ ...prev, photo: result.assets[0].uri }));
+      }
+    } catch (error) {
+      Alert.alert('Error', 'Failed to take photo. Please try again.');
     }
   };
 
   const showImagePickerOptions = () => {
     Alert.alert(
       'Profile Picture',
-      'Choose an option',
+      'Choose how you want to update your profile photo',
       [
-        { text: 'Take Photo', onPress: takePhoto },
-        { text: 'Choose from Library', onPress: pickImage },
-        { text: 'Cancel', style: 'cancel' },
+        { 
+          text: '📷 Take Photo', 
+          onPress: takePhoto,
+          style: 'default'
+        },
+        { 
+          text: '🖼️ Choose from Library', 
+          onPress: pickImage,
+          style: 'default'
+        },
+        { 
+          text: '❌ Cancel', 
+          style: 'cancel' 
+        },
       ]
     );
   };
@@ -199,6 +220,7 @@ const ProfileScreen: React.FC = () => {
             style={styles.photoContainer}
             onPress={isEditing ? showImagePickerOptions : undefined}
             disabled={!isEditing}
+            activeOpacity={isEditing ? 0.7 : 1}
           >
             {profileData.photo ? (
               <Image source={{ uri: profileData.photo }} style={styles.profilePhoto} />
@@ -215,11 +237,47 @@ const ProfileScreen: React.FC = () => {
           </TouchableOpacity>
           
           {isEditing && (
+            <View style={styles.photoActions}>
+              <TouchableOpacity 
+                style={styles.photoActionButton}
+                onPress={showImagePickerOptions}
+              >
+                <Ionicons name="camera" size={16} color={theme.colors.primary} />
+                <Text style={styles.photoActionText}>Change Photo</Text>
+              </TouchableOpacity>
+              
+              {profileData.photo && (
+                <TouchableOpacity 
+                  style={[styles.photoActionButton, styles.removePhotoButton]}
+                  onPress={() => {
+                    Alert.alert(
+                      'Remove Photo',
+                      'Are you sure you want to remove your profile photo?',
+                      [
+                        { text: 'Cancel', style: 'cancel' },
+                        {
+                          text: 'Remove',
+                          style: 'destructive',
+                          onPress: () => setProfileData(prev => ({ ...prev, photo: '' })),
+                        },
+                      ]
+                    );
+                  }}
+                >
+                  <Ionicons name="trash" size={16} color={theme.colors.error} />
+                  <Text style={[styles.photoActionText, { color: theme.colors.error }]}>Remove</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+          )}
+          
+          {!isEditing && profileData.photo && (
             <TouchableOpacity 
-              style={styles.changePhotoButton}
-              onPress={showImagePickerOptions}
+              style={styles.editPhotoHint}
+              onPress={() => setIsEditing(true)}
             >
-              <Text style={styles.changePhotoText}>Change Photo</Text>
+              <Ionicons name="create-outline" size={16} color={theme.colors.textSecondary} />
+              <Text style={styles.editPhotoHintText}>Tap Edit Profile to change photo</Text>
             </TouchableOpacity>
           )}
         </View>
@@ -489,18 +547,44 @@ const createStyles = (theme: any) => StyleSheet.create({
     borderWidth: 3,
     borderColor: 'white',
   },
-  changePhotoButton: {
+  photoActions: {
+    flexDirection: 'row',
+    gap: theme.spacing.sm,
+    justifyContent: 'center',
+  },
+  photoActionButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingHorizontal: theme.spacing.md,
     paddingVertical: theme.spacing.sm,
     backgroundColor: theme.colors.surface,
     borderRadius: 20,
     borderWidth: 1,
     borderColor: theme.colors.border,
+    gap: 6,
   },
-  changePhotoText: {
+  photoActionText: {
     color: theme.colors.primary,
     fontSize: 14,
     fontWeight: '500',
+  },
+  removePhotoButton: {
+    borderColor: theme.colors.error,
+  },
+  editPhotoHint: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: theme.spacing.sm,
+    backgroundColor: theme.colors.background,
+    borderRadius: 20,
+    gap: 6,
+    marginTop: theme.spacing.sm,
+  },
+  editPhotoHintText: {
+    color: theme.colors.textSecondary,
+    fontSize: 12,
+    fontStyle: 'italic',
   },
   form: {
     paddingHorizontal: theme.spacing.lg,

@@ -85,7 +85,10 @@ const HomeScreen: React.FC = () => {
             <Text style={styles.greeting}>Good morning!</Text>
             <Text style={styles.userName}>{user?.firstName || 'Player'}</Text>
           </View>
-          <TouchableOpacity style={styles.profileButton}>
+          <TouchableOpacity 
+            style={styles.profileButton}
+            onPress={() => navigation.navigate('Profile' as any)}
+          >
             <Ionicons name="person-circle" size={40} color={theme.colors.primary} />
           </TouchableOpacity>
         </View>
