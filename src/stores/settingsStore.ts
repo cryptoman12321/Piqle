@@ -1,7 +1,4 @@
 import { create } from 'zustand';
-import { persist, createJSONStorage } from 'zustand/middleware';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Platform } from 'react-native';
 
 export interface NotificationSettings {
   gameInvites: boolean;
@@ -162,154 +159,222 @@ const defaultAccessibilitySettings: AccessibilitySettings = {
   hapticFeedback: true,
 };
 
-export const useSettingsStore = create<SettingsStore>()(
-  persist(
-    (set, get) => ({
-      notifications: defaultNotificationSettings,
-      privacy: defaultPrivacySettings,
-      gamePreferences: defaultGamePreferences,
-      app: defaultAppSettings,
-      accessibility: defaultAccessibilitySettings,
-      isLoading: false,
-      error: null,
+// Web-compatible storage using localStorage
+const getStorage = () => {
+  if (typeof window !== 'undefined' && window.localStorage) {
+    return {
+      getItem: (key: string) => window.localStorage.getItem(key),
+      setItem: (key: string, value: string) => window.localStorage.setItem(key, value),
+      removeItem: (key: string) => window.localStorage.removeItem(key),
+    };
+  }
+  return {
+    getItem: () => null,
+    setItem: () => {},
+    removeItem: () => {},
+  };
+};
 
-      updateNotificationSettings: (updates) => {
-        set((state) => ({
-          notifications: { ...state.notifications, ...updates },
-        }));
-      },
+// Load settings from storage
+const loadSettingsFromStorage = () => {
+  try {
+    const storage = getStorage();
+    const stored = storage.getItem('piqle-settings');
+    if (stored) {
+      return JSON.parse(stored);
+    }
+  } catch (error) {
+    console.warn('Failed to load settings from storage:', error);
+  }
+  return null;
+};
 
-      toggleNotification: (key) => {
-        set((state) => ({
+// Save settings to storage
+const saveSettingsToStorage = (settings: any) => {
+  try {
+    const storage = getStorage();
+    storage.setItem('piqle-settings', JSON.stringify(settings));
+  } catch (error) {
+    console.warn('Failed to save settings to storage:', error);
+  }
+};
+
+export const useSettingsStore = create<SettingsStore>((set, get) => {
+  // Initialize with stored settings or defaults
+  const storedSettings = loadSettingsFromStorage();
+  const initialState = {
+    notifications: storedSettings?.notifications || defaultNotificationSettings,
+    privacy: storedSettings?.privacy || defaultPrivacySettings,
+    gamePreferences: storedSettings?.gamePreferences || defaultGamePreferences,
+    app: storedSettings?.app || defaultAppSettings,
+    accessibility: storedSettings?.accessibility || defaultAccessibilitySettings,
+    isLoading: false,
+    error: null,
+  };
+
+  return {
+    ...initialState,
+
+    updateNotificationSettings: (updates) => {
+      set((state) => {
+        const newState = { ...state, notifications: { ...state.notifications, ...updates } };
+        saveSettingsToStorage(newState);
+        return newState;
+      });
+    },
+
+    toggleNotification: (key) => {
+      set((state) => {
+        const newState = {
+          ...state,
           notifications: {
             ...state.notifications,
             [key]: !state.notifications[key],
           },
-        }));
-      },
-
-      updatePrivacySettings: (updates) => {
-        set((state) => ({
-          privacy: { ...state.privacy, ...updates },
-        }));
-      },
-
-      updateProfileVisibility: (visibility) => {
-        set((state) => ({
-          privacy: { ...state.privacy, profileVisibility: visibility },
-        }));
-      },
-
-      updateGamePreferences: (updates) => {
-        set((state) => ({
-          gamePreferences: { ...state.gamePreferences, ...updates },
-        }));
-      },
-
-      updatePreferredFormat: (format) => {
-        set((state) => ({
-          gamePreferences: { ...state.gamePreferences, preferredGameFormat: format },
-        }));
-      },
-
-      updatePreferredSkillLevel: (level) => {
-        set((state) => ({
-          gamePreferences: { ...state.gamePreferences, preferredSkillLevel: level },
-        }));
-      },
-
-      updateAppSettings: (updates) => {
-        set((state) => ({
-          app: { ...state.app, ...updates },
-        }));
-      },
-
-      updateTheme: (theme) => {
-        set((state) => ({
-          app: { ...state.app, theme },
-        }));
-      },
-
-      updateLanguage: (language) => {
-        set((state) => ({
-          app: { ...state.app, language },
-        }));
-      },
-
-      updateAccessibilitySettings: (updates) => {
-        set((state) => ({
-          accessibility: { ...state.accessibility, ...updates },
-        }));
-      },
-
-      updateFontSize: (size) => {
-        set((state) => ({
-          accessibility: { ...state.accessibility, fontSize: size },
-        }));
-      },
-
-      resetToDefaults: () => {
-        set({
-          notifications: defaultNotificationSettings,
-          privacy: defaultPrivacySettings,
-          gamePreferences: defaultGamePreferences,
-          app: defaultAppSettings,
-          accessibility: defaultAccessibilitySettings,
-        });
-      },
-
-      exportSettings: async () => {
-        const { notifications, privacy, gamePreferences, app, accessibility } = get();
-        const settingsData = {
-          notifications,
-          privacy,
-          gamePreferences,
-          app,
-          accessibility,
-          exportedAt: new Date().toISOString(),
-          version: '1.0.0',
         };
-        return JSON.stringify(settingsData, null, 2);
-      },
+        saveSettingsToStorage(newState);
+        return newState;
+      });
+    },
 
-      importSettings: async (settingsJson: string) => {
-        try {
-          const settingsData = JSON.parse(settingsJson);
-          
-          // Validate the imported data structure
-          if (!settingsData.notifications || !settingsData.privacy || 
-              !settingsData.gamePreferences || !settingsData.app || !settingsData.accessibility) {
-            throw new Error('Invalid settings format');
-          }
+    updatePrivacySettings: (updates) => {
+      set((state) => {
+        const newState = { ...state, privacy: { ...state.privacy, ...updates } };
+        saveSettingsToStorage(newState);
+        return newState;
+      });
+    },
 
-          set({
-            notifications: { ...defaultNotificationSettings, ...settingsData.notifications },
-            privacy: { ...defaultPrivacySettings, ...settingsData.privacy },
-            gamePreferences: { ...defaultGamePreferences, ...settingsData.gamePreferences },
-            app: { ...defaultAppSettings, ...settingsData.app },
-            accessibility: { ...defaultAccessibilitySettings, ...settingsData.accessibility },
-          });
+    updateProfileVisibility: (visibility) => {
+      set((state) => {
+        const newState = { ...state, privacy: { ...state.privacy, profileVisibility: visibility } };
+        saveSettingsToStorage(newState);
+        return newState;
+      });
+    },
 
-          return true;
-        } catch (error) {
-          set({ error: 'Failed to import settings: Invalid format' });
-          return false;
+    updateGamePreferences: (updates) => {
+      set((state) => {
+        const newState = { ...state, gamePreferences: { ...state.gamePreferences, ...updates } };
+        saveSettingsToStorage(newState);
+        return newState;
+      });
+    },
+
+    updatePreferredFormat: (format) => {
+      set((state) => {
+        const newState = { ...state, gamePreferences: { ...state.gamePreferences, preferredGameFormat: format } };
+        saveSettingsToStorage(newState);
+        return newState;
+      });
+    },
+
+    updatePreferredSkillLevel: (level) => {
+      set((state) => {
+        const newState = { ...state, gamePreferences: { ...state.gamePreferences, preferredSkillLevel: level } };
+        saveSettingsToStorage(newState);
+        return newState;
+      });
+    },
+
+    updateAppSettings: (updates) => {
+      set((state) => {
+        const newState = { ...state, app: { ...state.app, ...updates } };
+        saveSettingsToStorage(newState);
+        return newState;
+      });
+    },
+
+    updateTheme: (theme) => {
+      set((state) => {
+        const newState = { ...state, app: { ...state.app, theme } };
+        saveSettingsToStorage(newState);
+        return newState;
+      });
+    },
+
+    updateLanguage: (language) => {
+      set((state) => {
+        const newState = { ...state, app: { ...state.app, language } };
+        saveSettingsToStorage(newState);
+        return newState;
+      });
+    },
+
+    updateAccessibilitySettings: (updates) => {
+      set((state) => {
+        const newState = { ...state, accessibility: { ...state.accessibility, ...updates } };
+        saveSettingsToStorage(newState);
+        return newState;
+      });
+    },
+
+    updateFontSize: (size) => {
+      set((state) => {
+        const newState = { ...state, accessibility: { ...state.accessibility, fontSize: size } };
+        saveSettingsToStorage(newState);
+        return newState;
+      });
+    },
+
+    resetToDefaults: () => {
+      const newState = {
+        notifications: defaultNotificationSettings,
+        privacy: defaultPrivacySettings,
+        gamePreferences: defaultGamePreferences,
+        app: defaultAppSettings,
+        accessibility: defaultAccessibilitySettings,
+        isLoading: false,
+        error: null,
+      };
+      saveSettingsToStorage(newState);
+      set(newState);
+    },
+
+    exportSettings: async () => {
+      const { notifications, privacy, gamePreferences, app, accessibility } = get();
+      const settingsData = {
+        notifications,
+        privacy,
+        gamePreferences,
+        app,
+        accessibility,
+        exportedAt: new Date().toISOString(),
+        version: '1.0.0',
+      };
+      return JSON.stringify(settingsData, null, 2);
+    },
+
+    importSettings: async (settingsJson: string) => {
+      try {
+        const settingsData = JSON.parse(settingsJson);
+        
+        // Validate the imported data structure
+        if (!settingsData.notifications || !settingsData.privacy || 
+            !settingsData.gamePreferences || !settingsData.app || !settingsData.accessibility) {
+          throw new Error('Invalid settings format');
         }
-      },
 
-      setLoading: (loading) => set({ isLoading: loading }),
-      setError: (error) => set({ error }),
-    }),
-    {
-      name: 'piqle-settings',
-      storage: Platform.OS === 'web' ? undefined : createJSONStorage(() => AsyncStorage),
-      partialize: (state) => ({
-        notifications: state.notifications,
-        privacy: state.privacy,
-        gamePreferences: state.gamePreferences,
-        app: state.app,
-        accessibility: state.accessibility,
-      }),
-    }
-  )
-);
+        const newState = {
+          notifications: { ...defaultNotificationSettings, ...settingsData.notifications },
+          privacy: { ...defaultPrivacySettings, ...settingsData.privacy },
+          gamePreferences: { ...defaultGamePreferences, ...settingsData.gamePreferences },
+          app: { ...defaultAppSettings, ...settingsData.app },
+          accessibility: { ...defaultAccessibilitySettings, ...settingsData.accessibility },
+          isLoading: false,
+          error: null,
+        };
+
+        saveSettingsToStorage(newState);
+        set(newState);
+        return true;
+      } catch (error) {
+        set({ error: 'Failed to import settings: Invalid format' });
+        return false;
+      }
+    },
+
+    setLoading: (loading) => set({ isLoading: loading }),
+    setError: (error) => set({ error }),
+  };
+});
