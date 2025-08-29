@@ -15,6 +15,7 @@ import TournamentDetailsScreen from '../screens/TournamentDetailsScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import FriendsScreen from '../screens/FriendsScreen';
 import AddFriendsScreen from '../screens/AddFriendsScreen';
+import AchievementsScreen from '../screens/AchievementsScreen';
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
 const GamesStack = createNativeStackNavigator<GamesStackParamList>();
@@ -136,6 +137,9 @@ const MainTabNavigator: React.FC = () => {
             case 'Friends':
               iconName = focused ? 'people' : 'people-outline';
               break;
+            case 'Achievements':
+              iconName = focused ? 'trophy' : 'trophy-outline';
+              break;
             case 'Profile':
               iconName = focused ? 'person' : 'person-outline';
               break;
@@ -181,6 +185,11 @@ const MainTabNavigator: React.FC = () => {
         name="Friends" 
         component={FriendsStackNavigator}
         options={{ title: 'Friends' }}
+      />
+      <Tab.Screen 
+        name="Achievements" 
+        component={AchievementsScreen}
+        options={{ title: 'Achievements' }}
       />
       <Tab.Screen 
         name="Profile" 
