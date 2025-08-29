@@ -16,6 +16,7 @@ import ProfileScreen from '../screens/ProfileScreen';
 import FriendsScreen from '../screens/FriendsScreen';
 import AddFriendsScreen from '../screens/AddFriendsScreen';
 import AchievementsScreen from '../screens/AchievementsScreen';
+import ChatListScreen from '../screens/ChatListScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
@@ -138,6 +139,9 @@ const MainTabNavigator: React.FC = () => {
             case 'Friends':
               iconName = focused ? 'people' : 'people-outline';
               break;
+            case 'Chat':
+              iconName = focused ? 'chatbubble' : 'chatbubble-outline';
+              break;
             case 'Achievements':
               iconName = focused ? 'trophy' : 'trophy-outline';
               break;
@@ -189,6 +193,11 @@ const MainTabNavigator: React.FC = () => {
         name="Friends" 
         component={FriendsStackNavigator}
         options={{ title: 'Friends' }}
+      />
+      <Tab.Screen 
+        name="Chat" 
+        component={ChatListScreen}
+        options={{ title: 'Chat' }}
       />
       <Tab.Screen 
         name="Achievements" 

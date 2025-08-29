@@ -273,6 +273,7 @@ export interface MainTabParamList extends ParamListBase {
   Games: undefined;
   Tournaments: undefined;
   Friends: undefined;
+  Chat: undefined;
   Achievements: undefined;
   Settings: undefined;
   Profile: undefined;
