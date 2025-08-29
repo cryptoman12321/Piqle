@@ -18,9 +18,9 @@ import { Game, GameFormat, SkillLevel, GameStatus } from '../types';
 
 const GameDetailsScreen: React.FC = () => {
   const { theme } = useThemeStore();
-  const { getGameById, leaveGame } = useGameStore();
+  const { getGameById, leaveGame, joinGame } = useGameStore();
   const { user } = useAuthStore();
-  const navigation = useNavigation();
+  const navigation = useNavigation<any>();
   const route = useRoute();
   
   const gameId = (route.params as any)?.gameId;
@@ -50,7 +50,8 @@ const GameDetailsScreen: React.FC = () => {
           style: 'destructive',
           onPress: () => {
             leaveGame(game.id, user.id);
-            navigation.goBack();
+            // Navigate back to Games list instead of just going back
+            navigation.navigate('Games' as any);
           },
         },
       ]
@@ -297,8 +298,12 @@ const GameDetailsScreen: React.FC = () => {
               <TouchableOpacity 
                 style={[styles.actionButton, styles.joinButton]}
                 onPress={() => {
-                  // This would typically join the game, but for demo purposes we'll just go back
-                  navigation.goBack();
+                  if (game && user?.id) {
+                    // Actually join the game using the store
+                    joinGame(game.id, user.id);
+                    // Navigate back to Games list to show updated state
+                    navigation.navigate('Games' as any);
+                  }
                 }}
               >
                 <Ionicons name="enter-outline" size={20} color="white" />
