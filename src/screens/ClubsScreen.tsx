@@ -138,10 +138,6 @@ const ClubsScreen: React.FC = () => {
     return `${current}/${max} (${percentage}%)`;
   };
 
-  const getFilteredClubs = () => {
-    return getFilteredClubs();
-  };
-
   const filteredClubs = getFilteredClubs();
 
   const categories = ['RECREATIONAL', 'COMPETITIVE', 'MIXED', 'ELITE', 'BEGINNER_FRIENDLY'];

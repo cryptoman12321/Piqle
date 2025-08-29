@@ -16,11 +16,13 @@ import { LinearGradient } from 'expo-linear-gradient';
 import * as ImagePicker from 'expo-image-picker';
 import { useThemeStore } from '../stores/themeStore';
 import { useAuthStore } from '../stores/authStore';
+import { useAchievementsStore } from '../stores/achievementsStore';
 import { SkillLevel, Hand } from '../types';
 
 const ProfileScreen: React.FC = () => {
   const { theme } = useThemeStore();
   const { user, updateUser } = useAuthStore();
+  const { achievements, userStats } = useAchievementsStore();
   
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -181,6 +183,16 @@ const ProfileScreen: React.FC = () => {
       case Hand.RIGHT: return 'hand-right';
       case Hand.AMBIDEXTROUS: return 'hand-right';
       default: return 'hand-right';
+    }
+  };
+
+  const getAchievementColor = (rarity: string) => {
+    switch (rarity) {
+      case 'COMMON': return theme.colors.textSecondary;
+      case 'RARE': return theme.colors.info;
+      case 'EPIC': return theme.colors.primary;
+      case 'LEGENDARY': return theme.colors.secondary;
+      default: return theme.colors.textSecondary;
     }
   };
 
@@ -440,6 +452,67 @@ const ProfileScreen: React.FC = () => {
               <Text style={[styles.infoValue, { color: user.isOnline ? theme.colors.success : theme.colors.textSecondary }]}>
                 {user.isOnline ? 'Online' : 'Offline'}
               </Text>
+            </View>
+          </View>
+
+          {/* Achievements Section */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Achievements & Stats</Text>
+            
+            {/* Stats Overview */}
+            <View style={styles.statsOverview}>
+              <View style={styles.statCard}>
+                <Text style={styles.statNumber}>{userStats.totalPoints}</Text>
+                <Text style={styles.statLabel}>Total Points</Text>
+              </View>
+              <View style={styles.statCard}>
+                <Text style={styles.statNumber}>{achievements.filter(a => a.isUnlocked).length}</Text>
+                <Text style={styles.statLabel}>Achievements</Text>
+              </View>
+              <View style={styles.statCard}>
+                <Text style={styles.statNumber}>{userStats.gamesPlayed}</Text>
+                <Text style={styles.statLabel}>Games Played</Text>
+              </View>
+              <View style={styles.statCard}>
+                <Text style={styles.statNumber}>{userStats.winRate}%</Text>
+                <Text style={styles.statLabel}>Win Rate</Text>
+              </View>
+            </View>
+
+            {/* Recent Achievements */}
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Recent Achievements</Text>
+              <View style={styles.achievementsList}>
+                {achievements
+                  .filter(a => a.isUnlocked)
+                  .sort((a, b) => (b.unlockedAt?.getTime() || 0) - (a.unlockedAt?.getTime() || 0))
+                  .slice(0, 3)
+                  .map((achievement) => (
+                    <View key={achievement.id} style={styles.achievementItem}>
+                      <View style={[styles.achievementIcon, { backgroundColor: getAchievementColor(achievement.rarity) }]}>
+                        <Ionicons name={achievement.icon as any} size={20} color="white" />
+                      </View>
+                      <View style={styles.achievementInfo}>
+                        <Text style={styles.achievementName}>{achievement.name}</Text>
+                        <Text style={styles.achievementDescription}>{achievement.description}</Text>
+                        <Text style={styles.achievementDate}>
+                          {achievement.unlockedAt?.toLocaleDateString()}
+                        </Text>
+                      </View>
+                      <View style={styles.achievementPoints}>
+                        <Text style={styles.pointsText}>+{achievement.points}</Text>
+                      </View>
+                    </View>
+                  ))}
+              </View>
+              
+              {achievements.filter(a => a.isUnlocked).length === 0 && (
+                <View style={styles.noAchievements}>
+                  <Ionicons name="trophy-outline" size={48} color={theme.colors.textSecondary} />
+                  <Text style={styles.noAchievementsText}>No achievements yet</Text>
+                  <Text style={styles.noAchievementsSubtext}>Start playing to unlock achievements!</Text>
+                </View>
+              )}
             </View>
           </View>
         </View>
@@ -743,6 +816,94 @@ const createStyles = (theme: any) => StyleSheet.create({
     color: theme.colors.textSecondary,
     textAlign: 'center',
     lineHeight: 24,
+  },
+  // Achievement styles
+  statsOverview: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: theme.spacing.lg,
+  },
+  statCard: {
+    flex: 1,
+    alignItems: 'center',
+    padding: theme.spacing.md,
+    backgroundColor: theme.colors.surface,
+    borderRadius: 12,
+    marginHorizontal: 4,
+  },
+  statNumber: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: theme.colors.primary,
+    marginBottom: 4,
+  },
+  statLabel: {
+    fontSize: 12,
+    color: theme.colors.textSecondary,
+    textAlign: 'center',
+  },
+  achievementsList: {
+    gap: theme.spacing.sm,
+  },
+  achievementItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: theme.spacing.md,
+    backgroundColor: theme.colors.surface,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+  },
+  achievementIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: theme.spacing.md,
+  },
+  achievementInfo: {
+    flex: 1,
+  },
+  achievementName: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: theme.colors.text,
+    marginBottom: 2,
+  },
+  achievementDescription: {
+    fontSize: 14,
+    color: theme.colors.textSecondary,
+    marginBottom: 4,
+  },
+  achievementDate: {
+    fontSize: 12,
+    color: theme.colors.textSecondary,
+    fontStyle: 'italic',
+  },
+  achievementPoints: {
+    alignItems: 'center',
+  },
+  pointsText: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: theme.colors.success,
+  },
+  noAchievements: {
+    alignItems: 'center',
+    padding: theme.spacing.xl,
+  },
+  noAchievementsText: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: theme.colors.text,
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  noAchievementsSubtext: {
+    fontSize: 14,
+    color: theme.colors.textSecondary,
+    textAlign: 'center',
   },
 });
 

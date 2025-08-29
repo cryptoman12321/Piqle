@@ -265,16 +265,17 @@ export interface RootStackParamList extends ParamListBase {
   CreateGame: undefined;
   CreateTournament: undefined;
   CreateClub: undefined;
+  TournamentsList: undefined;
 }
 
 export interface MainTabParamList extends ParamListBase {
   Home: undefined;
   Map: undefined;
-  Games: undefined;
-  Tournaments: undefined;
+
   Friends: undefined;
   Chat: undefined;
-  Achievements: undefined;
+  Clubs: undefined;
+
   Settings: undefined;
   Profile: undefined;
 }
@@ -282,11 +283,13 @@ export interface MainTabParamList extends ParamListBase {
 export interface GamesStackParamList extends ParamListBase {
   GamesList: undefined;
   GameDetails: { gameId: string };
+  CreateGame: undefined;
 }
 
 export interface TournamentsStackParamList extends ParamListBase {
   TournamentsList: undefined;
   TournamentDetails: { tournamentId: string };
+  CreateTournament: undefined;
 }
 
 export interface FriendsStackParamList extends ParamListBase {
@@ -298,4 +301,10 @@ export interface ChatStackParamList extends ParamListBase {
   ChatList: undefined;
   ChatRoom: { conversationId: string };
   NewConversation: undefined;
+}
+
+export interface ClubsStackParamList extends ParamListBase {
+  ClubsList: undefined;
+  ClubDetails: { clubId: string };
+  CreateClub: undefined;
 }

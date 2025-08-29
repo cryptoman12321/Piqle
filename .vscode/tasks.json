@@ -1,0 +1,17 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Expo: start (clean)",
+      "type": "shell",
+      "command": "npx --yes expo@latest start --clear --host localhost",
+      "options": { "cwd": "${workspaceFolder}" }
+    },
+    {
+      "label": "Expo: web (clean)",
+      "type": "shell",
+      "command": "npx --yes expo@latest start --web --clear --host localhost",
+      "options": { "cwd": "${workspaceFolder}" }
+    }
+  ]
+}

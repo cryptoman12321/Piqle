@@ -1,40 +1,48 @@
 {
   "name": "piqlereactnative",
   "version": "1.0.0",
-  "main": "index.ts",
+  "main": "expo/AppEntry.js",
+  "browser": "index.web.js",
   "scripts": {
-    "start": "expo start",
+    "start": "expo start --host localhost",
+    "start:clean": "expo start --clear --host localhost",
     "android": "expo run:android",
     "ios": "expo run:ios",
-    "web": "expo start --web"
+    "web": "expo start --web --host localhost",
+    "web:clean": "expo start --web --clear --host localhost"
   },
   "dependencies": {
     "@expo/metro-runtime": "~5.0.4",
     "@react-native-async-storage/async-storage": "^2.2.0",
+    "@react-native-community/geolocation": "^3.4.0",
     "@react-navigation/bottom-tabs": "^7.4.6",
     "@react-navigation/native": "^7.1.17",
     "@react-navigation/native-stack": "^7.3.25",
     "@react-navigation/stack": "^7.4.7",
     "@tanstack/react-query": "^5.85.5",
+    "buffer": "^6.0.3",
+    "crypto-browserify": "^3.12.1",
     "expo": "~53.0.22",
     "expo-constants": "^17.1.7",
-    "expo-dev-client": "~5.2.4",
     "expo-font": "^13.3.2",
     "expo-image-picker": "^16.1.4",
     "expo-linear-gradient": "^14.1.5",
-    "expo-location": "^18.1.6",
+
     "expo-notifications": "^0.31.4",
     "expo-status-bar": "~2.2.3",
     "react": "19.0.0",
-    "react-dom": "19.0.0",
+    "react-dom": "^19.0.0",
     "react-native": "0.79.5",
     "react-native-gesture-handler": "~2.24.0",
+
     "react-native-paper": "^5.14.5",
     "react-native-reanimated": "~3.17.4",
     "react-native-safe-area-context": "5.4.0",
     "react-native-screens": "~4.11.1",
     "react-native-svg": "15.11.2",
     "react-native-web": "^0.20.0",
+
+    "stream-browserify": "^3.0.0",
     "zustand": "^5.0.8"
   },
   "devDependencies": {

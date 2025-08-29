@@ -6,6 +6,7 @@ import {
   ScrollView,
   TouchableOpacity,
   Image,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -58,16 +59,17 @@ const HomeScreen: React.FC = () => {
     navigation.navigate('CreateGame' as never);
   };
 
-  const handleCreateTournament = () => {
-    navigation.navigate('CreateTournament' as never);
+  const handleViewTournaments = () => {
+    navigation.navigate('TournamentsList' as never);
   };
 
   const handleFindGame = () => {
-    navigation.navigate('Games' as never);
+    // Temporarily disabled - Games tab removed
+    Alert.alert('Coming Soon', 'Games functionality will be available soon!');
   };
 
   const handleFindTournament = () => {
-    navigation.navigate('Tournaments' as never);
+    navigation.navigate('TournamentsList' as never);
   };
 
   const handleFindCourt = () => {
@@ -107,13 +109,13 @@ const HomeScreen: React.FC = () => {
               </LinearGradient>
             </TouchableOpacity>
             
-            <TouchableOpacity style={styles.actionButton} onPress={handleCreateTournament}>
+            <TouchableOpacity style={styles.actionButton} onPress={handleViewTournaments}>
               <LinearGradient
                 colors={[theme.colors.warning, '#D97706']}
                 style={styles.actionGradient}
               >
                 <Ionicons name="trophy" size={24} color="white" />
-                <Text style={styles.actionText}>Create Tournament</Text>
+                <Text style={styles.actionText}>Tournaments</Text>
               </LinearGradient>
             </TouchableOpacity>
             
@@ -153,7 +155,7 @@ const HomeScreen: React.FC = () => {
                 <TouchableOpacity 
                   key={game.id} 
                   style={styles.gameCard}
-                  onPress={() => navigation.navigate('GameDetails' as never, { gameId: game.id } as never)}
+                  onPress={() => Alert.alert('Game Details', `Details for ${game.title} coming soon!`)}
                 >
                   <View style={styles.gameCardHeader}>
                     <Text style={styles.gameTitle}>{game.title}</Text>
@@ -207,7 +209,7 @@ const HomeScreen: React.FC = () => {
                 <TouchableOpacity 
                   key={tournament.id} 
                   style={styles.tournamentCard}
-                  onPress={() => navigation.navigate('TournamentDetails' as never, { tournamentId: tournament.id } as never)}
+                  onPress={() => Alert.alert('Tournament Details', `Details for ${tournament.name} coming soon!`)}
                 >
                   <View style={styles.tournamentCardHeader}>
                     <Text style={styles.tournamentTitle}>{tournament.name}</Text>
@@ -247,8 +249,8 @@ const HomeScreen: React.FC = () => {
             <View style={styles.emptySection}>
               <Ionicons name="trophy-outline" size={48} color={theme.colors.textSecondary} />
               <Text style={styles.emptySectionText}>No tournaments yet</Text>
-              <TouchableOpacity style={styles.emptySectionButton} onPress={handleCreateTournament}>
-                <Text style={styles.emptySectionButtonText}>Create Your First Tournament</Text>
+              <TouchableOpacity style={styles.emptySectionButton} onPress={handleViewTournaments}>
+                <Text style={styles.emptySectionButtonText}>Browse Tournaments</Text>
               </TouchableOpacity>
             </View>
           )}

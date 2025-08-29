@@ -13,6 +13,7 @@ import ProfileScreen from '../screens/ProfileScreen';
 import CreateGameScreen from '../screens/CreateGameScreen';
 import CreateTournamentScreen from '../screens/CreateTournamentScreen';
 import CreateClubScreen from '../screens/CreateClubScreen';
+import TournamentsListScreen from '../screens/TournamentsListScreen';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -63,6 +64,11 @@ const RootNavigator: React.FC = () => {
               name="CreateClub" 
               component={CreateClubScreen}
               options={{ headerShown: true, title: 'Create Club' }}
+            />
+            <Stack.Screen 
+              name="TournamentsList" 
+              component={TournamentsListScreen}
+              options={{ headerShown: true, title: 'Tournaments' }}
             />
           </>
         )}
