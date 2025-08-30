@@ -79,6 +79,12 @@ const CreateTournamentScreen: React.FC = () => {
       icon: '🔄'
     },
     {
+      format: TournamentFormat.MIXED_DOUBLES_ROUND_ROBIN,
+      name: 'Round Robin Mixed Doubles League',
+      description: 'Mixed gender doubles teams compete in round robin format',
+      icon: '👫'
+    },
+    {
       format: TournamentFormat.RANDOM_TEAMS_ROUND_ROBIN,
       name: 'Random Teams Round Robin',
       description: 'Random team assignments with round robin play',
