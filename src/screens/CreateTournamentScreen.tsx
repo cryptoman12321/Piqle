@@ -134,15 +134,86 @@ const CreateTournamentScreen: React.FC = () => {
     }
   ];
 
+  // Mixed Doubles Round Robin League Calculations
+  const getMixedDoublesCalculations = (teamCount: number) => {
+    if (teamCount < 8) {
+      return {
+        isValid: false,
+        message: 'Mixed Doubles League requires at least 8 teams (16 players)',
+        males: 0,
+        females: 0,
+        totalPlayers: 0,
+        totalMatches: 0,
+        matchesPerTeam: 0,
+        hasByes: false
+      };
+    }
+
+    const males = teamCount;
+    const females = teamCount;
+    const totalPlayers = 2 * teamCount;
+    const totalMatches = (teamCount * (teamCount - 1)) / 2;
+    const matchesPerTeam = teamCount - 1;
+    const hasByes = teamCount % 2 === 1; // Odd number of teams means byes
+
+    return {
+      isValid: true,
+      message: `✅ ${teamCount} teams = ${males}♂ + ${females}♀ = ${totalPlayers} players`,
+      males,
+      females,
+      totalPlayers,
+      totalMatches,
+      matchesPerTeam,
+      hasByes
+    };
+  };
+
+  const getPoolCalculations = (teamCount: number, poolCount: number = 2) => {
+    if (teamCount < 8 || teamCount % poolCount !== 0) {
+      return null;
+    }
+
+    const teamsPerPool = teamCount / poolCount;
+    const poolMatches = (teamsPerPool * (teamsPerPool - 1)) / 2;
+    const totalPoolMatches = poolMatches * poolCount;
+
+    return {
+      teamsPerPool,
+      poolMatches,
+      totalPoolMatches,
+      message: `${poolCount} pools of ${teamsPerPool} teams each`
+    };
+  };
+
   const handleCreateTournament = async () => {
     if (!tournamentData.name || !tournamentData.location) {
       Alert.alert('Error', 'Please fill in the tournament name and location');
       return;
     }
 
-    if (tournamentData.maxParticipants < 4) {
-      Alert.alert('Error', 'Tournament must have at least 4 participants');
-      return;
+    // Special validation for Mixed Doubles Round Robin League
+    if (tournamentData.format === TournamentFormat.MIXED_DOUBLES_ROUND_ROBIN) {
+      const teamCount = Math.floor(tournamentData.maxParticipants / 2);
+      const calculations = getMixedDoublesCalculations(teamCount);
+      
+      if (!calculations.isValid) {
+        Alert.alert('Invalid Team Count', calculations.message);
+        return;
+      }
+      
+      if (tournamentData.maxParticipants !== calculations.totalPlayers) {
+        Alert.alert(
+          'Player Count Mismatch', 
+          `For ${teamCount} teams, you need exactly ${calculations.totalPlayers} players (${teamCount}♂ + ${teamCount}♀).\n\nCurrent: ${tournamentData.maxParticipants} players`
+        );
+        return;
+      }
+    } else {
+      // Standard validation for other formats
+      if (tournamentData.maxParticipants < 4) {
+        Alert.alert('Error', 'Tournament must have at least 4 participants');
+        return;
+      }
     }
 
     setIsLoading(true);
@@ -295,6 +366,54 @@ const CreateTournamentScreen: React.FC = () => {
                 </TouchableOpacity>
               ))}
             </ScrollView>
+            
+            {/* Mixed Doubles League Information */}
+            {tournamentData.format === TournamentFormat.MIXED_DOUBLES_ROUND_ROBIN && (
+              <View style={styles.mixedDoublesInfo}>
+                <View style={styles.infoHeader}>
+                  <Ionicons name="information-circle" size={20} color={theme.colors.info} />
+                  <Text style={styles.infoTitle}>Mixed Doubles League Formula</Text>
+                </View>
+                
+                <View style={styles.calculationGrid}>
+                  <View style={styles.calculationItem}>
+                    <Text style={styles.calculationLabel}>Teams</Text>
+                    <Text style={styles.calculationValue}>{Math.floor(tournamentData.maxParticipants / 2)}</Text>
+                  </View>
+                  <View style={styles.calculationItem}>
+                    <Text style={styles.calculationLabel}>Males</Text>
+                    <Text style={styles.calculationValue}>♂ {Math.floor(tournamentData.maxParticipants / 2)}</Text>
+                  </View>
+                  <View style={styles.calculationItem}>
+                    <Text style={styles.calculationLabel}>Females</Text>
+                    <Text style={styles.calculationValue}>♀ {Math.floor(tournamentData.maxParticipants / 2)}</Text>
+                  </View>
+                  <View style={styles.calculationItem}>
+                    <Text style={styles.calculationLabel}>Total Matches</Text>
+                    <Text style={styles.calculationValue}>
+                      {(() => {
+                        const teamCount = Math.floor(tournamentData.maxParticipants / 2);
+                        return teamCount >= 8 ? (teamCount * (teamCount - 1)) / 2 : 'N/A';
+                      })()}
+                    </Text>
+                  </View>
+                </View>
+                
+                <Text style={styles.infoText}>
+                  Each team = 1 male + 1 female. Minimum 8 teams (16 players) required.
+                </Text>
+                
+                {(() => {
+                  const teamCount = Math.floor(tournamentData.maxParticipants / 2);
+                  const calculations = getMixedDoublesCalculations(teamCount);
+                  return calculations.isValid ? (
+                    <Text style={styles.successText}>{calculations.message}</Text>
+                  ) : (
+                    <Text style={styles.errorText}>{calculations.message}</Text>
+                  );
+                })()}
+              </View>
+            )}
           </View>
 
           {/* Skill Level */}
@@ -329,7 +448,10 @@ const CreateTournamentScreen: React.FC = () => {
                 style={styles.participantCountButton}
                 onPress={() => setTournamentData({
                   ...tournamentData, 
-                  maxParticipants: Math.max(4, tournamentData.maxParticipants - 4)
+                  maxParticipants: Math.max(
+                    tournamentData.format === TournamentFormat.MIXED_DOUBLES_ROUND_ROBIN ? 16 : 4, 
+                    tournamentData.maxParticipants - (tournamentData.format === TournamentFormat.MIXED_DOUBLES_ROUND_ROBIN ? 2 : 4)
+                  )
                 })}
               >
                 <Ionicons name="remove" size={20} color={theme.colors.primary} />
@@ -339,14 +461,17 @@ const CreateTournamentScreen: React.FC = () => {
                 style={styles.participantCountButton}
                 onPress={() => setTournamentData({
                   ...tournamentData, 
-                  maxParticipants: tournamentData.maxParticipants + 4
+                  maxParticipants: tournamentData.maxParticipants + (tournamentData.format === TournamentFormat.MIXED_DOUBLES_ROUND_ROBIN ? 2 : 4)
                 })}
               >
                 <Ionicons name="add" size={20} color={theme.colors.primary} />
               </TouchableOpacity>
             </View>
             <Text style={styles.helperText}>
-              Must be divisible by 4 for doubles tournaments
+              {tournamentData.format === TournamentFormat.MIXED_DOUBLES_ROUND_ROBIN 
+                ? 'Must be even number ≥ 16 (8 teams minimum)'
+                : 'Must be divisible by 4 for doubles tournaments'
+              }
             </Text>
           </View>
 
@@ -631,6 +756,63 @@ const createStyles = (theme: any) => StyleSheet.create({
     color: theme.colors.textSecondary,
     marginTop: theme.spacing.xs,
     fontStyle: 'italic',
+  },
+  mixedDoublesInfo: {
+    backgroundColor: theme.colors.surface,
+    borderRadius: theme.borderRadius.md,
+    padding: theme.spacing.md,
+    marginTop: theme.spacing.md,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+  },
+  infoHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing.sm,
+    marginBottom: theme.spacing.md,
+  },
+  infoTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: theme.colors.text,
+  },
+  calculationGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: theme.spacing.md,
+    marginBottom: theme.spacing.md,
+  },
+  calculationItem: {
+    alignItems: 'center',
+    minWidth: 80,
+  },
+  calculationLabel: {
+    fontSize: 12,
+    color: theme.colors.textSecondary,
+    marginBottom: theme.spacing.xs,
+  },
+  calculationValue: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: theme.colors.primary,
+  },
+  infoText: {
+    fontSize: 14,
+    color: theme.colors.textSecondary,
+    marginBottom: theme.spacing.sm,
+    textAlign: 'center',
+  },
+  successText: {
+    fontSize: 14,
+    color: theme.colors.success,
+    fontWeight: '500',
+    textAlign: 'center',
+  },
+  errorText: {
+    fontSize: 14,
+    color: theme.colors.error,
+    fontWeight: '500',
+    textAlign: 'center',
   },
   dateDisplay: {
     fontSize: 16,
