@@ -44,6 +44,8 @@ export const useTournamentStore = create<TournamentStore>((set, get) => ({
     set((state) => ({
       tournaments: [newTournament, ...state.tournaments], // Add to beginning of list
     }));
+    
+    return newTournament; // Return the created tournament
   },
 
   updateTournament: (id, updates) => {

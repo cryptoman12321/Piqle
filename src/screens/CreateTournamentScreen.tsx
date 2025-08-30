@@ -248,7 +248,7 @@ const CreateTournamentScreen: React.FC = () => {
         createdBy: user?.id || 'currentUser',
       };
 
-      addTournament(newTournament);
+      const createdTournament = addTournament(newTournament);
       
       Alert.alert(
         'Tournament Created!', 
@@ -256,7 +256,7 @@ const CreateTournamentScreen: React.FC = () => {
         [
           {
             text: 'OK',
-            onPress: () => navigation.navigate('TournamentsList' as never)
+            onPress: () => navigation.navigate('TournamentDetails', { tournamentId: createdTournament.id })
           }
         ]
       );
