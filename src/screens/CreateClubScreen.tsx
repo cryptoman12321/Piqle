@@ -7,7 +7,6 @@ import {
   TouchableOpacity,
   TextInput,
   Alert,
-  Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -23,42 +22,28 @@ const CreateClubScreen: React.FC = () => {
   const { createClub } = useClubsStore();
   const navigation = useNavigation<any>();
   
-  const [step, setStep] = useState(1);
   const [clubData, setClubData] = useState({
     name: '',
     description: '',
-    category: 'MIXED' as const,
-    skillLevels: [] as string[],
+    category: 'PICKLEBALL' as const,
+    skillLevel: 'ALL_LEVELS' as const,
     membershipType: 'FREE' as const,
     membershipFee: '',
-    maxMembers: '',
-    rules: [''],
-    contactInfo: {
-      email: '',
-      phone: '',
-      website: '',
-    },
+    maxMembers: '50',
     location: {
-      name: '',
-      address: '',
       city: '',
       state: '',
-      country: '',
-      latitude: 0,
-      longitude: 0,
-      courtCount: '',
-      courtTypes: [] as string[],
-      amenities: [] as string[],
+      address: '',
     },
+    contactEmail: '',
+    contactPhone: '',
   });
 
   const styles = createStyles(theme);
 
-  const categories = ['RECREATIONAL', 'COMPETITIVE', 'MIXED', 'ELITE', 'BEGINNER_FRIENDLY'];
-  const skillLevelOptions = ['BEGINNER', 'INTERMEDIATE', 'ADVANCED', 'ELITE'];
-  const membershipTypes = ['FREE', 'PAID', 'INVITATION_ONLY', 'APPLICATION_REQUIRED'];
-  const courtTypeOptions = ['Outdoor', 'Indoor', 'Hard Court', 'Clay Court', 'Grass Court'];
-  const amenityOptions = ['Parking', 'Restrooms', 'Pro Shop', 'Lighting', 'Locker Rooms', 'Café', 'WiFi', 'First Aid'];
+  const categories = ['PICKLEBALL', 'TENNIS', 'MULTI_SPORT', 'SOCIAL', 'COMPETITIVE'];
+  const skillLevels = ['BEGINNER', 'INTERMEDIATE', 'ADVANCED', 'ALL_LEVELS'];
+  const membershipTypes = ['FREE', 'PAID', 'INVITATION_ONLY'];
 
   const updateClubData = (field: string, value: any) => {
     setClubData(prev => ({
@@ -67,7 +52,7 @@ const CreateClubScreen: React.FC = () => {
     }));
   };
 
-  const updateLocationData = (field: string, value: any) => {
+  const updateLocationData = (field: string, value: string) => {
     setClubData(prev => ({
       ...prev,
       location: {
@@ -77,93 +62,44 @@ const CreateClubScreen: React.FC = () => {
     }));
   };
 
-  const updateContactInfo = (field: string, value: string) => {
-    setClubData(prev => ({
-      ...prev,
-      contactInfo: {
-        ...prev.contactInfo,
-        [field]: value,
-      },
-    }));
-  };
-
-  const toggleArrayItem = (array: string[], item: string, field: string) => {
-    const newArray = array.includes(item)
-      ? array.filter(i => i !== item)
-      : [...array, item];
-    updateClubData(field, newArray);
-  };
-
-  const addRule = () => {
-    setClubData(prev => ({
-      ...prev,
-      rules: [...prev.rules, ''],
-    }));
-  };
-
-  const removeRule = (index: number) => {
-    setClubData(prev => ({
-      ...prev,
-      rules: prev.rules.filter((_, i) => i !== index),
-    }));
-  };
-
-  const updateRule = (index: number, value: string) => {
-    setClubData(prev => ({
-      ...prev,
-      rules: prev.rules.map((rule, i) => i === index ? value : rule),
-    }));
-  };
-
-  const validateStep = (currentStep: number): boolean => {
-    switch (currentStep) {
-      case 1:
-        return clubData.name.trim() !== '' && clubData.description.trim() !== '';
-      case 2:
-        return clubData.location.name.trim() !== '' && 
-               clubData.location.address.trim() !== '' && 
-               clubData.location.city.trim() !== '';
-      case 3:
-        return clubData.skillLevels.length > 0;
-      case 4:
-        return true; // Rules and contact info are optional
-      default:
-        return false;
-    }
-  };
-
-  const handleNext = () => {
-    if (validateStep(step)) {
-      if (step < 4) {
-        setStep(step + 1);
-      } else {
-        handleCreateClub();
-      }
-    } else {
-      Alert.alert('Validation Error', 'Please fill in all required fields before continuing.');
-    }
-  };
-
-  const handleBack = () => {
-    if (step > 1) {
-      setStep(step - 1);
-    } else {
-      navigation.goBack();
-    }
+  const validateForm = (): boolean => {
+    return (
+      clubData.name.trim() !== '' &&
+      clubData.description.trim() !== '' &&
+      clubData.location.city.trim() !== '' &&
+      clubData.location.state.trim() !== ''
+    );
   };
 
   const handleCreateClub = () => {
+    if (!validateForm()) {
+      Alert.alert('Validation Error', 'Please fill in all required fields (Name, Description, City, State).');
+      return;
+    }
+
     try {
       const newClub = {
-        ...clubData,
-        membershipFee: clubData.membershipType === 'PAID' ? parseFloat(clubData.membershipFee) : undefined,
-        maxMembers: parseInt(clubData.maxMembers) || 0,
+        id: Date.now().toString(),
+        name: clubData.name.trim(),
+        description: clubData.description.trim(),
+        category: clubData.category,
+        skillLevel: clubData.skillLevel,
+        membershipType: clubData.membershipType,
+        membershipFee: clubData.membershipType === 'PAID' ? parseFloat(clubData.membershipFee) : 0,
+        maxMembers: parseInt(clubData.maxMembers) || 50,
         location: {
-          ...clubData.location,
-          courtCount: parseInt(clubData.location.courtCount) || 0,
-          latitude: clubData.location.latitude || 0,
-          longitude: clubData.location.longitude || 0,
+          city: clubData.location.city.trim(),
+          state: clubData.location.state.trim(),
+          address: clubData.location.address.trim(),
         },
+        contactEmail: clubData.contactEmail.trim(),
+        contactPhone: clubData.contactPhone.trim(),
+        memberCount: 1,
+        isPublic: true,
+        photo: '',
+        tags: [clubData.category, clubData.skillLevel],
+        rating: 0,
+        reviewCount: 0,
         members: [{
           userId: user!.id,
           userName: `${user!.firstName} ${user!.lastName}`,
@@ -172,15 +108,15 @@ const CreateClubScreen: React.FC = () => {
         }],
       };
 
-      const clubId = createClub(newClub);
+      createClub(newClub);
       
       Alert.alert(
         'Club Created!',
-        'Your club has been created successfully. You are now the owner and can start managing your community!',
+        'Your club has been created successfully. You are now the owner!',
         [
           {
             text: 'View Club',
-            onPress: () => navigation.replace('ClubDetails', { clubId })
+            onPress: () => navigation.replace('ClubDetails', { clubId: newClub.id })
           }
         ]
       );
@@ -189,416 +125,235 @@ const CreateClubScreen: React.FC = () => {
     }
   };
 
-  const renderStepIndicator = () => (
-    <View style={styles.stepIndicator}>
-      {[1, 2, 3, 4].map((stepNumber) => (
-        <View key={stepNumber} style={styles.stepContainer}>
-          <View style={[
-            styles.stepCircle,
-            step >= stepNumber && styles.stepCircleActive
-          ]}>
-            {step > stepNumber ? (
-              <Ionicons name="checkmark" size={16} color="white" />
-            ) : (
-              <Text style={[
-                styles.stepNumber,
-                step >= stepNumber && styles.stepNumberActive
-              ]}>
-                {stepNumber}
-              </Text>
-            )}
-          </View>
-          <Text style={[
-            styles.stepLabel,
-            step >= stepNumber && styles.stepLabelActive
-          ]}>
-            {stepNumber === 1 && 'Basic Info'}
-            {stepNumber === 2 && 'Location'}
-            {stepNumber === 3 && 'Settings'}
-            {stepNumber === 4 && 'Details'}
-          </Text>
-        </View>
-      ))}
-    </View>
-  );
-
-  const renderBasicInfoStep = () => (
-    <View style={styles.stepContent}>
-      <Text style={styles.stepTitle}>Basic Club Information</Text>
-      <Text style={styles.stepSubtitle}>Tell us about your club</Text>
-      
-      <View style={styles.inputGroup}>
-        <Text style={styles.inputLabel}>Club Name *</Text>
-        <TextInput
-          style={styles.textInput}
-          value={clubData.name}
-          onChangeText={(value) => updateClubData('name', value)}
-          placeholder="Enter club name"
-          placeholderTextColor={theme.colors.textSecondary}
-        />
-      </View>
-      
-      <View style={styles.inputGroup}>
-        <Text style={styles.inputLabel}>Description *</Text>
-        <TextInput
-          style={[styles.textInput, styles.textArea]}
-          value={clubData.description}
-          onChangeText={(value) => updateClubData('description', value)}
-          placeholder="Describe your club's mission and activities"
-          placeholderTextColor={theme.colors.textSecondary}
-          multiline
-          numberOfLines={4}
-        />
-      </View>
-      
-      <View style={styles.inputGroup}>
-        <Text style={styles.inputLabel}>Category</Text>
-        <View style={styles.optionsGrid}>
-          {categories.map((category) => (
-            <TouchableOpacity
-              key={category}
-              style={[
-                styles.optionChip,
-                clubData.category === category && styles.optionChipActive
-              ]}
-              onPress={() => updateClubData('category', category)}
-            >
-              <Text style={[
-                styles.optionChipText,
-                clubData.category === category && styles.optionChipTextActive
-              ]}>
-                {category.replace('_', ' ')}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-      </View>
-    </View>
-  );
-
-  const renderLocationStep = () => (
-    <View style={styles.stepContent}>
-      <Text style={styles.stepTitle}>Club Location</Text>
-      <Text style={styles.stepSubtitle}>Where is your club located?</Text>
-      
-      <View style={styles.inputGroup}>
-        <Text style={styles.inputLabel}>Location Name *</Text>
-        <TextInput
-          style={styles.textInput}
-          value={clubData.location.name}
-          onChangeText={(value) => updateLocationData('name', value)}
-          placeholder="e.g., Central Park Courts"
-          placeholderTextColor={theme.colors.textSecondary}
-        />
-      </View>
-      
-      <View style={styles.inputGroup}>
-        <Text style={styles.inputLabel}>Address *</Text>
-        <TextInput
-          style={styles.textInput}
-          value={clubData.location.address}
-          onChangeText={(value) => updateLocationData('address', value)}
-          placeholder="Street address"
-          placeholderTextColor={theme.colors.textSecondary}
-        />
-      </View>
-      
-      <View style={styles.row}>
-        <View style={[styles.inputGroup, styles.halfWidth]}>
-          <Text style={styles.inputLabel}>City *</Text>
-          <TextInput
-            style={styles.textInput}
-            value={clubData.location.city}
-            onChangeText={(value) => updateLocationData('city', value)}
-            placeholder="City"
-            placeholderTextColor={theme.colors.textSecondary}
-          />
-        </View>
-        
-        <View style={[styles.inputGroup, styles.halfWidth]}>
-          <Text style={styles.inputLabel}>State</Text>
-          <TextInput
-            style={styles.textInput}
-            value={clubData.location.state}
-            onChangeText={(value) => updateLocationData('state', value)}
-            placeholder="State"
-            placeholderTextColor={theme.colors.textSecondary}
-          />
-        </View>
-      </View>
-      
-      <View style={styles.inputGroup}>
-        <Text style={styles.inputLabel}>Number of Courts</Text>
-        <TextInput
-          style={styles.textInput}
-          value={clubData.location.courtCount}
-          onChangeText={(value) => updateLocationData('courtCount', value)}
-          placeholder="0"
-          placeholderTextColor={theme.colors.textSecondary}
-          keyboardType="numeric"
-        />
-      </View>
-      
-      <View style={styles.inputGroup}>
-        <Text style={styles.inputLabel}>Court Types</Text>
-        <View style={styles.optionsGrid}>
-          {courtTypeOptions.map((type) => (
-            <TouchableOpacity
-              key={type}
-              style={[
-                styles.optionChip,
-                clubData.location.courtTypes.includes(type) && styles.optionChipActive
-              ]}
-              onPress={() => toggleArrayItem(clubData.location.courtTypes, type, 'courtTypes')}
-            >
-              <Text style={[
-                styles.optionChipText,
-                clubData.location.courtTypes.includes(type) && styles.optionChipTextActive
-              ]}>
-                {type}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-      </View>
-      
-      <View style={styles.inputGroup}>
-        <Text style={styles.inputLabel}>Amenities</Text>
-        <View style={styles.optionsGrid}>
-          {amenityOptions.map((amenity) => (
-            <TouchableOpacity
-              key={amenity}
-              style={[
-                styles.optionChip,
-                clubData.location.amenities.includes(amenity) && styles.optionChipActive
-              ]}
-              onPress={() => toggleArrayItem(clubData.location.amenities, amenity, 'amenities')}
-            >
-              <Text style={[
-                styles.optionChipText,
-                clubData.location.amenities.includes(amenity) && styles.optionChipTextActive
-              ]}>
-                {amenity}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-      </View>
-    </View>
-  );
-
-  const renderSettingsStep = () => (
-    <View style={styles.stepContent}>
-      <Text style={styles.stepTitle}>Club Settings</Text>
-      <Text style={styles.stepSubtitle}>Configure membership and requirements</Text>
-      
-      <View style={styles.inputGroup}>
-        <Text style={styles.inputLabel}>Skill Levels *</Text>
-        <Text style={styles.inputHint}>Select which skill levels your club welcomes</Text>
-        <View style={styles.optionsGrid}>
-          {skillLevelOptions.map((level) => (
-            <TouchableOpacity
-              key={level}
-              style={[
-                styles.optionChip,
-                clubData.skillLevels.includes(level) && styles.optionChipActive
-              ]}
-              onPress={() => toggleArrayItem(clubData.skillLevels, level, 'skillLevels')}
-            >
-              <Text style={[
-                styles.optionChipText,
-                clubData.skillLevels.includes(level) && styles.optionChipTextActive
-              ]}>
-                {level}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-      </View>
-      
-      <View style={styles.inputGroup}>
-        <Text style={styles.inputLabel}>Membership Type</Text>
-        <View style={styles.optionsGrid}>
-          {membershipTypes.map((type) => (
-            <TouchableOpacity
-              key={type}
-              style={[
-                styles.optionChip,
-                clubData.membershipType === type && styles.optionChipActive
-              ]}
-              onPress={() => updateClubData('membershipType', type)}
-            >
-              <Text style={[
-                styles.optionChipText,
-                clubData.membershipType === type && styles.optionChipTextActive
-              ]}>
-                {type.replace('_', ' ')}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-      </View>
-      
-      {clubData.membershipType === 'PAID' && (
-        <View style={styles.inputGroup}>
-          <Text style={styles.inputLabel}>Monthly Membership Fee ($)</Text>
-          <TextInput
-            style={styles.textInput}
-            value={clubData.membershipFee}
-            onChangeText={(value) => updateClubData('membershipFee', value)}
-            placeholder="0.00"
-            placeholderTextColor={theme.colors.textSecondary}
-            keyboardType="numeric"
-          />
-        </View>
-      )}
-      
-      <View style={styles.inputGroup}>
-        <Text style={styles.inputLabel}>Maximum Members</Text>
-        <TextInput
-          style={styles.textInput}
-          value={clubData.maxMembers}
-          onChangeText={(value) => updateClubData('maxMembers', value)}
-          placeholder="0 (unlimited)"
-          placeholderTextColor={theme.colors.textSecondary}
-          keyboardType="numeric"
-        />
-      </View>
-    </View>
-  );
-
-  const renderDetailsStep = () => (
-    <View style={styles.stepContent}>
-      <Text style={styles.stepTitle}>Additional Details</Text>
-      <Text style={styles.stepSubtitle}>Rules, contact info, and more</Text>
-      
-      <View style={styles.inputGroup}>
-        <Text style={styles.inputLabel}>Club Rules</Text>
-        <Text style={styles.inputHint}>Add rules that members should follow</Text>
-        {clubData.rules.map((rule, index) => (
-          <View key={index} style={styles.ruleInputContainer}>
-            <TextInput
-              style={styles.textInput}
-              value={rule}
-              onChangeText={(value) => updateRule(index, value)}
-              placeholder={`Rule ${index + 1}`}
-              placeholderTextColor={theme.colors.textSecondary}
-            />
-            {clubData.rules.length > 1 && (
-              <TouchableOpacity
-                style={styles.removeButton}
-                onPress={() => removeRule(index)}
-              >
-                <Ionicons name="close-circle" size={20} color={theme.colors.error} />
-              </TouchableOpacity>
-            )}
-          </View>
-        ))}
-        <TouchableOpacity
-          style={styles.addButton}
-          onPress={addRule}
-        >
-          <Ionicons name="add-circle" size={20} color={theme.colors.primary} />
-          <Text style={styles.addButtonText}>Add Rule</Text>
-        </TouchableOpacity>
-      </View>
-      
-      <View style={styles.inputGroup}>
-        <Text style={styles.inputLabel}>Contact Information</Text>
-        <TextInput
-          style={styles.textInput}
-          value={clubData.contactInfo.email}
-          onChangeText={(value) => updateContactInfo('email', value)}
-          placeholder="Email address"
-          placeholderTextColor={theme.colors.textSecondary}
-          keyboardType="email-address"
-        />
-        <TextInput
-          style={styles.textInput}
-          value={clubData.contactInfo.phone}
-          onChangeText={(value) => updateContactInfo('phone', value)}
-          placeholder="Phone number"
-          placeholderTextColor={theme.colors.textSecondary}
-          keyboardType="phone-pad"
-        />
-        <TextInput
-          style={styles.textInput}
-          value={clubData.contactInfo.website}
-          onChangeText={(value) => updateContactInfo('website', value)}
-          placeholder="Website (optional)"
-          placeholderTextColor={theme.colors.textSecondary}
-          keyboardType="url"
-        />
-      </View>
-    </View>
-  );
-
-  const renderCurrentStep = () => {
-    switch (step) {
-      case 1: return renderBasicInfoStep();
-      case 2: return renderLocationStep();
-      case 3: return renderSettingsStep();
-      case 4: return renderDetailsStep();
-      default: return null;
-    }
-  };
-
   return (
     <SafeAreaView style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <LinearGradient
-          colors={[theme.colors.primary, theme.colors.secondary]}
-          style={styles.headerGradient}
-        >
-          <View style={styles.headerContent}>
-            <TouchableOpacity
-              style={styles.backButton}
-              onPress={handleBack}
-            >
-              <Ionicons name="arrow-back" size={24} color="white" />
-            </TouchableOpacity>
+      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+        {/* Header */}
+        <View style={styles.header}>
+          <LinearGradient
+            colors={[theme.colors.primary, theme.colors.secondary]}
+            style={styles.headerGradient}
+          >
+            <View style={styles.headerContent}>
+              <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+                <Ionicons name="arrow-back" size={24} color="white" />
+              </TouchableOpacity>
+              <Text style={styles.headerTitle}>Create Club</Text>
+              <View style={styles.placeholder} />
+            </View>
+          </LinearGradient>
+        </View>
+
+        {/* Form */}
+        <View style={styles.formContainer}>
+          {/* Basic Information */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Basic Information</Text>
             
-            <Text style={styles.headerTitle}>Create New Club</Text>
-            
-            <View style={styles.headerSpacer} />
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>Club Name *</Text>
+              <TextInput
+                style={styles.textInput}
+                value={clubData.name}
+                onChangeText={(value) => updateClubData('name', value)}
+                placeholder="Enter club name"
+                placeholderTextColor={theme.colors.textSecondary}
+              />
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>Description *</Text>
+              <TextInput
+                style={[styles.textInput, styles.textArea]}
+                value={clubData.description}
+                onChangeText={(value) => updateClubData('description', value)}
+                placeholder="Describe your club"
+                placeholderTextColor={theme.colors.textSecondary}
+                multiline
+                numberOfLines={4}
+              />
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>Category</Text>
+              <View style={styles.optionsContainer}>
+                {categories.map((category) => (
+                  <TouchableOpacity
+                    key={category}
+                    style={[
+                      styles.optionChip,
+                      clubData.category === category && styles.optionChipSelected
+                    ]}
+                    onPress={() => updateClubData('category', category)}
+                  >
+                    <Text style={[
+                      styles.optionChipText,
+                      clubData.category === category && styles.optionChipTextSelected
+                    ]}>
+                      {category.replace('_', ' ')}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>Skill Level</Text>
+              <View style={styles.optionsContainer}>
+                {skillLevels.map((level) => (
+                  <TouchableOpacity
+                    key={level}
+                    style={[
+                      styles.optionChip,
+                      clubData.skillLevel === level && styles.optionChipSelected
+                    ]}
+                    onPress={() => updateClubData('skillLevel', level)}
+                  >
+                    <Text style={[
+                      styles.optionChipText,
+                      clubData.skillLevel === level && styles.optionChipTextSelected
+                    ]}>
+                      {level.replace('_', ' ')}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
           </View>
-        </LinearGradient>
-      </View>
 
-      {/* Step Indicator */}
-      {renderStepIndicator()}
+          {/* Location */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Location</Text>
+            
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>City *</Text>
+              <TextInput
+                style={styles.textInput}
+                value={clubData.location.city}
+                onChangeText={(value) => updateLocationData('city', value)}
+                placeholder="Enter city"
+                placeholderTextColor={theme.colors.textSecondary}
+              />
+            </View>
 
-      {/* Content */}
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        {renderCurrentStep()}
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>State *</Text>
+              <TextInput
+                style={styles.textInput}
+                value={clubData.location.state}
+                onChangeText={(value) => updateLocationData('state', value)}
+                placeholder="Enter state"
+                placeholderTextColor={theme.colors.textSecondary}
+              />
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>Address</Text>
+              <TextInput
+                style={styles.textInput}
+                value={clubData.location.address}
+                onChangeText={(value) => updateLocationData('address', value)}
+                placeholder="Enter address (optional)"
+                placeholderTextColor={theme.colors.textSecondary}
+              />
+            </View>
+          </View>
+
+          {/* Membership */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Membership</Text>
+            
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>Membership Type</Text>
+              <View style={styles.optionsContainer}>
+                {membershipTypes.map((type) => (
+                  <TouchableOpacity
+                    key={type}
+                    style={[
+                      styles.optionChip,
+                      clubData.membershipType === type && styles.optionChipSelected
+                    ]}
+                    onPress={() => updateClubData('membershipType', type)}
+                  >
+                    <Text style={[
+                      styles.optionChipText,
+                      clubData.membershipType === type && styles.optionChipTextSelected
+                    ]}>
+                      {type.replace('_', ' ')}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+
+            {clubData.membershipType === 'PAID' && (
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Monthly Fee ($)</Text>
+                <TextInput
+                  style={styles.textInput}
+                  value={clubData.membershipFee}
+                  onChangeText={(value) => updateClubData('membershipFee', value)}
+                  placeholder="0.00"
+                  placeholderTextColor={theme.colors.textSecondary}
+                  keyboardType="numeric"
+                />
+              </View>
+            )}
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>Max Members</Text>
+              <TextInput
+                style={styles.textInput}
+                value={clubData.maxMembers}
+                onChangeText={(value) => updateClubData('maxMembers', value)}
+                placeholder="50"
+                placeholderTextColor={theme.colors.textSecondary}
+                keyboardType="numeric"
+              />
+            </View>
+          </View>
+
+          {/* Contact Information */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Contact Information</Text>
+            
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>Email</Text>
+              <TextInput
+                style={styles.textInput}
+                value={clubData.contactEmail}
+                onChangeText={(value) => updateClubData('contactEmail', value)}
+                placeholder="Enter email (optional)"
+                placeholderTextColor={theme.colors.textSecondary}
+                keyboardType="email-address"
+              />
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>Phone</Text>
+              <TextInput
+                style={styles.textInput}
+                value={clubData.contactPhone}
+                onChangeText={(value) => updateClubData('contactPhone', value)}
+                placeholder="Enter phone (optional)"
+                placeholderTextColor={theme.colors.textSecondary}
+                keyboardType="phone-pad"
+              />
+            </View>
+          </View>
+
+          {/* Create Button */}
+          <TouchableOpacity style={styles.createButton} onPress={handleCreateClub}>
+            <LinearGradient
+              colors={[theme.colors.primary, theme.colors.secondary]}
+              style={styles.createButtonGradient}
+            >
+              <Ionicons name="add-circle" size={24} color="white" />
+              <Text style={styles.createButtonText}>Create Club</Text>
+            </LinearGradient>
+          </TouchableOpacity>
+        </View>
       </ScrollView>
-
-      {/* Navigation Buttons */}
-      <View style={styles.navigationButtons}>
-        <TouchableOpacity
-          style={styles.navButton}
-          onPress={handleBack}
-        >
-          <Text style={styles.navButtonText}>
-            {step === 1 ? 'Cancel' : 'Back'}
-          </Text>
-        </TouchableOpacity>
-        
-        <TouchableOpacity
-          style={[
-            styles.navButton,
-            styles.primaryButton,
-            !validateStep(step) && styles.disabledButton
-          ]}
-          onPress={handleNext}
-          disabled={!validateStep(step)}
-        >
-          <Text style={styles.primaryButtonText}>
-            {step === 4 ? 'Create Club' : 'Next'}
-          </Text>
-        </TouchableOpacity>
-      </View>
     </SafeAreaView>
   );
 };
@@ -608,200 +363,110 @@ const createStyles = (theme: any) => StyleSheet.create({
     flex: 1,
     backgroundColor: theme.colors.background,
   },
+  scrollView: {
+    flex: 1,
+  },
   header: {
     marginBottom: theme.spacing.lg,
   },
   headerGradient: {
-    padding: theme.spacing.lg,
-    borderBottomLeftRadius: 24,
-    borderBottomRightRadius: 24,
+    paddingVertical: theme.spacing.xl,
   },
   headerContent: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: theme.spacing.lg,
   },
   backButton: {
     padding: theme.spacing.sm,
-    marginRight: theme.spacing.md,
   },
   headerTitle: {
     fontSize: 24,
     fontWeight: '700',
     color: 'white',
-    flex: 1,
   },
-  headerSpacer: {
-    width: 48,
+  placeholder: {
+    width: 40,
   },
-  stepIndicator: {
-    flexDirection: 'row',
+  formContainer: {
     paddingHorizontal: theme.spacing.lg,
-    marginBottom: theme.spacing.xl,
-  },
-  stepContainer: {
-    flex: 1,
-    alignItems: 'center',
-  },
-  stepCircle: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: theme.colors.border,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: theme.spacing.xs,
-  },
-  stepCircleActive: {
-    backgroundColor: theme.colors.primary,
-  },
-  stepNumber: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: theme.colors.textSecondary,
-  },
-  stepNumberActive: {
-    color: 'white',
-  },
-  stepLabel: {
-    fontSize: 12,
-    color: theme.colors.textSecondary,
-    textAlign: 'center',
-  },
-  stepLabelActive: {
-    color: theme.colors.primary,
-    fontWeight: '500',
-  },
-  content: {
-    flex: 1,
-    paddingHorizontal: theme.spacing.lg,
-  },
-  stepContent: {
     paddingBottom: theme.spacing.xl,
   },
-  stepTitle: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: theme.colors.text,
-    marginBottom: theme.spacing.xs,
-  },
-  stepSubtitle: {
-    fontSize: 16,
-    color: theme.colors.textSecondary,
+  section: {
     marginBottom: theme.spacing.xl,
   },
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: theme.colors.text,
+    marginBottom: theme.spacing.md,
+  },
   inputGroup: {
-    marginBottom: theme.spacing.lg,
+    marginBottom: theme.spacing.md,
   },
   inputLabel: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: '500',
     color: theme.colors.text,
-    marginBottom: theme.spacing.sm,
-  },
-  inputHint: {
-    fontSize: 14,
-    color: theme.colors.textSecondary,
-    marginBottom: theme.spacing.sm,
+    marginBottom: theme.spacing.xs,
   },
   textInput: {
     backgroundColor: theme.colors.surface,
-    borderRadius: 12,
-    padding: theme.spacing.md,
-    fontSize: 16,
-    color: theme.colors.text,
     borderWidth: 1,
     borderColor: theme.colors.border,
+    borderRadius: theme.borderRadius.md,
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: theme.spacing.md,
+    fontSize: 16,
+    color: theme.colors.text,
   },
   textArea: {
     height: 100,
     textAlignVertical: 'top',
   },
-  row: {
-    flexDirection: 'row',
-    gap: theme.spacing.md,
-  },
-  halfWidth: {
-    flex: 1,
-  },
-  optionsGrid: {
+  optionsContainer: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: theme.spacing.sm,
+    gap: theme.spacing.xs,
   },
   optionChip: {
     paddingHorizontal: theme.spacing.md,
     paddingVertical: theme.spacing.sm,
-    borderRadius: 20,
+    borderRadius: theme.borderRadius.md,
     backgroundColor: theme.colors.surface,
     borderWidth: 1,
     borderColor: theme.colors.border,
   },
-  optionChipActive: {
+  optionChipSelected: {
     backgroundColor: theme.colors.primary,
     borderColor: theme.colors.primary,
   },
   optionChipText: {
     fontSize: 14,
-    fontWeight: '500',
     color: theme.colors.text,
+    fontWeight: '500',
   },
-  optionChipTextActive: {
+  optionChipTextSelected: {
     color: 'white',
+    fontWeight: '600',
   },
-  ruleInputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: theme.spacing.sm,
-    gap: theme.spacing.sm,
+  createButton: {
+    marginTop: theme.spacing.xl,
+    borderRadius: theme.borderRadius.lg,
+    overflow: 'hidden',
   },
-  removeButton: {
-    padding: 4,
-  },
-  addButton: {
+  createButtonGradient: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    padding: theme.spacing.md,
-    borderRadius: 12,
-    backgroundColor: theme.colors.primary + '20',
     gap: theme.spacing.sm,
+    paddingVertical: theme.spacing.lg,
   },
-  addButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: theme.colors.primary,
-  },
-  navigationButtons: {
-    flexDirection: 'row',
-    padding: theme.spacing.lg,
-    gap: theme.spacing.md,
-  },
-  navButton: {
-    flex: 1,
-    padding: theme.spacing.md,
-    borderRadius: 16,
-    backgroundColor: theme.colors.surface,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-    alignItems: 'center',
-  },
-  primaryButton: {
-    backgroundColor: theme.colors.primary,
-    borderColor: theme.colors.primary,
-  },
-  disabledButton: {
-    backgroundColor: theme.colors.border,
-    borderColor: theme.colors.border,
-  },
-  navButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: theme.colors.text,
-  },
-  primaryButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
+  createButtonText: {
     color: 'white',
+    fontSize: 18,
+    fontWeight: '600',
   },
 });
 

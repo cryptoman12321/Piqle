@@ -265,18 +265,22 @@ export interface RootStackParamList extends ParamListBase {
   CreateGame: undefined;
   CreateTournament: undefined;
   CreateClub: undefined;
+  AICoach: undefined;
+  Settings: undefined;
+  Profile: undefined;
   TournamentsList: undefined;
+  ClubsList: undefined;
+  Games: undefined;
+  GameDetails: { gameId: string };
+  Calendar: undefined;
+  TournamentDetails: { tournamentId: string };
 }
 
 export interface MainTabParamList extends ParamListBase {
   Home: undefined;
+  AICoach: undefined;
   Map: undefined;
-
-  Friends: undefined;
   Chat: undefined;
-  Clubs: undefined;
-
-  Settings: undefined;
   Profile: undefined;
 }
 

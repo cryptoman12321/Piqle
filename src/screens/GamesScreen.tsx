@@ -8,6 +8,7 @@ import {
   TextInput,
   FlatList,
   RefreshControl,
+  Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -20,6 +21,8 @@ import { CompositeNavigationProp } from '@react-navigation/native';
 import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Game, GameFormat, SkillLevel, GameStatus, MainTabParamList, GamesStackParamList } from '../types';
+
+const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
 type GamesScreenNavigationProp = CompositeNavigationProp<
   BottomTabNavigationProp<MainTabParamList, 'Games'>,
@@ -151,129 +154,135 @@ const GamesScreen: React.FC = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Find Games</Text>
-        <TouchableOpacity style={styles.createButton} onPress={handleCreateGame}>
-          <LinearGradient
-            colors={[theme.colors.primary, theme.colors.secondary]}
-            style={styles.createButtonGradient}
-          >
-            <Ionicons name="add" size={20} color="white" />
-            <Text style={styles.createButtonText}>Create</Text>
-          </LinearGradient>
-        </TouchableOpacity>
-      </View>
-
-      {/* Search Bar */}
-      <View style={styles.searchContainer}>
-        <Ionicons name="search" size={20} color={theme.colors.textSecondary} />
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Search games..."
-          placeholderTextColor={theme.colors.textSecondary}
-          value={searchQuery}
-          onChangeText={setSearchQuery}
-        />
-      </View>
-
-      {/* Filters */}
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filtersContainer}>
-        {/* Format Filter */}
-        <View style={styles.filterGroup}>
-          <Text style={styles.filterLabel}>Format:</Text>
-          <View style={styles.filterOptions}>
-            {['ALL', ...Object.values(GameFormat)].map((format) => (
-              <TouchableOpacity
-                key={format}
-                style={[
-                  styles.filterOption,
-                  selectedFormat === format && styles.filterOptionSelected
-                ]}
-                onPress={() => setSelectedFormat(format as any)}
-              >
-                <Text style={[
-                  styles.filterOptionText,
-                  selectedFormat === format && styles.filterOptionTextSelected
-                ]}>
-                  {format === 'ALL' ? 'All' : 
-                   format === GameFormat.SINGLES ? '1v1' : 
-                   format === GameFormat.DOUBLES ? '2v2' : 'Open'}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </View>
-
-        {/* Skill Level Filter */}
-        <View style={styles.filterGroup}>
-          <Text style={styles.filterLabel}>Skill:</Text>
-          <View style={styles.filterOptions}>
-            {['ALL', ...Object.values(SkillLevel)].map((level) => (
-              <TouchableOpacity
-                key={level}
-                style={[
-                  styles.filterOption,
-                  selectedSkillLevel === level && styles.filterOptionSelected
-                ]}
-                onPress={() => setSelectedSkillLevel(level as any)}
-              >
-                <Text style={[
-                  styles.filterOptionText,
-                  selectedSkillLevel === level && styles.filterOptionTextSelected
-                ]}>
-                  {level === 'ALL' ? 'All' : level}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </View>
-      </ScrollView>
-
-      {/* Loading State */}
-      {isLoading && !refreshing && (
-        <View style={styles.loadingContainer}>
-          <Text style={styles.loadingText}>Loading games...</Text>
-        </View>
-      )}
-
-      {/* Error State */}
-      {error && (
-        <View style={styles.errorContainer}>
-          <Text style={styles.errorText}>Error: {error}</Text>
-          <TouchableOpacity style={styles.retryButton} onPress={loadGames}>
-            <Text style={styles.retryButtonText}>Retry</Text>
+      {/* Fixed Header Section - Never Overlapped */}
+      <View style={styles.fixedHeader}>
+        {/* Header */}
+        <View style={styles.header}>
+          <Text style={styles.headerTitle}>Find Games</Text>
+          <TouchableOpacity style={styles.createButton} onPress={handleCreateGame}>
+            <LinearGradient
+              colors={[theme.colors.primary, theme.colors.secondary]}
+              style={styles.createButtonGradient}
+            >
+              <Ionicons name="add" size={20} color="white" />
+              <Text style={styles.createButtonText}>Create</Text>
+            </LinearGradient>
           </TouchableOpacity>
         </View>
-      )}
 
-      {/* Games List */}
-      {!isLoading && !error && (
-        <FlatList
-          data={filteredGames}
-          renderItem={renderGameCard}
-          keyExtractor={(item) => item.id}
-          contentContainerStyle={styles.gamesList}
-          refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-          }
-          showsVerticalScrollIndicator={false}
-          ListEmptyComponent={
-            <View style={styles.emptyContainer}>
-              <Ionicons name="game-controller-outline" size={64} color={theme.colors.textSecondary} />
-              <Text style={styles.emptyTitle}>No games found</Text>
-              <Text style={styles.emptySubtitle}>
-                {searchQuery || selectedFormat !== 'ALL' || selectedSkillLevel !== 'ALL' 
-                  ? 'Try adjusting your search or filters'
-                  : 'Be the first to create a game!'}
-              </Text>
-              <TouchableOpacity style={styles.createFirstGameButton} onPress={handleCreateGame}>
-                <Text style={styles.createFirstGameButtonText}>Create First Game</Text>
-              </TouchableOpacity>
+        {/* Search Bar */}
+        <View style={styles.searchContainer}>
+          <Ionicons name="search" size={20} color={theme.colors.textSecondary} />
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Search games..."
+            placeholderTextColor={theme.colors.textSecondary}
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+          />
+        </View>
+
+        {/* Filters */}
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filtersContainer}>
+          {/* Format Filter */}
+          <View style={styles.filterGroup}>
+            <Text style={styles.filterLabel}>Format:</Text>
+            <View style={styles.filterOptions}>
+              {['ALL', ...Object.values(GameFormat)].map((format) => (
+                <TouchableOpacity
+                  key={format}
+                  style={[
+                    styles.filterOption,
+                    selectedFormat === format && styles.filterOptionSelected
+                  ]}
+                  onPress={() => setSelectedFormat(format as any)}
+                >
+                  <Text style={[
+                    styles.filterOptionText,
+                    selectedFormat === format && styles.filterOptionTextSelected
+                  ]}>
+                    {format === 'ALL' ? 'All' : 
+                     format === GameFormat.SINGLES ? '1v1' : 
+                     format === GameFormat.DOUBLES ? '2v2' : 'Open'}
+                  </Text>
+                </TouchableOpacity>
+              ))}
             </View>
-          }
-        />
-      )}
+          </View>
+
+          {/* Skill Level Filter */}
+          <View style={styles.filterGroup}>
+            <Text style={styles.filterLabel}>Skill:</Text>
+            <View style={styles.filterOptions}>
+              {['ALL', ...Object.values(SkillLevel)].map((level) => (
+                <TouchableOpacity
+                  key={level}
+                  style={[
+                    styles.filterOption,
+                    selectedSkillLevel === level && styles.filterOptionSelected
+                  ]}
+                  onPress={() => setSelectedSkillLevel(level as any)}
+                >
+                  <Text style={[
+                    styles.filterOptionText,
+                    selectedSkillLevel === level && styles.filterOptionTextSelected
+                  ]}>
+                    {level === 'ALL' ? 'All' : level}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+        </ScrollView>
+      </View>
+
+      {/* Content Section - Below Fixed Header */}
+      <View style={styles.contentContainer}>
+        {/* Loading State */}
+        {isLoading && !refreshing && (
+          <View style={styles.loadingContainer}>
+            <Text style={styles.loadingText}>Loading games...</Text>
+          </View>
+        )}
+
+        {/* Error State */}
+        {error && (
+          <View style={styles.errorContainer}>
+            <Text style={styles.errorText}>Error: {error}</Text>
+            <TouchableOpacity style={styles.retryButton} onPress={loadGames}>
+              <Text style={styles.retryButtonText}>Retry</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
+        {/* Games List */}
+        {!isLoading && !error && (
+          <FlatList
+            data={filteredGames}
+            renderItem={renderGameCard}
+            keyExtractor={(item) => item.id}
+            contentContainerStyle={styles.gamesList}
+            refreshControl={
+              <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+            }
+            showsVerticalScrollIndicator={false}
+            ListEmptyComponent={
+              <View style={styles.emptyContainer}>
+                <Ionicons name="game-controller-outline" size={64} color={theme.colors.textSecondary} />
+                <Text style={styles.emptyTitle}>No games found</Text>
+                <Text style={styles.emptySubtitle}>
+                  {searchQuery || selectedFormat !== 'ALL' || selectedSkillLevel !== 'ALL' 
+                    ? 'Try adjusting your search or filters'
+                    : 'Be the first to create a game!'}
+                </Text>
+                <TouchableOpacity style={styles.createFirstGameButton} onPress={handleCreateGame}>
+                  <Text style={styles.createFirstGameButtonText}>Create First Game</Text>
+                </TouchableOpacity>
+              </View>
+            }
+          />
+        )}
+      </View>
     </SafeAreaView>
   );
 };
@@ -282,6 +291,26 @@ const createStyles = (theme: any) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: theme.colors.background,
+  },
+  fixedHeader: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 9999,
+    backgroundColor: theme.colors.background,
+    paddingTop: theme.spacing.md,
+    paddingBottom: theme.spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.colors.border,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 10,
   },
   header: {
     flexDirection: 'row',
@@ -349,7 +378,8 @@ const createStyles = (theme: any) => StyleSheet.create({
   filterOption: {
     paddingHorizontal: theme.spacing.sm,
     paddingVertical: theme.spacing.xs,
-    borderRadius: theme.borderRadius.md,
+    borderRadius: theme.borderRadius.sm,
+    backgroundColor: theme.colors.surface,
     borderWidth: 1,
     borderColor: theme.colors.border,
   },
@@ -358,18 +388,23 @@ const createStyles = (theme: any) => StyleSheet.create({
     borderColor: theme.colors.primary,
   },
   filterOptionText: {
-    fontSize: 12,
-    fontWeight: '500',
+    fontSize: 14,
     color: theme.colors.text,
+    fontWeight: '500',
   },
   filterOptionTextSelected: {
     color: 'white',
+    fontWeight: '600',
+  },
+  contentContainer: {
+    flex: 1,
+    marginTop: 280, // Adjust based on fixed header height
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingVertical: theme.spacing.xxl,
+    padding: theme.spacing.xl,
   },
   loadingText: {
     fontSize: 16,
@@ -379,7 +414,7 @@ const createStyles = (theme: any) => StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingVertical: theme.spacing.xxl,
+    padding: theme.spacing.xl,
     gap: theme.spacing.md,
   },
   errorText: {
@@ -395,11 +430,11 @@ const createStyles = (theme: any) => StyleSheet.create({
   },
   retryButtonText: {
     color: 'white',
+    fontSize: 14,
     fontWeight: '600',
   },
   gamesList: {
-    paddingHorizontal: theme.spacing.lg,
-    paddingBottom: theme.spacing.xxl,
+    padding: theme.spacing.lg,
   },
   gameCard: {
     backgroundColor: theme.colors.surface,
@@ -438,7 +473,7 @@ const createStyles = (theme: any) => StyleSheet.create({
     lineHeight: 20,
   },
   gameDetails: {
-    gap: theme.spacing.xs,
+    gap: theme.spacing.sm,
     marginBottom: theme.spacing.md,
   },
   gameDetail: {
@@ -452,16 +487,16 @@ const createStyles = (theme: any) => StyleSheet.create({
   },
   gameActions: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    gap: theme.spacing.md,
   },
   joinButton: {
-    flex: 1,
     backgroundColor: theme.colors.primary,
+    paddingHorizontal: theme.spacing.lg,
     paddingVertical: theme.spacing.sm,
-    paddingHorizontal: theme.spacing.md,
     borderRadius: theme.borderRadius.md,
-    alignItems: 'center',
+    flex: 1,
+    marginRight: theme.spacing.sm,
   },
   joinButtonDisabled: {
     backgroundColor: theme.colors.textSecondary,
@@ -470,27 +505,36 @@ const createStyles = (theme: any) => StyleSheet.create({
     color: 'white',
     fontSize: 14,
     fontWeight: '600',
+    textAlign: 'center',
   },
   shareButton: {
-    padding: theme.spacing.sm,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: theme.colors.surface,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: theme.colors.border,
   },
   emptyContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingVertical: theme.spacing.xxl,
+    padding: theme.spacing.xl,
     gap: theme.spacing.md,
   },
   emptyTitle: {
     fontSize: 20,
     fontWeight: '600',
     color: theme.colors.text,
+    textAlign: 'center',
   },
   emptySubtitle: {
     fontSize: 16,
     color: theme.colors.textSecondary,
     textAlign: 'center',
-    maxWidth: 300,
+    lineHeight: 24,
   },
   createFirstGameButton: {
     backgroundColor: theme.colors.primary,

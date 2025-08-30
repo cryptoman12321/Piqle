@@ -13,12 +13,12 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useThemeStore } from '../stores/themeStore';
+import { useThemeStore, ThemeMode } from '../stores/themeStore';
 import { useSettingsStore } from '../stores/settingsStore';
 import { useAuthStore } from '../stores/authStore';
 
 const SettingsScreen: React.FC = () => {
-  const { theme } = useThemeStore();
+  const { theme, themeMode, setThemeMode } = useThemeStore();
   const { user, logout } = useAuthStore();
   const {
     notifications,
@@ -364,13 +364,13 @@ const SettingsScreen: React.FC = () => {
           {activeSection === 'appSettings' && (
             <View style={styles.sectionContent}>
               {renderOptionSelector(
-                app.theme,
+                themeMode,
                 [
-                  { label: 'Light', value: 'LIGHT' },
-                  { label: 'Dark', value: 'DARK' },
-                  { label: 'System', value: 'SYSTEM' },
+                  { label: 'Light', value: 'light' },
+                  { label: 'Dark', value: 'dark' },
+                  { label: 'System', value: 'system' },
                 ],
-                (value) => updateAppSettings({ theme: value as any }),
+                (value) => setThemeMode(value as ThemeMode),
                 'Theme',
                 'Choose your preferred app theme'
               )}

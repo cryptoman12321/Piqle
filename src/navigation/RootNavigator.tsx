@@ -14,6 +14,13 @@ import CreateGameScreen from '../screens/CreateGameScreen';
 import CreateTournamentScreen from '../screens/CreateTournamentScreen';
 import CreateClubScreen from '../screens/CreateClubScreen';
 import TournamentsListScreen from '../screens/TournamentsListScreen';
+import ClubsListScreen from '../screens/ClubsListScreen';
+import GamesScreen from '../screens/GamesScreen';
+import GameDetailsScreen from '../screens/GameDetailsScreen';
+import AICoachScreen from '../screens/AICoachScreen';
+import SettingsScreen from '../screens/SettingsScreen';
+import CalendarScreen from '../screens/CalendarScreen';
+import TournamentDetailsScreen from '../screens/TournamentDetailsScreen';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -69,6 +76,41 @@ const RootNavigator: React.FC = () => {
               name="TournamentsList" 
               component={TournamentsListScreen}
               options={{ headerShown: true, title: 'Tournaments' }}
+            />
+            <Stack.Screen 
+              name="ClubsList" 
+              component={ClubsListScreen}
+              options={{ headerShown: true, title: 'Clubs' }}
+            />
+            <Stack.Screen 
+              name="Games" 
+              component={GamesScreen}
+              options={{ headerShown: true, title: 'Find Games' }}
+            />
+            <Stack.Screen 
+              name="GameDetails" 
+              component={GameDetailsScreen}
+              options={{ headerShown: true, title: 'Game Details' }}
+            />
+            <Stack.Screen 
+              name="AICoach" 
+              component={AICoachScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen 
+              name="Settings" 
+              component={SettingsScreen}
+              options={{ headerShown: true, title: 'Settings' }}
+            />
+            <Stack.Screen 
+              name="Calendar" 
+              component={CalendarScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen 
+              name="TournamentDetails" 
+              component={TournamentDetailsScreen}
+              options={{ headerShown: true, title: 'Tournament Details' }}
             />
           </>
         )}

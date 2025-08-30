@@ -179,7 +179,7 @@ const CreateTournamentScreen: React.FC = () => {
         [
           {
             text: 'OK',
-            onPress: () => navigation.navigate('Tournaments' as never)
+            onPress: () => navigation.navigate('TournamentsList' as never)
           }
         ]
       );

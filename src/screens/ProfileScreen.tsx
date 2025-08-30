@@ -17,7 +17,8 @@ import * as ImagePicker from 'expo-image-picker';
 import { useThemeStore } from '../stores/themeStore';
 import { useAuthStore } from '../stores/authStore';
 import { useAchievementsStore } from '../stores/achievementsStore';
-import { SkillLevel, Hand } from '../types';
+import { SkillLevel } from '../types';
+import RatingChart from '../components/RatingChart';
 
 const ProfileScreen: React.FC = () => {
   const { theme } = useThemeStore();
@@ -33,7 +34,6 @@ const ProfileScreen: React.FC = () => {
     city: '',
     country: '',
     skillLevel: SkillLevel.INTERMEDIATE,
-    hand: Hand.RIGHT,
     photo: '',
   });
 
@@ -48,7 +48,6 @@ const ProfileScreen: React.FC = () => {
         city: user.city || '',
         country: user.country || '',
         skillLevel: user.skillLevel || SkillLevel.INTERMEDIATE,
-        hand: user.hand || Hand.RIGHT,
         photo: user.photo || '',
       });
     }
@@ -73,7 +72,6 @@ const ProfileScreen: React.FC = () => {
         city: profileData.city.trim(),
         country: profileData.country.trim(),
         skillLevel: profileData.skillLevel,
-        hand: profileData.hand,
         photo: profileData.photo,
       });
 
@@ -95,7 +93,6 @@ const ProfileScreen: React.FC = () => {
         city: user.city || '',
         country: user.country || '',
         skillLevel: user.skillLevel || SkillLevel.INTERMEDIATE,
-        hand: user.hand || Hand.RIGHT,
         photo: user.photo || '',
       });
     }
@@ -177,14 +174,7 @@ const ProfileScreen: React.FC = () => {
     }
   };
 
-  const getHandIcon = (hand: Hand) => {
-    switch (hand) {
-      case Hand.LEFT: return 'hand-left';
-      case Hand.RIGHT: return 'hand-right';
-      case Hand.AMBIDEXTROUS: return 'hand-right';
-      default: return 'hand-right';
-    }
-  };
+
 
   const getAchievementColor = (rarity: string) => {
     switch (rarity) {
@@ -392,34 +382,60 @@ const ProfileScreen: React.FC = () => {
               </View>
             </View>
 
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Playing Hand</Text>
-              <View style={styles.pickerContainer}>
-                {Object.values(Hand).map((hand) => (
-                  <TouchableOpacity
-                    key={hand}
-                    style={[
-                      styles.handChip,
-                      profileData.hand === hand && { backgroundColor: theme.colors.primary }
-                    ]}
-                    onPress={() => isEditing && setProfileData(prev => ({ ...prev, hand }))}
-                    disabled={!isEditing}
-                  >
-                    <Ionicons 
-                      name={getHandIcon(hand) as any} 
-                      size={16} 
-                      color={profileData.hand === hand ? 'white' : theme.colors.textSecondary} 
-                    />
-                    <Text style={[
-                      styles.handText,
-                      profileData.hand === hand && { color: 'white' }
-                    ]}>
-                      {hand}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
+          </View>
+
+          {/* Match History & Rating Progress */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Match History & Rating Progress</Text>
+            
+            {/* Dynamic Rating Chart */}
+            <RatingChart 
+              data={[]} 
+              currentRating={4.25} 
+            />
+
+            {/* Recent Matches */}
+            <View style={styles.matchesSection}>
+              <Text style={styles.matchesSubtitle}>Recent Matches</Text>
+              <View style={styles.matchItem}>
+                <View style={styles.matchInfo}>
+                  <Text style={styles.matchType}>Doubles</Text>
+                  <Text style={styles.matchResult}>W 11-8, 11-6</Text>
+                </View>
+                <View style={styles.matchDetails}>
+                  <Text style={styles.matchDate}>2 days ago</Text>
+                  <Text style={styles.matchRating}>+0.08</Text>
+                </View>
+              </View>
+              
+              <View style={styles.matchItem}>
+                <View style={styles.matchInfo}>
+                  <Text style={styles.matchType}>Singles</Text>
+                  <Text style={styles.matchResult}>L 9-11, 11-9, 8-11</Text>
+                </View>
+                <View style={styles.matchDetails}>
+                  <Text style={styles.matchDate}>1 week ago</Text>
+                  <Text style={styles.matchRating}>-0.12</Text>
+                </View>
+              </View>
+              
+              <View style={styles.matchItem}>
+                <View style={styles.matchInfo}>
+                  <Text style={styles.matchType}>Doubles</Text>
+                  <Text style={styles.matchResult}>W 11-7, 11-4</Text>
+                </View>
+                <View style={styles.matchDetails}>
+                  <Text style={styles.matchDate}>2 weeks ago</Text>
+                  <Text style={styles.matchRating}>+0.10</Text>
+                </View>
               </View>
             </View>
+
+            {/* View All Matches Button */}
+            <TouchableOpacity style={styles.viewAllButton}>
+              <Text style={styles.viewAllButtonText}>View All Matches</Text>
+              <Ionicons name="chevron-forward" size={16} color={theme.colors.primary} />
+            </TouchableOpacity>
           </View>
 
           {/* Account Information */}
@@ -513,6 +529,62 @@ const ProfileScreen: React.FC = () => {
                   <Text style={styles.noAchievementsSubtext}>Start playing to unlock achievements!</Text>
                 </View>
               )}
+            </View>
+          </View>
+
+          {/* Friends Section */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Friends</Text>
+            
+            <View style={styles.friendsOverview}>
+              <View style={styles.friendStatCard}>
+                <Text style={styles.friendStatNumber}>12</Text>
+                <Text style={styles.friendStatLabel}>Total Friends</Text>
+              </View>
+              <View style={styles.friendStatCard}>
+                <Text style={styles.friendStatNumber}>8</Text>
+                <Text style={styles.friendStatLabel}>Online Now</Text>
+              </View>
+              <View style={styles.friendStatCard}>
+                <Text style={styles.friendStatNumber}>5</Text>
+                <Text style={styles.friendStatLabel}>Recent Activity</Text>
+              </View>
+            </View>
+
+            {/* Friends List Preview */}
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Recent Friends</Text>
+              <View style={styles.friendsList}>
+                {[
+                  { name: 'John Smith', status: 'Online', lastActivity: '2 min ago' },
+                  { name: 'Sarah Johnson', status: 'Offline', lastActivity: '1 hour ago' },
+                  { name: 'Mike Davis', status: 'Online', lastActivity: '5 min ago' },
+                ].map((friend, index) => (
+                  <View key={index} style={styles.friendItem}>
+                    <View style={styles.friendAvatar}>
+                      <Ionicons name="person" size={20} color={theme.colors.textSecondary} />
+                    </View>
+                    <View style={styles.friendInfo}>
+                      <Text style={styles.friendName}>{friend.name}</Text>
+                      <Text style={styles.friendStatus}>
+                        {friend.status} • {friend.lastActivity}
+                      </Text>
+                    </View>
+                    <TouchableOpacity style={styles.friendActionButton}>
+                      <Ionicons name="chatbubble-outline" size={20} color={theme.colors.primary} />
+                    </TouchableOpacity>
+                  </View>
+                ))}
+              </View>
+              
+              <TouchableOpacity style={styles.viewAllFriendsButton}>
+                <LinearGradient
+                  colors={[theme.colors.primary, theme.colors.secondary]}
+                  style={styles.viewAllFriendsButtonGradient}
+                >
+                  <Text style={styles.viewAllFriendsButtonText}>View All Friends</Text>
+                </LinearGradient>
+              </TouchableOpacity>
             </View>
           </View>
         </View>
@@ -722,22 +794,7 @@ const createStyles = (theme: any) => StyleSheet.create({
     fontWeight: '500',
     color: theme.colors.text,
   },
-  handChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.sm,
-    borderRadius: 20,
-    backgroundColor: theme.colors.surface,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-    gap: 6,
-  },
-  handText: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: theme.colors.text,
-  },
+
   infoRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -904,6 +961,143 @@ const createStyles = (theme: any) => StyleSheet.create({
     fontSize: 14,
     color: theme.colors.textSecondary,
     textAlign: 'center',
+  },
+  // Friends styles
+  friendsOverview: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: theme.spacing.lg,
+  },
+  friendStatCard: {
+    flex: 1,
+    alignItems: 'center',
+    padding: theme.spacing.md,
+    backgroundColor: theme.colors.surface,
+    borderRadius: 12,
+    marginHorizontal: 4,
+  },
+  friendStatNumber: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: theme.colors.primary,
+    marginBottom: 4,
+  },
+  friendStatLabel: {
+    fontSize: 12,
+    color: theme.colors.textSecondary,
+    textAlign: 'center',
+  },
+  friendsList: {
+    gap: theme.spacing.sm,
+    marginBottom: theme.spacing.md,
+  },
+  friendItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: theme.spacing.md,
+    backgroundColor: theme.colors.surface,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+  },
+  friendAvatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: theme.colors.background,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: theme.spacing.md,
+  },
+  friendInfo: {
+    flex: 1,
+  },
+  friendName: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: theme.colors.text,
+    marginBottom: 2,
+  },
+  friendStatus: {
+    fontSize: 14,
+    color: theme.colors.textSecondary,
+  },
+  friendActionButton: {
+    padding: theme.spacing.sm,
+  },
+  viewAllFriendsButton: {
+    borderRadius: 25,
+    overflow: 'hidden',
+  },
+  viewAllFriendsButtonGradient: {
+    paddingHorizontal: theme.spacing.xl,
+    paddingVertical: theme.spacing.md,
+    alignItems: 'center',
+  },
+  viewAllFriendsButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+
+  matchesSection: {
+    marginBottom: theme.spacing.lg,
+  },
+  matchesSubtitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: theme.colors.text,
+    marginBottom: theme.spacing.md,
+  },
+  matchItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: theme.spacing.sm,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.colors.border + '30',
+  },
+  matchInfo: {
+    flex: 1,
+  },
+  matchType: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: theme.colors.text,
+    marginBottom: 2,
+  },
+  matchResult: {
+    fontSize: 14,
+    color: theme.colors.textSecondary,
+  },
+  matchDetails: {
+    alignItems: 'flex-end',
+  },
+  matchDate: {
+    fontSize: 12,
+    color: theme.colors.textSecondary,
+    marginBottom: 2,
+  },
+  matchRating: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: theme.colors.success,
+  },
+  viewAllButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: theme.spacing.md,
+    backgroundColor: theme.colors.surface,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    gap: theme.spacing.sm,
+  },
+  viewAllButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: theme.colors.primary,
   },
 });
 

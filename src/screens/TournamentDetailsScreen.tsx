@@ -56,8 +56,8 @@ const TournamentDetailsScreen: React.FC = () => {
           style: 'destructive',
           onPress: () => {
             unregisterFromTournament(tournament.id, user.id);
-            // Navigate back to Tournaments list instead of just going back
-            navigation.navigate('Tournaments' as any);
+                // Navigate back to Tournaments list instead of just going back
+    navigation.navigate('TournamentsList' as any);
           },
         },
       ]
@@ -362,8 +362,8 @@ const TournamentDetailsScreen: React.FC = () => {
                   if (tournament && user?.id) {
                     // Actually register for the tournament using the store
                     registerForTournament(tournament.id, user.id);
-                    // Navigate back to Tournaments list to show updated state
-                    navigation.navigate('Tournaments' as any);
+                          // Navigate back to Tournaments list to show updated state
+      navigation.navigate('TournamentsList' as any);
                   }
                 }}
               >

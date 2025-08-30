@@ -3,22 +3,25 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import { useThemeStore } from '../stores/themeStore';
 import HomeScreen from '../screens/HomeScreen';
-import MapScreen from '../screens/MapScreen';
+import SimpleMapScreen from '../screens/SimpleMapScreen';
 
-import FriendsStackNavigator from './FriendsStackNavigator';
 import ChatStackNavigator from './ChatStackNavigator';
 
-import SettingsScreen from '../screens/SettingsScreen';
 import ProfileScreen from '../screens/ProfileScreen';
-import ClubsStackNavigator from './ClubsStackNavigator';
+import AICoachScreen from '../screens/AICoachScreen';
+import CalendarScreen from '../screens/CalendarScreen';
+
 
 const Tab = createBottomTabNavigator();
 
 const MainTabNavigator: React.FC = () => {
-  const { theme } = useThemeStore();
+  const { getCurrentTheme } = useThemeStore();
+  
+  const theme = getCurrentTheme();
 
   return (
     <Tab.Navigator
+      initialRouteName="Home"
       screenOptions={({ route }) => ({
         tabBarIcon: ({ focused, color, size }) => {
           let iconName: keyof typeof Ionicons.glyphMap;
@@ -27,22 +30,17 @@ const MainTabNavigator: React.FC = () => {
             case 'Home':
               iconName = focused ? 'home' : 'home-outline';
               break;
+            case 'AICoach':
+              iconName = focused ? 'bulb' : 'bulb-outline';
+              break;
             case 'Map':
               iconName = focused ? 'map' : 'map-outline';
               break;
-
-            case 'Friends':
-              iconName = focused ? 'people' : 'people-outline';
+            case 'Calendar':
+              iconName = focused ? 'calendar' : 'calendar-outline';
               break;
             case 'Chat':
               iconName = focused ? 'chatbubble' : 'chatbubble-outline';
-              break;
-            case 'Clubs':
-              iconName = focused ? 'business' : 'business-outline';
-              break;
-
-            case 'Settings':
-              iconName = focused ? 'settings' : 'settings-outline';
               break;
             case 'Profile':
               iconName = focused ? 'person' : 'person-outline';
@@ -70,12 +68,11 @@ const MainTabNavigator: React.FC = () => {
         headerShown: false,
       })}
     >
-              <Tab.Screen name="Home" component={HomeScreen} options={{ title: 'Home' }} />
-        <Tab.Screen name="Map" component={MapScreen} options={{ title: 'Map' }} />
-        <Tab.Screen name="Friends" component={FriendsStackNavigator} options={{ title: 'Friends' }} />
+        <Tab.Screen name="Map" component={SimpleMapScreen} options={{ title: 'Map' }} />
+        <Tab.Screen name="Calendar" component={CalendarScreen} options={{ title: 'Calendar' }} />
+        <Tab.Screen name="AICoach" component={AICoachScreen} options={{ title: 'AI Coach' }} />
+        <Tab.Screen name="Home" component={HomeScreen} options={{ title: 'Home' }} />
         <Tab.Screen name="Chat" component={ChatStackNavigator} options={{ title: 'Chat' }} />
-        <Tab.Screen name="Clubs" component={ClubsStackNavigator} options={{ title: 'Clubs' }} />
-        <Tab.Screen name="Settings" component={SettingsScreen} options={{ title: 'Settings' }} />
         <Tab.Screen name="Profile" component={ProfileScreen} options={{ title: 'Profile' }} />
     </Tab.Navigator>
   );

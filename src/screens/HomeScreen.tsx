@@ -6,7 +6,6 @@ import {
   ScrollView,
   TouchableOpacity,
   Image,
-  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -19,11 +18,13 @@ import { useNavigation } from '@react-navigation/native';
 import { Game, Court, GameFormat, SkillLevel, GameStatus, CourtType, CourtSurface, Tournament, TournamentFormat, TournamentStatus } from '../types';
 
 const HomeScreen: React.FC = () => {
-  const { theme } = useThemeStore();
+  const { getCurrentTheme } = useThemeStore();
   const { user } = useAuthStore();
   const { games, getUpcomingGames } = useGameStore();
   const { tournaments, getUpcomingTournaments } = useTournamentStore();
   const navigation = useNavigation<any>();
+  
+  const theme = getCurrentTheme();
 
   // Get recent games and tournaments from stores
   const recentGames = getUpcomingGames().slice(0, 2);
@@ -59,21 +60,78 @@ const HomeScreen: React.FC = () => {
     navigation.navigate('CreateGame' as never);
   };
 
-  const handleViewTournaments = () => {
-    navigation.navigate('TournamentsList' as never);
+  const handleCreateTournament = () => {
+    navigation.navigate('CreateTournament' as never);
   };
 
   const handleFindGame = () => {
-    // Temporarily disabled - Games tab removed
-    Alert.alert('Coming Soon', 'Games functionality will be available soon!');
+    navigation.navigate('Games' as never);
   };
 
   const handleFindTournament = () => {
     navigation.navigate('TournamentsList' as never);
   };
 
-  const handleFindCourt = () => {
-    navigation.navigate('Map' as never);
+  // Calendar helper functions
+  const getWeekDays = () => {
+    const today = new Date();
+    const weekDays = [];
+    
+    // Start from TODAY and show next 7 days
+    for (let i = 0; i < 7; i++) {
+      const date = new Date(today);
+      date.setDate(today.getDate() + i);
+      
+      weekDays.push({
+        date: date.toISOString().split('T')[0],
+        shortName: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][date.getDay()],
+        dayNumber: date.getDate(),
+        isToday: i === 0, // First day (i === 0) is today
+      });
+    }
+    
+    return weekDays;
+  };
+
+  const getEventsForDay = (dateString: string) => {
+    const date = new Date(dateString);
+    const dayStart = new Date(date);
+    dayStart.setHours(0, 0, 0, 0);
+    const dayEnd = new Date(date);
+    dayEnd.setHours(23, 59, 59, 999);
+    
+    return {
+      games: games.filter(game => {
+        const gameTime = new Date(game.startTime);
+        return gameTime >= dayStart && gameTime <= dayEnd;
+      }),
+      tournaments: tournaments.filter(tournament => {
+        const tournamentDate = new Date(tournament.startDate);
+        return tournamentDate.toDateString() === date.toDateString();
+      }),
+    };
+  };
+
+  const getEventDotColor = (dayEvents: { games: Game[], tournaments: Tournament[] }) => {
+    if (dayEvents.games.length > 0 && dayEvents.tournaments.length > 0) {
+      return theme.colors.warning; // Mixed events
+    } else if (dayEvents.tournaments.length > 0) {
+      return theme.colors.secondary; // Tournaments only
+    } else {
+      return theme.colors.primary; // Games only
+    }
+  };
+
+  const getTotalEventsThisWeek = () => {
+    const weekDays = getWeekDays();
+    let total = 0;
+    
+    weekDays.forEach(day => {
+      const dayEvents = getEventsForDay(day.date);
+      total += dayEvents.games.length + dayEvents.tournaments.length;
+    });
+    
+    return total;
   };
 
   const styles = createStyles(theme);
@@ -87,58 +145,153 @@ const HomeScreen: React.FC = () => {
             <Text style={styles.greeting}>Good morning!</Text>
             <Text style={styles.userName}>{user?.firstName || 'Player'}</Text>
           </View>
-          <TouchableOpacity 
-            style={styles.profileButton}
-            onPress={() => navigation.navigate('Profile' as any)}
-          >
-            <Ionicons name="person-circle" size={40} color={theme.colors.primary} />
-          </TouchableOpacity>
+          <View style={styles.headerButtons}>
+            <TouchableOpacity 
+              style={styles.settingsButton}
+              onPress={() => navigation.navigate('Settings' as any)}
+            >
+              <Ionicons name="settings" size={24} color={theme.colors.primary} />
+            </TouchableOpacity>
+            <TouchableOpacity 
+              style={styles.profileButton}
+              onPress={() => navigation.navigate('Profile' as any)}
+            >
+              <Ionicons name="person-circle" size={40} color={theme.colors.primary} />
+            </TouchableOpacity>
+          </View>
         </View>
 
         {/* Quick Actions */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Quick Actions</Text>
           <View style={styles.quickActions}>
-            <TouchableOpacity style={styles.actionButton} onPress={handleCreateGame}>
-              <LinearGradient
-                colors={[theme.colors.primary, theme.colors.secondary]}
-                style={styles.actionGradient}
-              >
-                <Ionicons name="add-circle" size={24} color="white" />
-                <Text style={styles.actionText}>Create Game</Text>
-              </LinearGradient>
-            </TouchableOpacity>
+            {/* Row 1: Create Game & Create Tournament */}
+            <View style={styles.actionRow}>
+              <TouchableOpacity style={styles.actionButton} onPress={handleCreateGame}>
+                <LinearGradient
+                  colors={[theme.colors.primary, theme.colors.secondary]}
+                  style={styles.actionGradient}
+                >
+                  <Ionicons name="add-circle" size={24} color="white" />
+                  <Text style={styles.actionText}>Create Game</Text>
+                </LinearGradient>
+              </TouchableOpacity>
+              
+              <TouchableOpacity style={styles.actionButton} onPress={handleCreateTournament}>
+                <LinearGradient
+                  colors={[theme.colors.warning, '#D97706']}
+                  style={styles.actionGradient}
+                >
+                  <Ionicons name="trophy" size={24} color="white" />
+                  <Text style={styles.actionText}>Create Tournament</Text>
+                </LinearGradient>
+              </TouchableOpacity>
+            </View>
             
-            <TouchableOpacity style={styles.actionButton} onPress={handleViewTournaments}>
-              <LinearGradient
-                colors={[theme.colors.warning, '#D97706']}
-                style={styles.actionGradient}
-              >
-                <Ionicons name="trophy" size={24} color="white" />
-                <Text style={styles.actionText}>Tournaments</Text>
-              </LinearGradient>
-            </TouchableOpacity>
+            {/* Row 2: Find Game & Clubs */}
+            <View style={styles.actionRow}>
+              <TouchableOpacity style={styles.actionButton} onPress={handleFindGame}>
+                <LinearGradient
+                  colors={[theme.colors.success, '#059669']}
+                  style={styles.actionGradient}
+                >
+                  <Ionicons name="search" size={24} color="white" />
+                  <Text style={styles.actionText}>Find Game</Text>
+                </LinearGradient>
+              </TouchableOpacity>
+              
+              <TouchableOpacity style={styles.actionButton} onPress={() => navigation.navigate('ClubsList' as never)}>
+                <LinearGradient
+                  colors={[theme.colors.secondary, '#7C3AED']}
+                  style={styles.actionGradient}
+                >
+                  <Ionicons name="business" size={24} color="white" />
+                  <Text style={styles.actionText}>Clubs</Text>
+                </LinearGradient>
+              </TouchableOpacity>
+            </View>
             
-            <TouchableOpacity style={styles.actionButton} onPress={handleFindGame}>
-              <LinearGradient
-                colors={[theme.colors.success, '#059669']}
-                style={styles.actionGradient}
-              >
-                <Ionicons name="search" size={24} color="white" />
-                <Text style={styles.actionText}>Find Game</Text>
-              </LinearGradient>
-            </TouchableOpacity>
-            
-            <TouchableOpacity style={styles.actionButton} onPress={handleFindCourt}>
-              <LinearGradient
-                colors={[theme.colors.info, '#2563EB']}
-                style={styles.actionGradient}
-              >
-                <Ionicons name="map" size={24} color="white" />
-                <Text style={styles.actionText}>Find Court</Text>
-              </LinearGradient>
+            {/* Row 3: Map & AI Coach */}
+            <View style={styles.actionRow}>
+              <TouchableOpacity style={styles.actionButton} onPress={() => navigation.navigate('Map' as never)}>
+                <LinearGradient
+                  colors={[theme.colors.error, '#DC2626']}
+                  style={styles.actionGradient}
+                >
+                  <Ionicons name="map" size={24} color="white" />
+                  <Text style={styles.actionText}>Map</Text>
+                </LinearGradient>
+              </TouchableOpacity>
+              
+              <TouchableOpacity style={styles.actionButton} onPress={() => navigation.navigate('AICoach' as never)}>
+                <LinearGradient
+                  colors={[theme.colors.info, '#0EA5E9']}
+                  style={styles.actionGradient}
+                >
+                  <Ionicons name="bulb" size={24} color="white" />
+                  <Text style={styles.actionText}>AI Coach</Text>
+                </LinearGradient>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+
+        {/* Weekly Calendar Preview */}
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>This Week</Text>
+            <TouchableOpacity onPress={() => navigation.navigate('Calendar' as never)}>
+              <Text style={styles.seeAllText}>View Full Calendar</Text>
             </TouchableOpacity>
           </View>
+          <TouchableOpacity 
+            style={styles.calendarPreview}
+            onPress={() => navigation.navigate('Calendar' as never)}
+          >
+            <View style={styles.calendarPreviewHeader}>
+              <Ionicons name="calendar" size={24} color={theme.colors.primary} />
+              <Text style={styles.calendarPreviewTitle}>Weekly Schedule</Text>
+            </View>
+            
+            <View style={styles.weekDaysContainer}>
+              {getWeekDays().map((day, index) => {
+                const dayEvents = getEventsForDay(day.date);
+                const hasEvents = dayEvents.games.length > 0 || dayEvents.tournaments.length > 0;
+                
+                return (
+                  <View key={index} style={styles.dayContainer}>
+                    <Text style={[
+                      styles.dayName, 
+                      day.isToday && styles.todayDayName
+                    ]}>
+                      {day.shortName}
+                    </Text>
+                    <Text style={[
+                      styles.dayNumber,
+                      day.isToday && styles.todayDayNumber
+                    ]}>
+                      {day.dayNumber}
+                    </Text>
+                    {hasEvents && (
+                      <View style={styles.eventIndicator}>
+                        <View style={[
+                          styles.eventDot,
+                          { backgroundColor: getEventDotColor(dayEvents) }
+                        ]} />
+                      </View>
+                    )}
+                  </View>
+                );
+              })}
+            </View>
+            
+            <View style={styles.calendarPreviewFooter}>
+              <Text style={styles.calendarPreviewSubtitle}>
+                {getTotalEventsThisWeek()} events this week
+              </Text>
+              <Ionicons name="chevron-forward" size={16} color={theme.colors.textSecondary} />
+            </View>
+          </TouchableOpacity>
         </View>
 
         {/* Recent Games */}
@@ -155,7 +308,7 @@ const HomeScreen: React.FC = () => {
                 <TouchableOpacity 
                   key={game.id} 
                   style={styles.gameCard}
-                  onPress={() => Alert.alert('Game Details', `Details for ${game.title} coming soon!`)}
+                  onPress={() => navigation.navigate('GameDetails' as never, { gameId: game.id } as never)}
                 >
                   <View style={styles.gameCardHeader}>
                     <Text style={styles.gameTitle}>{game.title}</Text>
@@ -209,7 +362,7 @@ const HomeScreen: React.FC = () => {
                 <TouchableOpacity 
                   key={tournament.id} 
                   style={styles.tournamentCard}
-                  onPress={() => Alert.alert('Tournament Details', `Details for ${tournament.name} coming soon!`)}
+                  onPress={() => navigation.navigate('TournamentDetails' as never, { tournamentId: tournament.id } as never)}
                 >
                   <View style={styles.tournamentCardHeader}>
                     <Text style={styles.tournamentTitle}>{tournament.name}</Text>
@@ -249,8 +402,8 @@ const HomeScreen: React.FC = () => {
             <View style={styles.emptySection}>
               <Ionicons name="trophy-outline" size={48} color={theme.colors.textSecondary} />
               <Text style={styles.emptySectionText}>No tournaments yet</Text>
-              <TouchableOpacity style={styles.emptySectionButton} onPress={handleViewTournaments}>
-                <Text style={styles.emptySectionButtonText}>Browse Tournaments</Text>
+              <TouchableOpacity style={styles.emptySectionButton} onPress={handleCreateTournament}>
+                <Text style={styles.emptySectionButtonText}>Create Your First Tournament</Text>
               </TouchableOpacity>
             </View>
           )}
@@ -260,7 +413,7 @@ const HomeScreen: React.FC = () => {
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Nearby Courts</Text>
-            <TouchableOpacity onPress={handleFindCourt}>
+            <TouchableOpacity onPress={() => navigation.navigate('Map' as never)}>
               <Text style={styles.seeAllText}>See All</Text>
             </TouchableOpacity>
           </View>
@@ -319,6 +472,14 @@ const createStyles = (theme: any) => StyleSheet.create({
     fontWeight: '600',
     color: theme.colors.text,
   },
+  headerButtons: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing.sm,
+  },
+  settingsButton: {
+    padding: theme.spacing.sm,
+  },
   profileButton: {
     padding: theme.spacing.sm,
   },
@@ -343,12 +504,17 @@ const createStyles = (theme: any) => StyleSheet.create({
     fontWeight: '500',
   },
   quickActions: {
+    // Removed flexDirection: 'row', flexWrap: 'wrap', gap: theme.spacing.md,
+    // This will cause the buttons to stack vertically within each row
+  },
+  actionRow: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
+    justifyContent: 'space-between',
     gap: theme.spacing.md,
+    marginBottom: theme.spacing.md,
   },
   actionButton: {
-    width: '48%',
+    width: '48%', // Adjusted width for 2x3 grid
     borderRadius: theme.borderRadius.md,
     overflow: 'hidden',
     ...theme.shadows?.md,
@@ -362,6 +528,73 @@ const createStyles = (theme: any) => StyleSheet.create({
     color: 'white',
     fontSize: 14,
     fontWeight: '600',
+  },
+  calendarPreview: {
+    backgroundColor: theme.colors.surface,
+    borderRadius: theme.borderRadius.lg,
+    padding: theme.spacing.lg,
+    ...theme.shadows?.sm,
+  },
+  calendarPreviewHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: theme.spacing.md,
+    gap: theme.spacing.sm,
+  },
+  calendarPreviewTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: theme.colors.text,
+  },
+  weekDaysContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: theme.spacing.md,
+  },
+  dayContainer: {
+    alignItems: 'center',
+    minWidth: 40,
+  },
+  dayName: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: theme.colors.textSecondary,
+    marginBottom: 4,
+    textTransform: 'uppercase',
+  },
+  todayDayName: {
+    color: theme.colors.primary,
+    fontWeight: '600',
+  },
+  dayNumber: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: theme.colors.text,
+    marginBottom: 4,
+  },
+  todayDayNumber: {
+    color: theme.colors.primary,
+  },
+  eventIndicator: {
+    alignItems: 'center',
+  },
+  eventDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  calendarPreviewFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingTop: theme.spacing.sm,
+    borderTopWidth: 1,
+    borderTopColor: theme.colors.border,
+  },
+  calendarPreviewSubtitle: {
+    fontSize: 14,
+    color: theme.colors.textSecondary,
+    fontWeight: '500',
   },
   gameCard: {
     backgroundColor: theme.colors.surface,

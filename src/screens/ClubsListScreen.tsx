@@ -15,31 +15,28 @@ import { useThemeStore } from '../stores/themeStore';
 import { useAuthStore } from '../stores/authStore';
 import { useNavigation } from '@react-navigation/native';
 
-interface Tournament {
+interface Club {
   id: string;
-  title: string;
+  name: string;
   description: string;
-  startDate: Date;
-  endDate: Date;
   location: {
     city: string;
-    venue: string;
+    state: string;
     address: string;
   };
-  maxParticipants: number;
-  currentParticipants: number;
-  entryFee: number;
-  prizePool: number;
-  status: 'UPCOMING' | 'REGISTRATION_OPEN' | 'REGISTRATION_CLOSED' | 'IN_PROGRESS' | 'COMPLETED';
-  category: 'SINGLES' | 'DOUBLES' | 'MIXED_DOUBLES' | 'TEAM';
+  memberCount: number;
+  maxMembers: number;
+  category: 'PICKLEBALL' | 'TENNIS' | 'MULTI_SPORT' | 'SOCIAL' | 'COMPETITIVE';
   skillLevel: 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED' | 'ALL_LEVELS';
-  organizer: {
-    name: string;
-    photo: string;
-  };
+  membershipFee: number;
+  isPublic: boolean;
+  photo: string;
+  tags: string[];
+  rating: number;
+  reviewCount: number;
 }
 
-const TournamentsListScreen: React.FC = () => {
+const ClubsListScreen: React.FC = () => {
   const { theme } = useThemeStore();
   const { user } = useAuthStore();
   const navigation = useNavigation();
@@ -47,172 +44,177 @@ const TournamentsListScreen: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('ALL');
   const [selectedSkillLevel, setSelectedSkillLevel] = useState<string>('ALL');
-  const [selectedStatus, setSelectedStatus] = useState<string>('ALL');
 
-  const handleCreateTournament = () => {
-    navigation.navigate('CreateTournament' as never);
+  const handleCreateClub = () => {
+    navigation.navigate('CreateClub' as never);
   };
 
-  // Mock tournaments data
-  const tournaments: Tournament[] = [
+  // Mock clubs data
+  const clubs: Club[] = [
     {
       id: '1',
-      title: 'Spring Championship 2024',
-      description: 'Annual spring tournament for all skill levels',
-      startDate: new Date('2024-04-15'),
-      endDate: new Date('2024-04-17'),
+      name: 'NYC Pickleball Club',
+      description: 'Premier pickleball community with professional coaching, tournaments, and social events.',
       location: {
         city: 'New York',
-        venue: 'Central Park Tennis Center',
-        address: '123 Tennis Ave, NY 10001',
+        state: 'NY',
+        address: 'Manhattan, NY',
       },
-      maxParticipants: 64,
-      currentParticipants: 48,
-      entryFee: 50,
-      prizePool: 5000,
-      status: 'REGISTRATION_OPEN',
-      category: 'SINGLES',
+      memberCount: 156,
+      maxMembers: 200,
+      category: 'PICKLEBALL',
       skillLevel: 'ALL_LEVELS',
-      organizer: {
-        name: 'NYC Tennis Association',
-        photo: '',
-      },
+      membershipFee: 50,
+      isPublic: true,
+      photo: '',
+      tags: ['Professional', 'Coaching', 'Tournaments', 'Social'],
+      rating: 4.8,
+      reviewCount: 89,
     },
     {
       id: '2',
-      title: 'Doubles Masters Cup',
-      description: 'Elite doubles tournament for advanced players',
-      startDate: new Date('2024-05-20'),
-      endDate: new Date('2024-05-22'),
+      name: 'Brooklyn Tennis Society',
+      description: 'Friendly tennis community for all skill levels. Weekly meetups and casual play.',
       location: {
-        city: 'Los Angeles',
-        venue: 'LA Tennis Club',
-        address: '456 Court St, LA 90210',
+        city: 'Brooklyn',
+        state: 'NY',
+        address: 'Brooklyn, NY',
       },
-      maxParticipants: 32,
-      currentParticipants: 28,
-      entryFee: 75,
-      prizePool: 3000,
-      status: 'REGISTRATION_OPEN',
-      category: 'DOUBLES',
-      skillLevel: 'ADVANCED',
-      organizer: {
-        name: 'LA Tennis Federation',
-        photo: '',
-      },
+      memberCount: 89,
+      maxMembers: 120,
+      category: 'TENNIS',
+      skillLevel: 'ALL_LEVELS',
+      membershipFee: 35,
+      isPublic: true,
+      photo: '',
+      tags: ['Casual', 'Weekly Meetups', 'Friendly', 'All Levels'],
+      rating: 4.6,
+      reviewCount: 67,
     },
     {
       id: '3',
-      title: 'Beginner Friendly Tournament',
-      description: 'Perfect for new players to gain experience',
-      startDate: new Date('2024-06-10'),
-      endDate: new Date('2024-06-10'),
+      name: 'Queens Sports Collective',
+      description: 'Multi-sport community with focus on pickleball. Indoor and outdoor facilities.',
       location: {
-        city: 'Chicago',
-        venue: 'Community Tennis Center',
-        address: '789 Racket Rd, Chicago 60601',
+        city: 'Queens',
+        state: 'NY',
+        address: 'Queens, NY',
       },
-      maxParticipants: 24,
-      currentParticipants: 16,
-      entryFee: 25,
-      prizePool: 500,
-      status: 'REGISTRATION_OPEN',
-      category: 'SINGLES',
-      skillLevel: 'BEGINNER',
-      organizer: {
-        name: 'Chicago Tennis Community',
-        photo: '',
+      memberCount: 234,
+      maxMembers: 300,
+      category: 'MULTI_SPORT',
+      skillLevel: 'ALL_LEVELS',
+      membershipFee: 75,
+      isPublic: false,
+      photo: '',
+      tags: ['Multi-Sport', 'Indoor', 'Outdoor', 'Facilities'],
+      rating: 4.9,
+      reviewCount: 156,
+    },
+    {
+      id: '4',
+      name: 'Manhattan Elite Pickleball',
+      description: 'Competitive pickleball club for advanced players. Professional training and league play.',
+      location: {
+        city: 'New York',
+        state: 'NY',
+        address: 'Manhattan, NY',
       },
+      memberCount: 45,
+      maxMembers: 60,
+      category: 'PICKLEBALL',
+      skillLevel: 'ADVANCED',
+      membershipFee: 120,
+      isPublic: false,
+      photo: '',
+      tags: ['Competitive', 'Advanced', 'Professional', 'League Play'],
+      rating: 4.7,
+      reviewCount: 34,
     },
   ];
 
-  const filteredTournaments = useMemo(() => {
-    return tournaments.filter(tournament => {
-      const matchesSearch = tournament.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                           tournament.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                           tournament.location.city.toLowerCase().includes(searchQuery.toLowerCase());
+  const filteredClubs = useMemo(() => {
+    return clubs.filter(club => {
+      const matchesSearch = club.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                           club.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                           club.location.city.toLowerCase().includes(searchQuery.toLowerCase());
       
-      const matchesCategory = selectedCategory === 'ALL' || tournament.category === selectedCategory;
-      const matchesSkillLevel = selectedSkillLevel === 'ALL' || tournament.skillLevel === selectedSkillLevel;
-      const matchesStatus = selectedStatus === 'ALL' || tournament.status === selectedStatus;
+      const matchesCategory = selectedCategory === 'ALL' || club.category === selectedCategory;
+      const matchesSkillLevel = selectedSkillLevel === 'ALL' || club.skillLevel === selectedSkillLevel;
       
-      return matchesSearch && matchesCategory && matchesSkillLevel && matchesStatus;
+      return matchesSearch && matchesCategory && matchesSkillLevel;
     });
-  }, [searchQuery, selectedCategory, selectedSkillLevel, selectedStatus]);
+  }, [searchQuery, selectedCategory, selectedSkillLevel]);
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'UPCOMING': return theme.colors.info;
-      case 'REGISTRATION_OPEN': return theme.colors.success;
-      case 'REGISTRATION_CLOSED': return theme.colors.warning;
-      case 'IN_PROGRESS': return theme.colors.primary;
-      case 'COMPLETED': return theme.colors.textSecondary;
+  const getCategoryColor = (category: string) => {
+    switch (category) {
+      case 'PICKLEBALL': return theme.colors.primary;
+      case 'TENNIS': return theme.colors.success;
+      case 'MULTI_SPORT': return theme.colors.info;
+      case 'SOCIAL': return theme.colors.warning;
+      case 'COMPETITIVE': return theme.colors.secondary;
       default: return theme.colors.textSecondary;
     }
   };
 
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case 'UPCOMING': return 'Upcoming';
-      case 'REGISTRATION_OPEN': return 'Registration Open';
-      case 'REGISTRATION_CLOSED': return 'Registration Closed';
-      case 'IN_PROGRESS': return 'In Progress';
-      case 'COMPLETED': return 'Completed';
-      default: return status;
-    }
-  };
-
-  const renderTournamentCard = ({ item }: { item: Tournament }) => (
-    <TouchableOpacity style={styles.tournamentCard}>
-      <View style={styles.tournamentHeader}>
-        <Text style={styles.tournamentTitle}>{item.title}</Text>
-        <View style={[styles.statusBadge, { backgroundColor: getStatusColor(item.status) }]}>
-          <Text style={styles.statusText}>{getStatusText(item.status)}</Text>
+  const renderClubCard = ({ item }: { item: Club }) => (
+    <TouchableOpacity style={styles.clubCard}>
+      <View style={styles.clubHeader}>
+        <View style={styles.clubInfo}>
+          <Text style={styles.clubName}>{item.name}</Text>
+          <View style={[styles.categoryBadge, { backgroundColor: getCategoryColor(item.category) }]}>
+            <Text style={styles.categoryText}>{item.category.replace('_', ' ')}</Text>
+          </View>
+        </View>
+        <View style={styles.clubStats}>
+          <Text style={styles.ratingText}>{item.rating} ⭐</Text>
+          <Text style={styles.reviewText}>({item.reviewCount} reviews)</Text>
         </View>
       </View>
       
-      <Text style={styles.tournamentDescription}>{item.description}</Text>
+      <Text style={styles.clubDescription}>{item.description}</Text>
       
-      <View style={styles.tournamentDetails}>
-        <View style={styles.detailRow}>
-          <Ionicons name="calendar" size={16} color={theme.colors.textSecondary} />
-          <Text style={styles.detailText}>
-            {item.startDate.toLocaleDateString()} - {item.endDate.toLocaleDateString()}
-          </Text>
-        </View>
-        
+      <View style={styles.clubDetails}>
         <View style={styles.detailRow}>
           <Ionicons name="location" size={16} color={theme.colors.textSecondary} />
-          <Text style={styles.detailText}>{item.location.venue}, {item.location.city}</Text>
+          <Text style={styles.detailText}>{item.location.city}, {item.location.state}</Text>
         </View>
         
         <View style={styles.detailRow}>
           <Ionicons name="people" size={16} color={theme.colors.textSecondary} />
           <Text style={styles.detailText}>
-            {item.currentParticipants}/{item.maxParticipants} participants
+            {item.memberCount}/{item.maxMembers} members
           </Text>
         </View>
         
         <View style={styles.detailRow}>
-          <Ionicons name="trophy" size={16} color={theme.colors.textSecondary} />
-          <Text style={styles.detailText}>Prize Pool: ${item.prizePool.toLocaleString()}</Text>
+          <Ionicons name="star" size={16} color={theme.colors.textSecondary} />
+          <Text style={styles.detailText}>Skill Level: {item.skillLevel}</Text>
+        </View>
+        
+        <View style={styles.detailRow}>
+          <Ionicons name="cash" size={16} color={theme.colors.textSecondary} />
+          <Text style={styles.detailText}>
+            Membership: ${item.membershipFee}/month
+          </Text>
         </View>
       </View>
       
-      <View style={styles.tournamentFooter}>
-        <View style={styles.categoryChips}>
-          <View style={[styles.categoryChip, { backgroundColor: theme.colors.surface }]}>
-            <Text style={styles.categoryChipText}>{item.category.replace('_', ' ')}</Text>
-          </View>
-          <View style={[styles.categoryChip, { backgroundColor: theme.colors.surface }]}>
-            <Text style={styles.categoryChipText}>{item.skillLevel}</Text>
-          </View>
+      <View style={styles.clubFooter}>
+        <View style={styles.tagsList}>
+          {item.tags.slice(0, 3).map((tag, index) => (
+            <View key={index} style={styles.tag}>
+              <Text style={styles.tagText}>{tag}</Text>
+            </View>
+          ))}
         </View>
         
-        <View style={styles.entryFee}>
-          <Text style={styles.entryFeeLabel}>Entry Fee:</Text>
-          <Text style={styles.entryFeeAmount}>${item.entryFee}</Text>
-        </View>
+        <TouchableOpacity 
+          style={[styles.actionButton, { backgroundColor: theme.colors.primary }]}
+          onPress={() => {}}
+        >
+          <Text style={styles.actionButtonText}>View Details</Text>
+        </TouchableOpacity>
       </View>
     </TouchableOpacity>
   );
@@ -230,12 +232,12 @@ const TournamentsListScreen: React.FC = () => {
           >
             <View style={styles.headerContent}>
               <View style={styles.headerTextContainer}>
-                <Text style={styles.headerTitle}>Tournaments</Text>
-                <Text style={styles.headerSubtitle}>Find and join exciting tournaments</Text>
+                <Text style={styles.headerTitle}>Clubs</Text>
+                <Text style={styles.headerSubtitle}>Join amazing sports communities</Text>
               </View>
-              <TouchableOpacity style={styles.createButton} onPress={handleCreateTournament}>
+              <TouchableOpacity style={styles.createButton} onPress={handleCreateClub}>
                 <LinearGradient
-                  colors={[theme.colors.warning, '#D97706']}
+                  colors={[theme.colors.primary, theme.colors.secondary]}
                   style={styles.createButtonGradient}
                 >
                   <Ionicons name="add" size={20} color="white" />
@@ -252,7 +254,7 @@ const TournamentsListScreen: React.FC = () => {
             <Ionicons name="search" size={20} color={theme.colors.textSecondary} />
             <TextInput
               style={styles.searchInput}
-              placeholder="Search tournaments..."
+              placeholder="Search clubs..."
               placeholderTextColor={theme.colors.textSecondary}
               value={searchQuery}
               onChangeText={setSearchQuery}
@@ -263,7 +265,7 @@ const TournamentsListScreen: React.FC = () => {
           <View style={styles.filterGroup}>
             <Text style={styles.filterLabel}>Category:</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterChips}>
-              {['ALL', 'SINGLES', 'DOUBLES', 'MIXED_DOUBLES', 'TEAM'].map((category) => (
+              {['ALL', 'PICKLEBALL', 'TENNIS', 'MULTI_SPORT', 'SOCIAL', 'COMPETITIVE'].map((category) => (
                 <TouchableOpacity
                   key={category}
                   style={[
@@ -308,28 +310,28 @@ const TournamentsListScreen: React.FC = () => {
           </View>
         </View>
 
-        {/* Tournaments List */}
-        <View style={styles.tournamentsSection}>
+        {/* Clubs List */}
+        <View style={styles.clubsSection}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>
-              Available Tournaments ({filteredTournaments.length})
+              Available Clubs ({filteredClubs.length})
             </Text>
           </View>
           
-          {filteredTournaments.length > 0 ? (
+          {filteredClubs.length > 0 ? (
             <FlatList
-              data={filteredTournaments}
-              renderItem={renderTournamentCard}
+              data={filteredClubs}
+              renderItem={renderClubCard}
               keyExtractor={(item) => item.id}
               scrollEnabled={false}
               showsVerticalScrollIndicator={false}
             />
           ) : (
             <View style={styles.emptyState}>
-              <Ionicons name="trophy-outline" size={64} color={theme.colors.textSecondary} />
-              <Text style={styles.emptyStateTitle}>No tournaments found</Text>
+              <Ionicons name="business-outline" size={64} color={theme.colors.textSecondary} />
+              <Text style={styles.emptyStateTitle}>No clubs found</Text>
               <Text style={styles.emptyStateText}>
-                Try adjusting your search criteria or check back later for new tournaments.
+                Try adjusting your search criteria or check back later for new clubs.
               </Text>
             </View>
           )}
@@ -436,7 +438,7 @@ const createStyles = (theme: any) => StyleSheet.create({
     fontWeight: '500',
     color: theme.colors.text,
   },
-  tournamentsSection: {
+  clubsSection: {
     paddingHorizontal: theme.spacing.lg,
     paddingBottom: theme.spacing.xl,
   },
@@ -448,7 +450,7 @@ const createStyles = (theme: any) => StyleSheet.create({
     fontWeight: '600',
     color: theme.colors.text,
   },
-  tournamentCard: {
+  clubCard: {
     backgroundColor: theme.colors.surface,
     borderRadius: 16,
     padding: theme.spacing.lg,
@@ -456,36 +458,52 @@ const createStyles = (theme: any) => StyleSheet.create({
     borderWidth: 1,
     borderColor: theme.colors.border,
   },
-  tournamentHeader: {
+  clubHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
     marginBottom: theme.spacing.sm,
   },
-  tournamentTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: theme.colors.text,
+  clubInfo: {
     flex: 1,
     marginRight: theme.spacing.sm,
   },
-  statusBadge: {
+  clubName: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: theme.colors.text,
+    marginBottom: theme.spacing.sm,
+  },
+  categoryBadge: {
+    alignSelf: 'flex-start',
     paddingHorizontal: theme.spacing.sm,
     paddingVertical: 4,
     borderRadius: 12,
   },
-  statusText: {
+  categoryText: {
     fontSize: 12,
     fontWeight: '600',
     color: 'white',
   },
-  tournamentDescription: {
+  clubStats: {
+    alignItems: 'flex-end',
+  },
+  ratingText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: theme.colors.primary,
+  },
+  reviewText: {
+    fontSize: 12,
+    color: theme.colors.textSecondary,
+  },
+  clubDescription: {
     fontSize: 14,
     color: theme.colors.textSecondary,
     marginBottom: theme.spacing.md,
     lineHeight: 20,
   },
-  tournamentDetails: {
+  clubDetails: {
     marginBottom: theme.spacing.md,
   },
   detailRow: {
@@ -498,36 +516,34 @@ const createStyles = (theme: any) => StyleSheet.create({
     color: theme.colors.text,
     marginLeft: theme.spacing.sm,
   },
-  tournamentFooter: {
+  clubFooter: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-  categoryChips: {
+  tagsList: {
     flexDirection: 'row',
     gap: theme.spacing.sm,
   },
-  categoryChip: {
+  tag: {
     paddingHorizontal: theme.spacing.sm,
     paddingVertical: 4,
+    backgroundColor: theme.colors.background,
     borderRadius: 12,
   },
-  categoryChipText: {
-    fontSize: 12,
-    fontWeight: '500',
-    color: theme.colors.text,
-  },
-  entryFee: {
-    alignItems: 'flex-end',
-  },
-  entryFeeLabel: {
+  tagText: {
     fontSize: 12,
     color: theme.colors.textSecondary,
   },
-  entryFeeAmount: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: theme.colors.primary,
+  actionButton: {
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: theme.spacing.sm,
+    borderRadius: 20,
+  },
+  actionButtonText: {
+    color: 'white',
+    fontSize: 14,
+    fontWeight: '600',
   },
   emptyState: {
     alignItems: 'center',
@@ -548,4 +564,4 @@ const createStyles = (theme: any) => StyleSheet.create({
   },
 });
 
-export default TournamentsListScreen;
+export default ClubsListScreen;
