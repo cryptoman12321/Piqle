@@ -29,6 +29,7 @@ const AICoachScreen: React.FC = () => {
     setCurrentConversation,
     deleteConversation,
     clearError,
+    generateAIResponse,
   } = useAICoachStore();
   
   const theme = getCurrentTheme();
@@ -60,7 +61,7 @@ const AICoachScreen: React.FC = () => {
 
     const message = inputText.trim();
     setInputText('');
-    await sendMessage(message);
+    await generateAIResponse(currentConversation?.id || '', message);
   };
 
   const handleNewConversation = () => {

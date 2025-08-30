@@ -280,3 +280,5 @@ function generateConversationTitle(userMessage: string): string {
     return 'Pickleball coaching session';
   }
 }
+
+export default useAICoachStore;
