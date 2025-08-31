@@ -53,17 +53,17 @@ export interface Theme {
 
 export const lightTheme: Theme = {
   colors: {
-    primary: '#2563EB', // Modern blue
-    secondary: '#7C3AED', // Purple accent
+    primary: '#3B82F6', // Vibrant blue
+    secondary: '#8B5CF6', // Modern purple
     background: '#FFFFFF',
     surface: '#F8FAFC',
-    text: '#0F172A',
+    text: '#1E293B',
     textSecondary: '#64748B',
     border: '#E2E8F0',
     error: '#EF4444',
     success: '#10B981',
     warning: '#F59E0B',
-    info: '#3B82F6',
+    info: '#06B6D4',
   },
   spacing: {
     xs: 4,

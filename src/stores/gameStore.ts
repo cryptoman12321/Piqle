@@ -9,7 +9,7 @@ interface GameState {
 
 interface GameActions {
   // CRUD operations
-  addGame: (game: Omit<Game, 'id' | 'createdAt'>) => void;
+  addGame: (game: Omit<Game, 'id' | 'createdAt'>) => Game;
   updateGame: (id: string, updates: Partial<Game>) => void;
   deleteGame: (id: string) => void;
   joinGame: (gameId: string, userId: string) => void;
@@ -43,6 +43,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
     set((state) => ({
       games: [newGame, ...state.games], // Add to beginning of list
     }));
+    
+    return newGame; // Return the created game
   },
 
   updateGame: (id, updates) => {

@@ -1,6 +1,7 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
+import { Platform } from 'react-native';
 import { useThemeStore } from '../stores/themeStore';
 import HomeScreen from '../screens/HomeScreen';
 import SimpleMapScreen from '../screens/SimpleMapScreen';
@@ -57,9 +58,9 @@ const MainTabNavigator: React.FC = () => {
           backgroundColor: theme.colors.surface,
           borderTopColor: theme.colors.border,
           borderTopWidth: 1,
-          paddingBottom: 8,
+          paddingBottom: Platform.OS === 'android' ? 32 : 8,
           paddingTop: 8,
-          height: 60,
+          height: Platform.OS === 'android' ? 100 : 60,
         },
         tabBarLabelStyle: {
           fontSize: 12,

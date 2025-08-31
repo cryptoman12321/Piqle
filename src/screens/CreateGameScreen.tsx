@@ -71,15 +71,18 @@ const CreateGameScreen: React.FC = () => {
         status: GameStatus.UPCOMING,
       };
 
-      addGame(newGame);
+      // Add the game and get the created game
+      const createdGame = addGame(newGame);
       
       Alert.alert(
         'Success!', 
         'Your game has been created and is now visible to other players!',
         [
           {
-            text: 'OK',
-            onPress: () => navigation.navigate('Games' as never)
+            text: 'View Game',
+            onPress: () => {
+              navigation.navigate('GameDetails', { gameId: createdGame.id });
+            }
           }
         ]
       );
