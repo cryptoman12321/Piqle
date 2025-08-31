@@ -13,7 +13,7 @@ interface GameActions {
   addGame: (game: Omit<Game, 'id' | 'createdAt'>) => Promise<Game>;
   updateGame: (id: string, updates: Partial<Game>) => Promise<void>;
   deleteGame: (id: string) => Promise<void>;
-  joinGame: (gameId: string, userId: string) => void;
+  joinGame: (gameId: string, userId: string) => Promise<void>;
   leaveGame: (gameId: string, userId: string) => void;
   
   // Data loading
@@ -88,10 +88,10 @@ export const useGameStore = create<GameStore>((set, get) => ({
     }
   },
 
-  joinGame: (gameId, userId) => {
+  joinGame: async (gameId, userId) => {
     set((state) => ({
       games: state.games.map((game) => {
-        if (game.id === gameId && game.currentPlayers < game.maxPlayers) {
+        if (game.id === gameId && game.currentPlayers < game.maxPlayers && !game.players.includes(userId)) {
           return {
             ...game,
             currentPlayers: game.currentPlayers + 1,
@@ -101,6 +101,23 @@ export const useGameStore = create<GameStore>((set, get) => ({
         return game;
       }),
     }));
+    
+    // Save to AsyncStorage
+    try {
+      const updatedGames = get().games.map((game) => {
+        if (game.id === gameId && game.currentPlayers < game.maxPlayers && !game.players.includes(userId)) {
+          return {
+            ...game,
+            currentPlayers: game.currentPlayers + 1,
+            players: [...game.players, userId],
+          };
+        }
+        return game;
+      });
+      await AsyncStorage.setItem('games', JSON.stringify(updatedGames));
+    } catch (error) {
+      console.error('Error saving game to AsyncStorage:', error);
+    }
   },
 
   leaveGame: (gameId, userId) => {

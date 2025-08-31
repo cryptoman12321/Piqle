@@ -15,6 +15,7 @@ import { useGameStore } from '../stores/gameStore';
 import { useAuthStore } from '../stores/authStore';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { Game, GameFormat, SkillLevel, GameStatus } from '../types';
+import AddPlayersModal from '../components/AddPlayersModal';
 
 const GameDetailsScreen: React.FC = () => {
   const { theme } = useThemeStore();
@@ -26,6 +27,7 @@ const GameDetailsScreen: React.FC = () => {
   const gameId = (route.params as any)?.gameId;
   const [game, setGame] = useState<Game | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [showAddPlayersModal, setShowAddPlayersModal] = useState(false);
 
   const styles = createStyles(theme);
 
@@ -247,7 +249,26 @@ const GameDetailsScreen: React.FC = () => {
 
           {/* Players List */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Current Players</Text>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Players</Text>
+              {game.currentPlayers < game.maxPlayers && (
+                <View style={styles.addPlayersContainer}>
+                  <TouchableOpacity
+                    style={styles.addButton}
+                    onPress={() => setShowAddPlayersModal(true)}
+                  >
+                    <Ionicons name="add" size={24} color={theme.colors.primary} />
+                    <Text style={styles.addButtonText}>Add</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.qrButton}
+                    onPress={() => setShowAddPlayersModal(true)}
+                  >
+                    <Ionicons name="qr-code" size={24} color={theme.colors.primary} />
+                  </TouchableOpacity>
+                </View>
+              )}
+            </View>
             <View style={styles.playersContainer}>
               {game.players.length > 0 ? (
                 game.players.map((playerId, index) => (
@@ -301,10 +322,10 @@ const GameDetailsScreen: React.FC = () => {
             ) : canJoinGame ? (
               <TouchableOpacity 
                 style={[styles.actionButton, styles.joinButton]}
-                onPress={() => {
+                onPress={async () => {
                   if (game && user?.id) {
                     // Actually join the game using the store
-                    joinGame(game.id, user.id);
+                    await joinGame(game.id, user.id);
                     // Navigate back to Games list to show updated state
                     navigation.navigate('Games' as any);
                   }
@@ -330,6 +351,13 @@ const GameDetailsScreen: React.FC = () => {
           </View>
         </View>
       </ScrollView>
+      
+      {/* Add Players Modal */}
+      <AddPlayersModal
+        visible={showAddPlayersModal}
+        onClose={() => setShowAddPlayersModal(false)}
+        game={game}
+      />
     </SafeAreaView>
   );
 };
@@ -388,6 +416,40 @@ const createStyles = (theme: any) => StyleSheet.create({
     fontWeight: '600',
     color: theme.colors.text,
     marginBottom: theme.spacing.md,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: theme.spacing.md,
+  },
+  addPlayersContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing.sm,
+  },
+  addButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: theme.colors.surface,
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: theme.spacing.sm,
+    borderRadius: theme.borderRadius.md,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+  },
+  addButtonText: {
+    marginLeft: theme.spacing.xs,
+    fontSize: 16,
+    fontWeight: '600',
+    color: theme.colors.primary,
+  },
+  qrButton: {
+    backgroundColor: theme.colors.surface,
+    padding: theme.spacing.sm,
+    borderRadius: theme.borderRadius.md,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
   },
   description: {
     fontSize: 16,
