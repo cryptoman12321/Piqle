@@ -16,6 +16,7 @@ import { useAuthStore } from '../stores/authStore';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { Game, GameFormat, SkillLevel, GameStatus } from '../types';
 import AddPlayersModal from '../components/AddPlayersModal';
+import { userService } from '../services/userService';
 
 const GameDetailsScreen: React.FC = () => {
   const { theme } = useThemeStore();
@@ -71,6 +72,21 @@ const GameDetailsScreen: React.FC = () => {
         { text: 'Cancel', style: 'cancel' },
       ]
     );
+  };
+
+  const handlePlayerAdded = (playerId: string) => {
+    if (!game || !user?.id) return;
+    
+    // Add player to the game using the store
+    joinGame(game.id, playerId);
+    
+    // Update the local game state
+    const updatedGame = { ...game };
+    if (!updatedGame.players.includes(playerId)) {
+      updatedGame.players.push(playerId);
+      updatedGame.currentPlayers += 1;
+      setGame(updatedGame);
+    }
   };
 
   const getFormatDisplayName = (format: GameFormat) => {
@@ -251,14 +267,14 @@ const GameDetailsScreen: React.FC = () => {
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>Players</Text>
-              {game.currentPlayers < game.maxPlayers && (
+              {game.currentPlayers < game.maxPlayers && user?.id === game.createdBy && (
                 <View style={styles.addPlayersContainer}>
                   <TouchableOpacity
                     style={styles.addButton}
                     onPress={() => setShowAddPlayersModal(true)}
                   >
                     <Ionicons name="add" size={24} color={theme.colors.primary} />
-                    <Text style={styles.addButtonText}>Add</Text>
+                    <Text style={styles.addButtonText}>Add Players</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
                     style={styles.qrButton}
@@ -271,23 +287,36 @@ const GameDetailsScreen: React.FC = () => {
             </View>
             <View style={styles.playersContainer}>
               {game.players.length > 0 ? (
-                game.players.map((playerId, index) => (
-                  <View key={playerId} style={styles.playerItem}>
-                    <View style={styles.playerAvatar}>
-                      <Text style={styles.playerInitial}>
-                        {playerId === user?.id ? 'You' : playerId === game.createdBy ? 'Host' : `P${index + 1}`}
-                      </Text>
+                game.players.map((playerId, index) => {
+                  const player = userService.getUserById(playerId);
+                  const isCurrentUser = playerId === user?.id;
+                  const isCreator = playerId === game.createdBy;
+                  
+                  // Debug logging
+                  console.log('Player ID:', playerId, 'User ID:', user?.id, 'Player found:', !!player, 'Player name:', player?.firstName);
+                  
+                  return (
+                    <View key={playerId} style={styles.playerItem}>
+                      <View style={styles.playerAvatar}>
+                        <Text style={styles.playerInitial}>
+                          {player ? `${player.firstName[0]}${player.lastName[0]}` : 
+                           isCurrentUser ? 'You' : 
+                           isCreator ? 'Host' : `P${index + 1}`}
+                        </Text>
+                      </View>
+                      <View style={styles.playerInfo}>
+                        <Text style={styles.playerName}>
+                          {player ? `${player.firstName} ${player.lastName}` : 
+                           isCurrentUser ? 'You' : 
+                           isCreator ? 'Host' : `Player ${index + 1}`}
+                        </Text>
+                        <Text style={styles.playerRole}>
+                          {isCreator ? 'Game Creator' : 'Player'}
+                        </Text>
+                      </View>
                     </View>
-                    <View style={styles.playerInfo}>
-                      <Text style={styles.playerName}>
-                        {playerId === user?.id ? 'You' : playerId === game.createdBy ? 'Host' : `Player ${index + 1}`}
-                      </Text>
-                      <Text style={styles.playerRole}>
-                        {playerId === game.createdBy ? 'Game Creator' : 'Player'}
-                      </Text>
-                    </View>
-                  </View>
-                ))
+                  );
+                })
               ) : (
                 <Text style={styles.noPlayersText}>No players joined yet</Text>
               )}
@@ -357,6 +386,7 @@ const GameDetailsScreen: React.FC = () => {
         visible={showAddPlayersModal}
         onClose={() => setShowAddPlayersModal(false)}
         game={game}
+        onPlayerAdded={handlePlayerAdded}
       />
     </SafeAreaView>
   );

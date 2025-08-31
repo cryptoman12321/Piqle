@@ -116,9 +116,16 @@ class UserService {
   }
 
   // Поиск пользователей
-  searchUsers(query: string): UserSearchResult[] {
+  searchUsers(query: string, excludeUserId?: string): UserSearchResult[] {
     const searchTerm = query.toLowerCase();
-    return Array.from(this.users.values())
+    let users = Array.from(this.users.values());
+    
+    // Исключаем текущего пользователя из поиска
+    if (excludeUserId) {
+      users = users.filter(user => user.id !== excludeUserId);
+    }
+    
+    return users
       .filter(user => 
         user.firstName.toLowerCase().includes(searchTerm) ||
         user.lastName.toLowerCase().includes(searchTerm) ||
@@ -240,15 +247,22 @@ class UserService {
   }
 
   // Симуляция получения пользователей из API
-  async fetchUsers(query?: string): Promise<UserSearchResult[]> {
+  async fetchUsers(query?: string, excludeUserId?: string): Promise<UserSearchResult[]> {
     // Симуляция задержки сети
     await new Promise(resolve => setTimeout(resolve, 500));
     
-    if (query) {
-      return this.searchUsers(query);
+    let users = Array.from(this.users.values());
+    
+    // Исключаем текущего пользователя из списка
+    if (excludeUserId) {
+      users = users.filter(user => user.id !== excludeUserId);
     }
     
-    return Array.from(this.users.values()).map(user => ({
+    if (query) {
+      return this.searchUsers(query, excludeUserId);
+    }
+    
+    return users.map(user => ({
       id: user.id,
       name: `${user.firstName} ${user.lastName}`,
       email: user.email,

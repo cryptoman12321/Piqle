@@ -9,6 +9,7 @@ import {
   FlatList,
   RefreshControl,
   Dimensions,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -32,7 +33,7 @@ type GamesScreenNavigationProp = CompositeNavigationProp<
 
 const GamesScreen: React.FC = () => {
   const { theme } = useThemeStore();
-  const { games, loadGames, joinGame, isLoading, error } = useGameStore();
+  const { games, loadGames, joinGame, deleteGame, isLoading, error } = useGameStore();
   const { user } = useAuthStore();
   const navigation = useNavigation<GamesScreenNavigationProp>();
   
@@ -81,6 +82,36 @@ const GamesScreen: React.FC = () => {
 
   const handleCreateGame = () => {
     navigation.navigate('CreateGame' as any);
+  };
+
+  const handleDeleteGame = (gameId: string) => {
+    const game = games.find(g => g.id === gameId);
+    if (!game) return;
+    
+    // Double-check permissions
+    if (!canDeleteGame(game)) {
+      Alert.alert('Access Denied', 'You can only delete games that you created.');
+      return;
+    }
+    
+    Alert.alert(
+      'Delete Game',
+      'Are you sure you want to delete this game?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { 
+          text: 'Delete', 
+          style: 'destructive',
+          onPress: () => deleteGame(gameId, user?.id)
+        },
+      ]
+    );
+  };
+
+
+
+  const canDeleteGame = (game: Game) => {
+    return user?.id === game.createdBy;
   };
 
   const renderGameCard = ({ item: game }: { item: Game }) => (
@@ -144,9 +175,20 @@ const GamesScreen: React.FC = () => {
           </Text>
         </TouchableOpacity>
         
-        <TouchableOpacity style={styles.shareButton}>
-          <Ionicons name="share-outline" size={20} color={theme.colors.primary} />
+            <View style={styles.actionButtons}>
+      <TouchableOpacity style={styles.shareButton}>
+        <Ionicons name="share-outline" size={20} color={theme.colors.primary} />
+      </TouchableOpacity>
+      
+      {canDeleteGame(game) && (
+        <TouchableOpacity 
+          style={styles.deleteButton}
+          onPress={() => handleDeleteGame(game.id)}
+        >
+          <Ionicons name="trash-outline" size={20} color={theme.colors.error} />
         </TouchableOpacity>
+      )}
+    </View>
       </View>
     </TouchableOpacity>
   );
@@ -321,6 +363,8 @@ const createStyles = (theme: any) => StyleSheet.create({
     paddingHorizontal: theme.spacing.lg,
     paddingVertical: theme.spacing.md,
   },
+
+
   headerTitle: {
     fontSize: 24,
     fontWeight: '700',
@@ -492,6 +536,11 @@ const createStyles = (theme: any) => StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
   },
+  actionButtons: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing.sm,
+  },
   joinButton: {
     backgroundColor: theme.colors.primary,
     paddingHorizontal: theme.spacing.lg,
@@ -518,6 +567,16 @@ const createStyles = (theme: any) => StyleSheet.create({
     alignItems: 'center',
     borderWidth: 1,
     borderColor: theme.colors.border,
+  },
+  deleteButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: theme.colors.surface,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: theme.colors.error,
   },
   emptyContainer: {
     flex: 1,

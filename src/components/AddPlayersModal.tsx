@@ -86,7 +86,7 @@ const AddPlayersModal: React.FC<AddPlayersModalProps> = ({
   const loadPlayers = async () => {
     setIsLoading(true);
     try {
-      const fetchedPlayers = await userService.fetchUsers(searchQuery);
+      const fetchedPlayers = await userService.fetchUsers(searchQuery, user?.id);
       setPlayers(fetchedPlayers);
     } catch (error) {
       console.error('Error loading players:', error);

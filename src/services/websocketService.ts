@@ -1,5 +1,3 @@
-import { EventEmitter } from 'events';
-
 export interface WebSocketMessage {
   type: 'GAME_INVITE' | 'PLAYER_JOINED' | 'PLAYER_LEFT' | 'GAME_UPDATED' | 'TOURNAMENT_INVITE' | 'CHAT_MESSAGE';
   data: any;
@@ -27,17 +25,44 @@ export interface PlayerJoined {
   maxPlayers: number;
 }
 
-class WebSocketService extends EventEmitter {
+class WebSocketService {
   private ws: WebSocket | null = null;
   private reconnectAttempts = 0;
   private maxReconnectAttempts = 5;
   private reconnectDelay = 1000;
   private isConnecting = false;
   private userId: string | null = null;
+  private listeners: { [key: string]: Function[] } = {};
 
   constructor() {
-    super();
+    // Initialize listeners object
   }
+
+  // Simple event emitter implementation
+  on(event: string, callback: Function) {
+    if (!this.listeners[event]) {
+      this.listeners[event] = [];
+    }
+    this.listeners[event].push(callback);
+  }
+
+  emit(event: string, ...args: any[]) {
+    if (this.listeners[event]) {
+      this.listeners[event].forEach(callback => callback(...args));
+    }
+  }
+
+  off(event: string, callback?: Function) {
+    if (this.listeners[event]) {
+      if (callback) {
+        this.listeners[event] = this.listeners[event].filter(cb => cb !== callback);
+      } else {
+        delete this.listeners[event];
+      }
+    }
+  }
+
+
 
   connect(userId: string, token: string) {
     if (this.isConnecting || this.ws?.readyState === WebSocket.OPEN) {
@@ -47,6 +72,14 @@ class WebSocketService extends EventEmitter {
     this.isConnecting = true;
     this.userId = userId;
 
+    // Для демонстрации отключаем WebSocket подключение
+    // В реальном приложении раскомментируйте код ниже
+    console.log('WebSocket connection disabled for demo');
+    this.isConnecting = false;
+    this.emit('connected'); // Симулируем успешное подключение
+    return;
+
+    /*
     try {
       // В реальном приложении здесь будет URL вашего WebSocket сервера
       // const wsUrl = `wss://your-websocket-server.com/ws?userId=${userId}&token=${token}`;
@@ -93,6 +126,7 @@ class WebSocketService extends EventEmitter {
       this.isConnecting = false;
       this.emit('error', error);
     }
+    */
   }
 
   private scheduleReconnect() {
@@ -179,7 +213,10 @@ class WebSocketService extends EventEmitter {
   }
 
   isConnected(): boolean {
-    return this.ws?.readyState === WebSocket.OPEN;
+    // Для демонстрации всегда возвращаем true
+    // В реальном приложении раскомментируйте строку ниже
+    return true;
+    // return this.ws?.readyState === WebSocket.OPEN;
   }
 }
 

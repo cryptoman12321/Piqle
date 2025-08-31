@@ -12,12 +12,14 @@ interface GameActions {
   // CRUD operations
   addGame: (game: Omit<Game, 'id' | 'createdAt'>) => Promise<Game>;
   updateGame: (id: string, updates: Partial<Game>) => Promise<void>;
-  deleteGame: (id: string) => Promise<void>;
+  deleteGame: (id: string, userId?: string) => Promise<void>;
   joinGame: (gameId: string, userId: string) => Promise<void>;
   leaveGame: (gameId: string, userId: string) => void;
   
   // Data loading
   loadGames: () => Promise<void>;
+  
+  // State management
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
   
@@ -37,13 +39,27 @@ export const useGameStore = create<GameStore>((set, get) => ({
   addGame: async (gameData) => {
     const newGame: Game = {
       ...gameData,
-      id: Date.now().toString(), // Simple ID generation for demo
+      id: `game_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`, // More unique ID generation
       createdAt: new Date(),
     };
     
-    set((state) => ({
-      games: [newGame, ...state.games], // Add to beginning of list
-    }));
+    set((state) => {
+      // Check for duplicates
+      const existingGame = state.games.find(game => 
+        game.title === newGame.title && 
+        game.createdBy === newGame.createdBy &&
+        Math.abs(game.startTime.getTime() - newGame.startTime.getTime()) < 60000 // Within 1 minute
+      );
+      
+      if (existingGame) {
+        console.log('Duplicate game detected, returning existing game');
+        return state; // Don't add duplicate
+      }
+      
+      return {
+        games: [newGame, ...state.games], // Add to beginning of list
+      };
+    });
     
     // Save to AsyncStorage
     try {
@@ -74,7 +90,14 @@ export const useGameStore = create<GameStore>((set, get) => ({
     }
   },
 
-  deleteGame: async (id) => {
+  deleteGame: async (id, userId?: string) => {
+    const game = get().games.find(g => g.id === id);
+    
+    // Check if user has permission to delete this game
+    if (userId && game && game.createdBy !== userId) {
+      throw new Error('You can only delete games that you created.');
+    }
+    
     set((state) => ({
       games: state.games.filter((game) => game.id !== id),
     }));
@@ -150,7 +173,13 @@ export const useGameStore = create<GameStore>((set, get) => ({
           startTime: new Date(game.startTime),
           createdAt: new Date(game.createdAt),
         }));
-        set({ games: gamesWithDates, isLoading: false });
+        
+        // Remove duplicates based on ID
+        const uniqueGames = gamesWithDates.filter((game: Game, index: number, self: Game[]) => 
+          index === self.findIndex(g => g.id === game.id)
+        );
+        
+        set({ games: uniqueGames, isLoading: false });
       } else {
         // Load mock data if no saved games
         const mockGames: Game[] = [
@@ -231,6 +260,8 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
   setLoading: (loading) => set({ isLoading: loading }),
   setError: (error) => set({ error }),
+
+
 
   getGameById: (id) => {
     const { games } = get();

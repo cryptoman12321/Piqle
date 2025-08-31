@@ -38,13 +38,27 @@ export const useTournamentStore = create<TournamentStore>((set, get) => ({
   addTournament: async (tournamentData) => {
     const newTournament: Tournament = {
       ...tournamentData,
-      id: Date.now().toString(), // Simple ID generation for demo
+      id: `tournament_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`, // More unique ID generation
       createdAt: new Date(),
     };
     
-    set((state) => ({
-      tournaments: [newTournament, ...state.tournaments], // Add to beginning of list
-    }));
+    set((state) => {
+      // Check for duplicates
+      const existingTournament = state.tournaments.find(tournament => 
+        tournament.name === newTournament.name && 
+        tournament.createdBy === newTournament.createdBy &&
+        Math.abs(tournament.startDate.getTime() - newTournament.startDate.getTime()) < 60000 // Within 1 minute
+      );
+      
+      if (existingTournament) {
+        console.log('Duplicate tournament detected, returning existing tournament');
+        return state; // Don't add duplicate
+      }
+      
+      return {
+        tournaments: [newTournament, ...state.tournaments], // Add to beginning of list
+      };
+    });
     
     // Save to AsyncStorage
     try {
@@ -139,7 +153,13 @@ export const useTournamentStore = create<TournamentStore>((set, get) => ({
           registrationDeadline: new Date(tournament.registrationDeadline),
           createdAt: new Date(tournament.createdAt),
         }));
-        set({ tournaments: tournamentsWithDates, isLoading: false });
+        
+        // Remove duplicates based on ID
+        const uniqueTournaments = tournamentsWithDates.filter((tournament: Tournament, index: number, self: Tournament[]) => 
+          index === self.findIndex(t => t.id === tournament.id)
+        );
+        
+        set({ tournaments: uniqueTournaments, isLoading: false });
       } else {
         // Load mock data if no saved tournaments
         const mockTournaments: Tournament[] = [
