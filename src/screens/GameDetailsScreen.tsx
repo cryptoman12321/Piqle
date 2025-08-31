@@ -186,7 +186,8 @@ const GameDetailsScreen: React.FC = () => {
           {/* Game Details */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Game Details</Text>
-            <View style={styles.detailsGrid}>
+            {/* Row 1: Format & Players */}
+            <View style={styles.detailsRow}>
               <View style={styles.detailItem}>
                 <Ionicons name="game-controller" size={20} color={theme.colors.primary} />
                 <Text style={styles.detailLabel}>Format</Text>
@@ -200,7 +201,10 @@ const GameDetailsScreen: React.FC = () => {
                   {game.currentPlayers}/{game.maxPlayers}
                 </Text>
               </View>
-              
+            </View>
+            
+            {/* Row 2: Skill Level & Start Time */}
+            <View style={styles.detailsRow}>
               <View style={styles.detailItem}>
                 <Ionicons name="star" size={20} color={theme.colors.primary} />
                 <Text style={styles.detailLabel}>Skill Level</Text>
@@ -390,10 +394,11 @@ const createStyles = (theme: any) => StyleSheet.create({
     color: theme.colors.textSecondary,
     lineHeight: 24,
   },
-  detailsGrid: {
+  detailsRow: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
     justifyContent: 'space-between',
+    gap: theme.spacing.md,
+    marginBottom: theme.spacing.md,
   },
   detailItem: {
     width: '48%',

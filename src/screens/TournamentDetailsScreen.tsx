@@ -219,7 +219,8 @@ const TournamentDetailsScreen: React.FC = () => {
           {/* Tournament Details */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Tournament Details</Text>
-            <View style={styles.detailsGrid}>
+            {/* Row 1: Format & Participants */}
+            <View style={styles.detailsRow}>
               <View style={styles.detailItem}>
                 <Ionicons name="trophy" size={20} color={theme.colors.primary} />
                 <Text style={styles.detailLabel}>Format</Text>
@@ -233,7 +234,10 @@ const TournamentDetailsScreen: React.FC = () => {
                   {tournament.currentParticipants}/{tournament.maxParticipants}
                 </Text>
               </View>
-              
+            </View>
+            
+            {/* Row 2: Skill Level & DUPR Rating */}
+            <View style={styles.detailsRow}>
               <View style={styles.detailItem}>
                 <Ionicons name="star" size={20} color={theme.colors.primary} />
                 <Text style={styles.detailLabel}>Skill Level</Text>
@@ -453,10 +457,11 @@ const createStyles = (theme: any) => StyleSheet.create({
     color: theme.colors.textSecondary,
     lineHeight: 24,
   },
-  detailsGrid: {
+  detailsRow: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
     justifyContent: 'space-between',
+    gap: theme.spacing.md,
+    marginBottom: theme.spacing.md,
   },
   detailItem: {
     width: '48%',
