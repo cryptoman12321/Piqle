@@ -247,7 +247,7 @@ const CreateTournamentScreen: React.FC = () => {
         createdBy: user?.id || 'currentUser',
       };
 
-      const createdTournament = addTournament(newTournament);
+      const createdTournament = await addTournament(newTournament);
       
       // Show success toast
       showSuccess(`Tournament "${tournamentData.name}" created successfully!`);

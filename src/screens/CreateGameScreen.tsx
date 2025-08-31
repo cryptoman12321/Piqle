@@ -138,7 +138,7 @@ const CreateGameScreen: React.FC = () => {
       };
 
       // Add the game and get the created game
-      const createdGame = addGame(newGame);
+      const createdGame = await addGame(newGame);
       
       // Show success toast
       showSuccess('Game created successfully!');

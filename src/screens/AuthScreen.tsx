@@ -25,7 +25,7 @@ const AuthScreen: React.FC = () => {
   const [lastName, setLastName] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  const { login } = useAuthStore();
+  const { login, authenticateUser } = useAuthStore();
   const { theme } = useThemeStore();
 
   const handleAuth = async () => {
@@ -37,26 +37,31 @@ const AuthScreen: React.FC = () => {
     setIsLoading(true);
 
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      if (isLogin) {
+        // Try to authenticate with predefined users
+        const success = await authenticateUser(email, password);
+        if (!success) {
+          Alert.alert('Error', 'Invalid email or password');
+          return;
+        }
+      } else {
+        // For registration, create a new user (simplified)
+        const mockUser: User = {
+          id: Date.now().toString(),
+          email,
+          firstName,
+          lastName,
+          city: 'New York',
+          country: 'USA',
+          skillLevel: SkillLevel.INTERMEDIATE,
+          hand: Hand.RIGHT,
+          isOnline: true,
+          createdAt: new Date(),
+        };
 
-      // Create mock user for demo
-      const mockUser: User = {
-        id: '1',
-        email,
-        firstName: isLogin ? 'John' : firstName,
-        lastName: isLogin ? 'Doe' : lastName,
-        city: 'New York',
-        country: 'USA',
-        skillLevel: SkillLevel.INTERMEDIATE,
-        hand: Hand.RIGHT,
-        isOnline: true,
-        createdAt: new Date(),
-      };
-
-      const mockToken = 'mock-jwt-token-' + Date.now();
-      
-      login(mockUser, mockToken);
+        const mockToken = 'mock-jwt-token-' + Date.now();
+        login(mockUser, mockToken);
+      }
     } catch (error) {
       Alert.alert('Error', 'Authentication failed. Please try again.');
     } finally {

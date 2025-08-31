@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { User } from '../types';
+import { User, SkillLevel, Hand } from '../types';
 
 interface AuthState {
   user: User | null;
@@ -15,9 +15,40 @@ interface AuthActions {
   login: (user: User, token: string) => void;
   logout: () => void;
   updateUser: (updates: Partial<User>) => void;
+  authenticateUser: (email: string, password: string) => Promise<boolean>;
 }
 
 type AuthStore = AuthState & AuthActions;
+
+// Predefined users
+const predefinedUsers: User[] = [
+  {
+    id: 'user1',
+    email: '2',
+    firstName: 'Sol',
+    lastName: 'Shats',
+    city: 'New York',
+    country: 'USA',
+    skillLevel: SkillLevel.INTERMEDIATE,
+    hand: Hand.RIGHT,
+    isOnline: true,
+    lastOnlineTime: new Date(),
+    createdAt: new Date('2024-01-01'),
+  },
+  {
+    id: 'user2',
+    email: '1',
+    firstName: 'Vlad',
+    lastName: 'Shetinin',
+    city: 'New York',
+    country: 'USA',
+    skillLevel: SkillLevel.ADVANCED,
+    hand: Hand.RIGHT,
+    isOnline: true,
+    lastOnlineTime: new Date(),
+    createdAt: new Date('2024-01-01'),
+  },
+];
 
 export const useAuthStore = create<AuthStore>((set, get) => ({
   // State
@@ -51,6 +82,35 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
     const { user } = get();
     if (user) {
       set({ user: { ...user, ...updates } });
+    }
+  },
+
+  authenticateUser: async (email: string, password: string) => {
+    set({ isLoading: true });
+    
+    try {
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Find user by email and password
+      const user = predefinedUsers.find(u => u.email === email);
+      
+      if (user && password === email) { // Password matches email for simplicity
+        const token = `token_${user.id}_${Date.now()}`;
+        set({
+          user,
+          token,
+          isAuthenticated: true,
+          isLoading: false,
+        });
+        return true;
+      } else {
+        set({ isLoading: false });
+        return false;
+      }
+    } catch (error) {
+      set({ isLoading: false });
+      return false;
     }
   },
 }));
