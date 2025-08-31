@@ -393,7 +393,7 @@ const createStyles = (theme: any) => StyleSheet.create({
   detailsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: theme.spacing.md,
+    justifyContent: 'space-between',
   },
   detailItem: {
     width: '48%',

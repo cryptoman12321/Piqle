@@ -6,7 +6,6 @@ import {
   ScrollView,
   TouchableOpacity,
   TextInput,
-  Alert,
   Switch,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -16,6 +15,8 @@ import { useThemeStore } from '../stores/themeStore';
 import { useTournamentStore } from '../stores/tournamentStore';
 import { useAuthStore } from '../stores/authStore';
 import { useNavigation } from '@react-navigation/native';
+import Toast from '../components/Toast';
+import { useToast } from '../hooks/useToast';
 import { 
   TournamentFormat, 
   SkillLevel, 
@@ -29,6 +30,7 @@ const CreateTournamentScreen: React.FC = () => {
   const { addTournament } = useTournamentStore();
   const { user } = useAuthStore();
   const navigation = useNavigation();
+  const { toast, showSuccess, showError, hideToast } = useToast();
   
   const [tournamentData, setTournamentData] = useState({
     name: '',
@@ -187,7 +189,7 @@ const CreateTournamentScreen: React.FC = () => {
 
   const handleCreateTournament = async () => {
     if (!tournamentData.name || !tournamentData.location) {
-      Alert.alert('Error', 'Please fill in the tournament name and location');
+      showError('Please fill in the tournament name and location');
       return;
     }
 
@@ -197,21 +199,18 @@ const CreateTournamentScreen: React.FC = () => {
       const calculations = getMixedDoublesCalculations(teamCount);
       
       if (!calculations.isValid) {
-        Alert.alert('Invalid Team Count', calculations.message);
+        showError(calculations.message);
         return;
       }
       
       if (tournamentData.maxParticipants !== calculations.totalPlayers) {
-        Alert.alert(
-          'Player Count Mismatch', 
-          `For ${teamCount} teams, you need exactly ${calculations.totalPlayers} players (${teamCount}♂ + ${teamCount}♀).\n\nCurrent: ${tournamentData.maxParticipants} players`
-        );
+        showError(`For ${teamCount} teams, you need exactly ${calculations.totalPlayers} players (${teamCount}♂ + ${teamCount}♀).\n\nCurrent: ${tournamentData.maxParticipants} players`);
         return;
       }
     } else {
       // Standard validation for other formats
       if (tournamentData.maxParticipants < 4) {
-        Alert.alert('Error', 'Tournament must have at least 4 participants');
+        showError('Tournament must have at least 4 participants');
         return;
       }
     }
@@ -250,18 +249,16 @@ const CreateTournamentScreen: React.FC = () => {
 
       const createdTournament = addTournament(newTournament);
       
-      Alert.alert(
-        'Tournament Created!', 
-        `"${tournamentData.name}" has been created successfully! Players can now register.`,
-        [
-          {
-            text: 'OK',
-            onPress: () => navigation.navigate('TournamentDetails', { tournamentId: createdTournament.id })
-          }
-        ]
-      );
+      // Show success toast
+      showSuccess(`Tournament "${tournamentData.name}" created successfully!`);
+      
+      // Navigate to tournament details after a short delay
+      setTimeout(() => {
+        navigation.navigate('TournamentDetails', { tournamentId: createdTournament.id });
+      }, 1000);
+      
     } catch (error) {
-      Alert.alert('Error', 'Failed to create tournament. Please try again.');
+      showError('Failed to create tournament. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -294,6 +291,13 @@ const CreateTournamentScreen: React.FC = () => {
 
   return (
     <SafeAreaView style={styles.container}>
+      <Toast
+        visible={toast.visible}
+        message={toast.message}
+        type={toast.type}
+        duration={toast.duration}
+        onClose={hideToast}
+      />
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         {/* Header */}
         <View style={styles.header}>

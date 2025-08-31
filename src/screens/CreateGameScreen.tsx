@@ -6,23 +6,86 @@ import {
   ScrollView,
   TouchableOpacity,
   TextInput,
-  Alert,
   Switch,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { useThemeStore } from '../stores/themeStore';
 import { useGameStore } from '../stores/gameStore';
 import { useAuthStore } from '../stores/authStore';
 import { GameFormat, SkillLevel, GameStatus } from '../types';
 import { useNavigation } from '@react-navigation/native';
+import Toast from '../components/Toast';
+import { useToast } from '../hooks/useToast';
 
 const CreateGameScreen: React.FC = () => {
   const { theme } = useThemeStore();
   const { addGame } = useGameStore();
   const { user } = useAuthStore();
   const navigation = useNavigation();
+  const { toast, showSuccess, showError, hideToast } = useToast();
+
+  const handleDateChange = (event: any, selectedDate?: Date) => {
+    setShowDatePicker(false);
+    if (selectedDate) {
+      const currentTime = gameData.startTime;
+      const newDateTime = new Date(selectedDate);
+      newDateTime.setHours(currentTime.getHours());
+      newDateTime.setMinutes(currentTime.getMinutes());
+      setGameData({...gameData, startTime: newDateTime});
+    }
+  };
+
+  const handleTimeChange = (event: any, selectedTime?: Date) => {
+    setShowTimePicker(false);
+    if (selectedTime) {
+      const currentDate = gameData.startTime;
+      const newDateTime = new Date(currentDate);
+      newDateTime.setHours(selectedTime.getHours());
+      newDateTime.setMinutes(selectedTime.getMinutes());
+      setGameData({...gameData, startTime: newDateTime});
+    }
+  };
+
+  const formatTime = (date: Date) => {
+    return date.toLocaleTimeString([], { 
+      hour: '2-digit', 
+      minute: '2-digit',
+      hour12: true 
+    });
+  };
+
+  const formatDate = (date: Date) => {
+    return date.toLocaleDateString([], { 
+      weekday: 'short',
+      month: 'short',
+      day: 'numeric'
+    });
+  };
+
+  const getTimeSlots = () => {
+    const slots = [];
+    for (let hour = 0; hour < 24; hour++) {
+      for (let minute = 0; minute < 60; minute += 15) {
+        const time = new Date();
+        time.setHours(hour, minute, 0, 0);
+        slots.push(time);
+      }
+    }
+    return slots;
+  };
+
+  const selectCustomTime = (selectedTime: Date) => {
+    const currentDate = gameData.startTime;
+    const newDateTime = new Date(currentDate);
+    newDateTime.setHours(selectedTime.getHours());
+    newDateTime.setMinutes(selectedTime.getMinutes());
+    setGameData({...gameData, startTime: newDateTime});
+    setShowCustomTimePicker(false);
+  };
   
   const [gameData, setGameData] = useState({
     title: '',
@@ -38,10 +101,13 @@ const CreateGameScreen: React.FC = () => {
   });
 
   const [isLoading, setIsLoading] = useState(false);
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showTimePicker, setShowTimePicker] = useState(false);
+  const [showCustomTimePicker, setShowCustomTimePicker] = useState(false);
 
   const handleCreateGame = async () => {
     if (!gameData.title || !gameData.location) {
-      Alert.alert('Error', 'Please fill in the title and location');
+      showError('Please fill in the title and location');
       return;
     }
 
@@ -74,20 +140,16 @@ const CreateGameScreen: React.FC = () => {
       // Add the game and get the created game
       const createdGame = addGame(newGame);
       
-      Alert.alert(
-        'Success!', 
-        'Your game has been created and is now visible to other players!',
-        [
-          {
-            text: 'View Game',
-            onPress: () => {
-              navigation.navigate('GameDetails', { gameId: createdGame.id });
-            }
-          }
-        ]
-      );
+      // Show success toast
+      showSuccess('Game created successfully!');
+      
+      // Navigate to game details after a short delay
+      setTimeout(() => {
+        navigation.navigate('GameDetails', { gameId: createdGame.id });
+      }, 1000);
+      
     } catch (error) {
-      Alert.alert('Error', 'Failed to create game. Please try again.');
+      showError('Failed to create game. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -97,6 +159,13 @@ const CreateGameScreen: React.FC = () => {
 
   return (
     <SafeAreaView style={styles.container}>
+      <Toast
+        visible={toast.visible}
+        message={toast.message}
+        type={toast.type}
+        duration={toast.duration}
+        onClose={hideToast}
+      />
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         {/* Header */}
         <View style={styles.header}>
@@ -148,7 +217,17 @@ const CreateGameScreen: React.FC = () => {
                     styles.formatOption,
                     gameData.format === format && styles.formatOptionSelected
                   ]}
-                  onPress={() => setGameData({...gameData, format})}
+                  onPress={() => {
+                    let newMaxPlayers = 4;
+                    if (format === GameFormat.SINGLES) {
+                      newMaxPlayers = 2;
+                    } else if (format === GameFormat.DOUBLES) {
+                      newMaxPlayers = 4;
+                    } else if (format === GameFormat.OPEN_PLAY) {
+                      newMaxPlayers = 4; // Минимум 4 для Open Play
+                    }
+                    setGameData({...gameData, format, maxPlayers: newMaxPlayers});
+                  }}
                 >
                   <Text style={[
                     styles.formatOptionText,
@@ -165,21 +244,29 @@ const CreateGameScreen: React.FC = () => {
           {/* Player Count */}
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Maximum Players</Text>
-            <View style={styles.playerCountContainer}>
-              <TouchableOpacity
-                style={styles.playerCountButton}
-                onPress={() => setGameData({...gameData, maxPlayers: Math.max(2, gameData.maxPlayers - 1)})}
-              >
-                <Ionicons name="remove" size={20} color={theme.colors.primary} />
-              </TouchableOpacity>
-              <Text style={styles.playerCount}>{gameData.maxPlayers}</Text>
-              <TouchableOpacity
-                style={styles.playerCountButton}
-                onPress={() => setGameData({...gameData, maxPlayers: gameData.maxPlayers + 1})}
-              >
-                <Ionicons name="add" size={20} color={theme.colors.primary} />
-              </TouchableOpacity>
-            </View>
+            {gameData.format === GameFormat.OPEN_PLAY ? (
+              <View style={styles.playerCountContainer}>
+                <TouchableOpacity
+                  style={styles.playerCountButton}
+                  onPress={() => setGameData({...gameData, maxPlayers: Math.max(4, gameData.maxPlayers - 1)})}
+                >
+                  <Ionicons name="remove" size={20} color={theme.colors.primary} />
+                </TouchableOpacity>
+                <Text style={styles.playerCount}>{gameData.maxPlayers}</Text>
+                <TouchableOpacity
+                  style={styles.playerCountButton}
+                  onPress={() => setGameData({...gameData, maxPlayers: gameData.maxPlayers + 1})}
+                >
+                  <Ionicons name="add" size={20} color={theme.colors.primary} />
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <View style={styles.fixedPlayerCount}>
+                <Text style={styles.fixedPlayerCountText}>
+                  {gameData.format === GameFormat.SINGLES ? '2 players (1v1)' : '4 players (2v2)'}
+                </Text>
+              </View>
+            )}
           </View>
 
           {/* Skill Level */}
@@ -209,12 +296,27 @@ const CreateGameScreen: React.FC = () => {
           {/* Time & Duration */}
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Start Time</Text>
-            <Text style={styles.timeDisplay}>
-              {gameData.startTime.toLocaleString()}
-            </Text>
-            <TouchableOpacity style={styles.timeButton}>
-              <Text style={styles.timeButtonText}>Change Time</Text>
-            </TouchableOpacity>
+            <View style={styles.timeDisplayContainer}>
+              <Text style={styles.timeDisplay}>
+                {formatDate(gameData.startTime)} at {formatTime(gameData.startTime)}
+              </Text>
+            </View>
+            <View style={styles.timeButtonsContainer}>
+              <TouchableOpacity 
+                style={styles.timeButton}
+                onPress={() => setShowDatePicker(true)}
+              >
+                <Ionicons name="calendar" size={16} color={theme.colors.primary} />
+                <Text style={styles.timeButtonText}>Change Date</Text>
+              </TouchableOpacity>
+              <TouchableOpacity 
+                style={styles.timeButton}
+                onPress={() => setShowCustomTimePicker(true)}
+              >
+                <Ionicons name="time" size={16} color={theme.colors.primary} />
+                <Text style={styles.timeButtonText}>Change Time</Text>
+              </TouchableOpacity>
+            </View>
           </View>
 
           <View style={styles.inputGroup}>
@@ -294,6 +396,53 @@ const CreateGameScreen: React.FC = () => {
           </TouchableOpacity>
         </View>
       </ScrollView>
+      
+      {/* Date Picker */}
+      {showDatePicker && (
+        <DateTimePicker
+          value={gameData.startTime}
+          mode="date"
+          display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+          onChange={handleDateChange}
+          minimumDate={new Date()}
+        />
+      )}
+      
+      {/* Custom Time Picker */}
+      {showCustomTimePicker && (
+        <View style={styles.customTimePickerOverlay}>
+          <View style={styles.customTimePickerContainer}>
+            <View style={styles.customTimePickerHeader}>
+              <Text style={styles.customTimePickerTitle}>Select Time</Text>
+              <TouchableOpacity 
+                onPress={() => setShowCustomTimePicker(false)}
+                style={styles.closeButton}
+              >
+                <Ionicons name="close" size={24} color={theme.colors.text} />
+              </TouchableOpacity>
+            </View>
+            <ScrollView style={styles.timeSlotsContainer} showsVerticalScrollIndicator={false}>
+              {getTimeSlots().map((time, index) => (
+                <TouchableOpacity
+                  key={index}
+                  style={[
+                    styles.timeSlot,
+                    formatTime(gameData.startTime) === formatTime(time) && styles.timeSlotSelected
+                  ]}
+                  onPress={() => selectCustomTime(time)}
+                >
+                  <Text style={[
+                    styles.timeSlotText,
+                    formatTime(gameData.startTime) === formatTime(time) && styles.timeSlotTextSelected
+                  ]}>
+                    {formatTime(time)}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+        </View>
+      )}
     </SafeAreaView>
   );
 };
@@ -350,9 +499,11 @@ const createStyles = (theme: any) => StyleSheet.create({
   },
   formatOptions: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: theme.spacing.sm,
   },
   formatOption: {
+    minWidth: '30%',
     flex: 1,
     paddingVertical: theme.spacing.md,
     paddingHorizontal: theme.spacing.md,
@@ -395,6 +546,74 @@ const createStyles = (theme: any) => StyleSheet.create({
     minWidth: 40,
     textAlign: 'center',
   },
+  fixedPlayerCount: {
+    backgroundColor: theme.colors.surface,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    borderRadius: theme.borderRadius.md,
+    paddingVertical: theme.spacing.md,
+    alignItems: 'center',
+  },
+  fixedPlayerCountText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: theme.colors.text,
+  },
+  customTimePickerOverlay: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1000,
+  },
+  customTimePickerContainer: {
+    backgroundColor: theme.colors.surface,
+    borderRadius: theme.borderRadius.lg,
+    width: '80%',
+    maxHeight: '70%',
+    ...theme.shadows?.lg,
+  },
+  customTimePickerHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: theme.spacing.lg,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.colors.border,
+  },
+  customTimePickerTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: theme.colors.text,
+  },
+  closeButton: {
+    padding: theme.spacing.xs,
+  },
+  timeSlotsContainer: {
+    maxHeight: 300,
+  },
+  timeSlot: {
+    paddingVertical: theme.spacing.md,
+    paddingHorizontal: theme.spacing.lg,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.colors.border,
+  },
+  timeSlotSelected: {
+    backgroundColor: theme.colors.primary,
+  },
+  timeSlotText: {
+    fontSize: 16,
+    color: theme.colors.text,
+    textAlign: 'center',
+  },
+  timeSlotTextSelected: {
+    color: 'white',
+    fontWeight: '600',
+  },
   skillLevelOptions: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -419,18 +638,35 @@ const createStyles = (theme: any) => StyleSheet.create({
   skillLevelOptionTextSelected: {
     color: 'white',
   },
-  timeDisplay: {
-    fontSize: 16,
-    color: theme.colors.textSecondary,
+  timeDisplayContainer: {
+    backgroundColor: theme.colors.surface,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    borderRadius: theme.borderRadius.md,
+    padding: theme.spacing.md,
     marginBottom: theme.spacing.sm,
   },
+  timeDisplay: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: theme.colors.text,
+    textAlign: 'center',
+  },
+  timeButtonsContainer: {
+    flexDirection: 'row',
+    gap: theme.spacing.sm,
+  },
   timeButton: {
+    flex: 1,
     backgroundColor: theme.colors.surface,
     borderWidth: 1,
     borderColor: theme.colors.border,
     borderRadius: theme.borderRadius.md,
     paddingVertical: theme.spacing.sm,
     alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: theme.spacing.xs,
   },
   timeButtonText: {
     color: theme.colors.primary,
