@@ -561,7 +561,7 @@ const ProfileScreen: React.FC = () => {
                   { name: 'Sarah Johnson', status: 'Offline', lastActivity: '1 hour ago' },
                   { name: 'Mike Davis', status: 'Online', lastActivity: '5 min ago' },
                 ].map((friend, index) => (
-                  <View key={index} style={styles.friendItem}>
+                  <View key={`profile-friend-${index}`} style={styles.friendItem}>
                     <View style={styles.friendAvatar}>
                       <Ionicons name="person" size={20} color={theme.colors.textSecondary} />
                     </View>

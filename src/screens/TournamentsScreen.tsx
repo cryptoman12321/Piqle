@@ -225,7 +225,7 @@ const TournamentsScreen: React.FC = () => {
           <Text style={styles.prizesTitle}>Prizes:</Text>
           <View style={styles.prizesList}>
             {tournament.prizes.slice(0, 3).map((prize, index) => (
-              <View key={index} style={styles.prizeItem}>
+              <View key={`tournament-prize-${prize.place}-${index}`} style={styles.prizeItem}>
                 <Text style={styles.prizePlace}>{prize.place}</Text>
                 <Text style={styles.prizeAmount}>
                   {prize.amount === 0 ? 'Certificate' : `$${prize.amount}`}

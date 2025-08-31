@@ -333,7 +333,7 @@ const TournamentDetailsScreen: React.FC = () => {
               <Text style={styles.sectionTitle}>Prizes</Text>
               <View style={styles.prizesContainer}>
                 {tournament.prizes.map((prize, index) => (
-                  <View key={index} style={styles.prizeItem}>
+                  <View key={`prize-${prize.place}-${index}`} style={styles.prizeItem}>
                     <View style={styles.prizePlace}>
                       <Text style={styles.prizePlaceText}>{prize.place}</Text>
                     </View>

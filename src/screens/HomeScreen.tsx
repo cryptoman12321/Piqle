@@ -260,7 +260,7 @@ const HomeScreen: React.FC = () => {
                 const hasEvents = dayEvents.games.length > 0 || dayEvents.tournaments.length > 0;
                 
                 return (
-                  <View key={index} style={styles.dayContainer}>
+                  <View key={`day-${day.date}`} style={styles.dayContainer}>
                     <Text style={[
                       styles.dayName, 
                       day.isToday && styles.todayDayName
@@ -429,7 +429,7 @@ const HomeScreen: React.FC = () => {
                 <Text style={styles.courtType}>{court.type}</Text>
                 <View style={styles.courtAmenities}>
                   {court.amenities.slice(0, 3).map((amenity, index) => (
-                    <View key={index} style={styles.amenityTag}>
+                    <View key={`${court.id}-amenity-${index}`} style={styles.amenityTag}>
                       <Text style={styles.amenityText}>{amenity}</Text>
                     </View>
                   ))}

@@ -300,7 +300,7 @@ const GameDetailsScreen: React.FC = () => {
               <Text style={styles.sectionTitle}>Available Slots</Text>
               <View style={styles.slotsContainer}>
                 {Array.from({ length: game.maxPlayers - game.currentPlayers }, (_, index) => (
-                  <View key={index} style={styles.emptySlot}>
+                  <View key={`empty-slot-${index}`} style={styles.emptySlot}>
                     <Ionicons name="person-add" size={20} color={theme.colors.textSecondary} />
                     <Text style={styles.emptySlotText}>Open</Text>
                   </View>
