@@ -21,6 +21,7 @@ import { useNavigation } from '@react-navigation/native';
 import Toast from '../components/Toast';
 import { useToast } from '../hooks/useToast';
 import AddPlayersModal from '../components/AddPlayersModal';
+import { userService } from '../services/userService';
 
 const CreateGameScreen: React.FC = () => {
   const { theme } = useThemeStore();
@@ -305,32 +306,34 @@ const CreateGameScreen: React.FC = () => {
                     Added Players ({addedPlayers.length})
                   </Text>
                   <View style={styles.addedPlayersList}>
-                    {addedPlayers.map((playerId, index) => (
-                      <View key={`added-player-${index}`} style={styles.addedPlayerItem}>
-                        <View style={styles.addedPlayerAvatar}>
-                          <Text style={styles.addedPlayerInitial}>
-                            {playerId === 'user1' ? 'SS' : playerId === 'user2' ? 'VS' : `P${index + 1}`}
-                          </Text>
+                    {addedPlayers.map((playerId, index) => {
+                      const player = userService.getUserById(playerId);
+                      return (
+                        <View key={`added-player-${index}`} style={styles.addedPlayerItem}>
+                          <View style={styles.addedPlayerAvatar}>
+                            <Text style={styles.addedPlayerInitial}>
+                              {player ? `${player.firstName[0]}${player.lastName[0]}` : `P${index + 1}`}
+                            </Text>
+                          </View>
+                          <View style={styles.addedPlayerInfo}>
+                            <Text style={styles.addedPlayerName}>
+                              {player ? `${player.firstName} ${player.lastName}` : `Player ${index + 1}`}
+                            </Text>
+                            <Text style={styles.addedPlayerEmail}>
+                              {player ? player.email : 'player@example.com'}
+                            </Text>
+                          </View>
+                          <TouchableOpacity
+                            style={styles.removePlayerButton}
+                            onPress={() => {
+                              setAddedPlayers(addedPlayers.filter((_, i) => i !== index));
+                            }}
+                          >
+                            <Ionicons name="close" size={16} color={theme.colors.error} />
+                          </TouchableOpacity>
                         </View>
-                        <View style={styles.addedPlayerInfo}>
-                          <Text style={styles.addedPlayerName}>
-                            {playerId === 'user1' ? 'Sol Shats' : 
-                             playerId === 'user2' ? 'Vlad Shetinin' : `Player ${index + 1}`}
-                          </Text>
-                          <Text style={styles.addedPlayerEmail}>
-                            {playerId === 'user1' ? '2' : playerId === 'user2' ? '1' : 'player@example.com'}
-                          </Text>
-                        </View>
-                        <TouchableOpacity
-                          style={styles.removePlayerButton}
-                          onPress={() => {
-                            setAddedPlayers(addedPlayers.filter((_, i) => i !== index));
-                          }}
-                        >
-                          <Ionicons name="close" size={16} color={theme.colors.error} />
-                        </TouchableOpacity>
-                      </View>
-                    ))}
+                      );
+                    })}
                   </View>
                 </View>
               )}

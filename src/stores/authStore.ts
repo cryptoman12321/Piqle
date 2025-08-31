@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { User, SkillLevel, Hand } from '../types';
+import { websocketService } from '../services/websocketService';
 
 interface AuthState {
   user: User | null;
@@ -71,12 +72,17 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
     isLoading: false,
   }),
   
-  logout: () => set({
-    user: null,
-    token: null,
-    isAuthenticated: false,
-    isLoading: false,
-  }),
+  logout: () => {
+    // Disconnect WebSocket before logout
+    websocketService.disconnect();
+    
+    set({
+      user: null,
+      token: null,
+      isAuthenticated: false,
+      isLoading: false,
+    });
+  },
   
   updateUser: (updates) => {
     const { user } = get();
@@ -103,6 +109,10 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
           isAuthenticated: true,
           isLoading: false,
         });
+        
+        // Connect to WebSocket after successful authentication
+        websocketService.connect(user.id, token);
+        
         return true;
       } else {
         set({ isLoading: false });

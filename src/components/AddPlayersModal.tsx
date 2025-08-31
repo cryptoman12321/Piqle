@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -14,6 +14,8 @@ import { useThemeStore } from '../stores/themeStore';
 import { useAuthStore } from '../stores/authStore';
 import { useGameStore } from '../stores/gameStore';
 import { Game } from '../types';
+import { userService, UserSearchResult } from '../services/userService';
+import { websocketService } from '../services/websocketService';
 
 interface AddPlayersModalProps {
   visible: boolean;
@@ -33,6 +35,8 @@ const AddPlayersModal: React.FC<AddPlayersModalProps> = ({
   const { joinGame } = useGameStore();
   const [activeTab, setActiveTab] = useState<'app' | 'qr'>('app');
   const [searchQuery, setSearchQuery] = useState('');
+  const [players, setPlayers] = useState<UserSearchResult[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
 
   const styles = createStyles(theme);
 
@@ -50,12 +54,44 @@ const AddPlayersModal: React.FC<AddPlayersModalProps> = ({
       }
 
       await joinGame(game.id, playerId);
+      
+      // Send WebSocket notification
+      const player = players.find(p => p.id === playerId);
+      if (player && websocketService.isConnected()) {
+        websocketService.sendPlayerJoined(
+          game.id,
+          playerId,
+          player.name,
+          game.currentPlayers + 1,
+          game.maxPlayers
+        );
+      }
+      
       Alert.alert('Success', 'Player added to the game!');
       onClose();
     } else if (onPlayerAdded) {
       // For new games (creation screen)
       onPlayerAdded(playerId);
       onClose();
+    }
+  };
+
+  // Load players when modal opens
+  useEffect(() => {
+    if (visible) {
+      loadPlayers();
+    }
+  }, [visible, searchQuery]);
+
+  const loadPlayers = async () => {
+    setIsLoading(true);
+    try {
+      const fetchedPlayers = await userService.fetchUsers(searchQuery);
+      setPlayers(fetchedPlayers);
+    } catch (error) {
+      console.error('Error loading players:', error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -82,15 +118,7 @@ const AddPlayersModal: React.FC<AddPlayersModalProps> = ({
     );
   };
 
-  // Mock players data - in real app this would come from a users store
-  const mockPlayers = [
-    { id: 'user1', name: 'Sol Shats', email: '2', skillLevel: 'Intermediate' },
-    { id: 'user2', name: 'Vlad Shetinin', email: '1', skillLevel: 'Advanced' },
-    { id: 'user3', name: 'John Doe', email: 'john@example.com', skillLevel: 'Beginner' },
-    { id: 'user4', name: 'Jane Smith', email: 'jane@example.com', skillLevel: 'Intermediate' },
-  ];
-
-  const filteredPlayers = mockPlayers.filter(player =>
+  const filteredPlayers = players.filter(player =>
     player.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     player.email.toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -160,30 +188,43 @@ const AddPlayersModal: React.FC<AddPlayersModalProps> = ({
 
             {/* Players List */}
             <ScrollView style={styles.playersList} showsVerticalScrollIndicator={false}>
-              {filteredPlayers.map((player) => (
-                <TouchableOpacity
-                  key={player.id}
-                  style={styles.playerItem}
-                  onPress={() => handleAddPlayer(player.id)}
-                >
-                  <View style={styles.playerAvatar}>
-                    <Text style={styles.playerInitial}>
-                      {player.name.split(' ').map(n => n[0]).join('')}
-                    </Text>
-                  </View>
-                  <View style={styles.playerInfo}>
-                    <Text style={styles.playerName}>{player.name}</Text>
-                    <Text style={styles.playerEmail}>{player.email}</Text>
-                    <Text style={styles.playerSkill}>{player.skillLevel}</Text>
-                  </View>
+              {isLoading ? (
+                <View style={styles.loadingContainer}>
+                  <Text style={styles.loadingText}>Loading players...</Text>
+                </View>
+              ) : filteredPlayers.length === 0 ? (
+                <View style={styles.emptyContainer}>
+                  <Text style={styles.emptyText}>No players found</Text>
+                </View>
+              ) : (
+                filteredPlayers.map((player) => (
                   <TouchableOpacity
-                    style={styles.addButton}
+                    key={player.id}
+                    style={styles.playerItem}
                     onPress={() => handleAddPlayer(player.id)}
                   >
-                    <Ionicons name="add" size={20} color={theme.colors.primary} />
+                    <View style={styles.playerAvatar}>
+                      <Text style={styles.playerInitial}>
+                        {player.name.split(' ').map(n => n[0]).join('')}
+                      </Text>
+                    </View>
+                    <View style={styles.playerInfo}>
+                      <Text style={styles.playerName}>{player.name}</Text>
+                      <Text style={styles.playerEmail}>{player.email}</Text>
+                      <View style={styles.playerDetails}>
+                        <Text style={styles.playerSkill}>{player.skillLevel}</Text>
+                        <View style={[styles.onlineIndicator, player.isOnline && styles.onlineIndicatorActive]} />
+                      </View>
+                    </View>
+                    <TouchableOpacity
+                      style={styles.addButton}
+                      onPress={() => handleAddPlayer(player.id)}
+                    >
+                      <Ionicons name="add" size={20} color={theme.colors.primary} />
+                    </TouchableOpacity>
                   </TouchableOpacity>
-                </TouchableOpacity>
-              ))}
+                ))
+              )}
             </ScrollView>
           </View>
         ) : (
@@ -329,6 +370,41 @@ const createStyles = (theme: any) => StyleSheet.create({
     fontSize: 12,
     color: theme.colors.primary,
     marginTop: 2,
+  },
+  playerDetails: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 2,
+  },
+  onlineIndicator: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: theme.colors.textSecondary,
+    marginLeft: theme.spacing.sm,
+  },
+  onlineIndicatorActive: {
+    backgroundColor: theme.colors.success,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: theme.spacing.xl,
+  },
+  loadingText: {
+    fontSize: 16,
+    color: theme.colors.textSecondary,
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: theme.spacing.xl,
+  },
+  emptyText: {
+    fontSize: 16,
+    color: theme.colors.textSecondary,
   },
   addButton: {
     padding: theme.spacing.sm,
