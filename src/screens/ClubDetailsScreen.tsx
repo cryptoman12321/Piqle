@@ -882,9 +882,7 @@ const createStyles = (theme: any) => StyleSheet.create({
     fontSize: 10,
     fontWeight: '500',
   },
-  verifiedBadge: {
-    marginLeft: theme.spacing.xs,
-  },
+
   memberStats: {
     fontSize: 12,
     color: theme.colors.textSecondary,

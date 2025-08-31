@@ -254,7 +254,7 @@ const CreateTournamentScreen: React.FC = () => {
       
       // Navigate to tournament details after a short delay
       setTimeout(() => {
-        navigation.navigate('TournamentDetails', { tournamentId: createdTournament.id });
+        (navigation as any).navigate('TournamentDetails', { tournamentId: createdTournament.id });
       }, 1000);
       
     } catch (error) {

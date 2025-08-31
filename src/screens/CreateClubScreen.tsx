@@ -79,36 +79,39 @@ const CreateClubScreen: React.FC = () => {
 
     try {
       const newClub = {
-        id: Date.now().toString(),
         name: clubData.name.trim(),
         description: clubData.description.trim(),
-        category: clubData.category,
-        skillLevel: clubData.skillLevel,
+        category: 'RECREATIONAL' as const,
+        skillLevels: [clubData.skillLevel],
         membershipType: clubData.membershipType,
-        membershipFee: clubData.membershipType === 'PAID' ? parseFloat(clubData.membershipFee) : 0,
+        membershipFee: (clubData.membershipType as string) === 'PAID' ? parseFloat(clubData.membershipFee) : 0,
         maxMembers: parseInt(clubData.maxMembers) || 50,
+        currentMembers: 1,
         location: {
+          id: `location_${Date.now()}`,
+          name: clubData.name.trim(),
+          address: clubData.location.address.trim(),
           city: clubData.location.city.trim(),
           state: clubData.location.state.trim(),
-          address: clubData.location.address.trim(),
+          country: 'USA',
+          latitude: 0,
+          longitude: 0,
+          courtCount: 0,
+          courtTypes: [],
+          amenities: [],
+          photos: [],
         },
-        contactEmail: clubData.contactEmail.trim(),
-        contactPhone: clubData.contactPhone.trim(),
-        memberCount: 1,
-        isPublic: true,
-        photo: '',
-        tags: [clubData.category, clubData.skillLevel],
-        rating: 0,
-        reviewCount: 0,
-        members: [{
-          userId: user!.id,
-          userName: `${user!.firstName} ${user!.lastName}`,
-          userPhoto: user!.photo,
-          role: 'OWNER' as const,
-        }],
+        isActive: true,
+        isVerified: false,
+        contactInfo: {
+          email: clubData.contactEmail.trim(),
+          phone: clubData.contactPhone.trim(),
+        },
+        rules: [],
+        achievements: [],
       };
 
-      createClub(newClub);
+      const clubId = createClub(newClub);
       
       Alert.alert(
         'Club Created!',
@@ -116,7 +119,7 @@ const CreateClubScreen: React.FC = () => {
         [
           {
             text: 'View Club',
-            onPress: () => navigation.replace('ClubDetails', { clubId: newClub.id })
+            onPress: () => navigation.replace('ClubDetails' as any, { clubId })
           }
         ]
       );
@@ -286,7 +289,7 @@ const CreateClubScreen: React.FC = () => {
               </View>
             </View>
 
-            {clubData.membershipType === 'PAID' && (
+            {(clubData.membershipType as string) === 'PAID' && (
               <View style={styles.inputGroup}>
                 <Text style={styles.inputLabel}>Monthly Fee ($)</Text>
                 <TextInput

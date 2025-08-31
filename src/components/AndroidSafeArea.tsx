@@ -19,7 +19,7 @@ const AndroidSafeArea: React.FC<AndroidSafeAreaProps> = ({
         ...style,
         paddingBottom: 20, // Дополнительный отступ для Android
       }
-    : style;
+    : style || {};
 
   return (
     <SafeAreaView 

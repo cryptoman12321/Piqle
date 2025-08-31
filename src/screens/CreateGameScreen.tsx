@@ -145,7 +145,7 @@ const CreateGameScreen: React.FC = () => {
       
       // Navigate to game details after a short delay
       setTimeout(() => {
-        navigation.navigate('GameDetails', { gameId: createdGame.id });
+        (navigation as any).navigate('GameDetails', { gameId: createdGame.id });
       }, 1000);
       
     } catch (error) {

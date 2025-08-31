@@ -196,9 +196,9 @@ export const useClubsStore = create<ClubsStore>((set, get) => ({
       ...clubData,
       id,
       members: [{
-        userId: clubData.members[0]?.userId || 'currentUser',
-        userName: clubData.members[0]?.userName || 'Current User',
-        userPhoto: clubData.members[0]?.userPhoto,
+        userId: 'currentUser',
+        userName: 'Current User',
+        userPhoto: '',
         role: 'OWNER',
         joinedAt: new Date(),
         isVerified: true,
