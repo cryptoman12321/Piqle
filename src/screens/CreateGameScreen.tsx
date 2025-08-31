@@ -20,6 +20,7 @@ import { GameFormat, SkillLevel, GameStatus } from '../types';
 import { useNavigation } from '@react-navigation/native';
 import Toast from '../components/Toast';
 import { useToast } from '../hooks/useToast';
+import AddPlayersModal from '../components/AddPlayersModal';
 
 const CreateGameScreen: React.FC = () => {
   const { theme } = useThemeStore();
@@ -99,6 +100,9 @@ const CreateGameScreen: React.FC = () => {
     location: '',
     price: '',
   });
+  
+  const [showAddPlayersModal, setShowAddPlayersModal] = useState(false);
+  const [addedPlayers, setAddedPlayers] = useState<string[]>([]);
 
   const [isLoading, setIsLoading] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
@@ -118,12 +122,13 @@ const CreateGameScreen: React.FC = () => {
       await new Promise(resolve => setTimeout(resolve, 1500));
       
       // Create the game using the store
+      const allPlayers = [user?.id || 'currentUser', ...addedPlayers];
       const newGame = {
         title: gameData.title,
         description: gameData.description,
         format: gameData.format,
         maxPlayers: gameData.maxPlayers,
-        currentPlayers: 1, // Creator is automatically added
+        currentPlayers: allPlayers.length, // Include creator and added players
         skillLevel: gameData.skillLevel,
         location: { 
           latitude: 40.7128, // Default coordinates for demo
@@ -133,7 +138,7 @@ const CreateGameScreen: React.FC = () => {
         startTime: gameData.startTime,
         isPrivate: gameData.isPrivate,
         createdBy: user?.id || 'currentUser',
-        players: [user?.id || 'currentUser'], // Creator is first player
+        players: allPlayers, // Include creator and added players
         status: GameStatus.UPCOMING,
       };
 
@@ -268,6 +273,69 @@ const CreateGameScreen: React.FC = () => {
               </View>
             )}
           </View>
+
+          {/* Add Players Section */}
+          {gameData.format !== GameFormat.SINGLES && (
+            <View style={styles.inputGroup}>
+              <View style={styles.sectionHeader}>
+                <Text style={styles.label}>Add Players</Text>
+                <View style={styles.addPlayersContainer}>
+                  <TouchableOpacity
+                    style={styles.addButton}
+                    onPress={() => setShowAddPlayersModal(true)}
+                  >
+                    <Ionicons name="add" size={20} color={theme.colors.primary} />
+                    <Text style={styles.addButtonText}>
+                      {gameData.format === GameFormat.DOUBLES ? 'Add Player' : 'Add Players'}
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.qrButton}
+                    onPress={() => setShowAddPlayersModal(true)}
+                  >
+                    <Ionicons name="qr-code" size={20} color={theme.colors.primary} />
+                  </TouchableOpacity>
+                </View>
+              </View>
+              
+              {/* Added Players List */}
+              {addedPlayers.length > 0 && (
+                <View style={styles.addedPlayersContainer}>
+                  <Text style={styles.addedPlayersTitle}>
+                    Added Players ({addedPlayers.length})
+                  </Text>
+                  <View style={styles.addedPlayersList}>
+                    {addedPlayers.map((playerId, index) => (
+                      <View key={`added-player-${index}`} style={styles.addedPlayerItem}>
+                        <View style={styles.addedPlayerAvatar}>
+                          <Text style={styles.addedPlayerInitial}>
+                            {playerId === 'user1' ? 'SS' : playerId === 'user2' ? 'VS' : `P${index + 1}`}
+                          </Text>
+                        </View>
+                        <View style={styles.addedPlayerInfo}>
+                          <Text style={styles.addedPlayerName}>
+                            {playerId === 'user1' ? 'Sol Shats' : 
+                             playerId === 'user2' ? 'Vlad Shetinin' : `Player ${index + 1}`}
+                          </Text>
+                          <Text style={styles.addedPlayerEmail}>
+                            {playerId === 'user1' ? '2' : playerId === 'user2' ? '1' : 'player@example.com'}
+                          </Text>
+                        </View>
+                        <TouchableOpacity
+                          style={styles.removePlayerButton}
+                          onPress={() => {
+                            setAddedPlayers(addedPlayers.filter((_, i) => i !== index));
+                          }}
+                        >
+                          <Ionicons name="close" size={16} color={theme.colors.error} />
+                        </TouchableOpacity>
+                      </View>
+                    ))}
+                  </View>
+                </View>
+              )}
+            </View>
+          )}
 
           {/* Skill Level */}
           <View style={styles.inputGroup}>
@@ -443,6 +511,18 @@ const CreateGameScreen: React.FC = () => {
           </View>
         </View>
       )}
+      
+      {/* Add Players Modal */}
+      <AddPlayersModal
+        visible={showAddPlayersModal}
+        onClose={() => setShowAddPlayersModal(false)}
+        game={null}
+        onPlayerAdded={(playerId) => {
+          if (!addedPlayers.includes(playerId)) {
+            setAddedPlayers([...addedPlayers, playerId]);
+          }
+        }}
+      />
     </SafeAreaView>
   );
 };
@@ -721,6 +801,91 @@ const createStyles = (theme: any) => StyleSheet.create({
     color: 'white',
     fontSize: 18,
     fontWeight: '600',
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: theme.spacing.md,
+  },
+  addPlayersContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing.sm,
+  },
+  addButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: theme.colors.surface,
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: theme.spacing.sm,
+    borderRadius: theme.borderRadius.md,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+  },
+  addButtonText: {
+    marginLeft: theme.spacing.xs,
+    fontSize: 16,
+    fontWeight: '600',
+    color: theme.colors.primary,
+  },
+  qrButton: {
+    backgroundColor: theme.colors.surface,
+    padding: theme.spacing.sm,
+    borderRadius: theme.borderRadius.md,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+  },
+  addedPlayersContainer: {
+    marginTop: theme.spacing.md,
+  },
+  addedPlayersTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: theme.colors.textSecondary,
+    marginBottom: theme.spacing.sm,
+  },
+  addedPlayersList: {
+    gap: theme.spacing.sm,
+  },
+  addedPlayerItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: theme.colors.surface,
+    padding: theme.spacing.md,
+    borderRadius: theme.borderRadius.md,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+  },
+  addedPlayerAvatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: theme.colors.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: theme.spacing.md,
+  },
+  addedPlayerInitial: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  addedPlayerInfo: {
+    flex: 1,
+  },
+  addedPlayerName: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: theme.colors.text,
+  },
+  addedPlayerEmail: {
+    fontSize: 14,
+    color: theme.colors.textSecondary,
+    marginTop: 2,
+  },
+  removePlayerButton: {
+    padding: theme.spacing.sm,
   },
 });
 

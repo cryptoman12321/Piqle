@@ -19,12 +19,14 @@ interface AddPlayersModalProps {
   visible: boolean;
   onClose: () => void;
   game: Game | null;
+  onPlayerAdded?: (playerId: string) => void;
 }
 
 const AddPlayersModal: React.FC<AddPlayersModalProps> = ({
   visible,
   onClose,
   game,
+  onPlayerAdded,
 }) => {
   const { theme } = useThemeStore();
   const { user } = useAuthStore();
@@ -35,21 +37,26 @@ const AddPlayersModal: React.FC<AddPlayersModalProps> = ({
   const styles = createStyles(theme);
 
   const handleAddPlayer = async (playerId: string) => {
-    if (!game || !user?.id) return;
-    
-    if (game.players.includes(playerId)) {
-      Alert.alert('Player Already Added', 'This player is already in the game.');
-      return;
-    }
+    if (game && user?.id) {
+      // For existing games
+      if (game.players.includes(playerId)) {
+        Alert.alert('Player Already Added', 'This player is already in the game.');
+        return;
+      }
 
-    if (game.currentPlayers >= game.maxPlayers) {
-      Alert.alert('Game Full', 'This game is already full.');
-      return;
-    }
+      if (game.currentPlayers >= game.maxPlayers) {
+        Alert.alert('Game Full', 'This game is already full.');
+        return;
+      }
 
-    await joinGame(game.id, playerId);
-    Alert.alert('Success', 'Player added to the game!');
-    onClose();
+      await joinGame(game.id, playerId);
+      Alert.alert('Success', 'Player added to the game!');
+      onClose();
+    } else if (onPlayerAdded) {
+      // For new games (creation screen)
+      onPlayerAdded(playerId);
+      onClose();
+    }
   };
 
   const handleQRCodeScan = () => {
