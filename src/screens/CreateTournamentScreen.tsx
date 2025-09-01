@@ -290,7 +290,7 @@ const CreateTournamentScreen: React.FC = () => {
   const styles = createStyles(theme);
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
       <Toast
         visible={toast.visible}
         message={toast.message}
@@ -300,15 +300,13 @@ const CreateTournamentScreen: React.FC = () => {
       />
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         {/* Header */}
-        <View style={styles.header}>
-          <LinearGradient
-            colors={[theme.colors.primary, theme.colors.secondary]}
-            style={styles.headerGradient}
-          >
-            <Ionicons name="trophy" size={32} color="white" />
-            <Text style={styles.headerTitle}>Create Tournament</Text>
-          </LinearGradient>
-        </View>
+        <LinearGradient
+          colors={[theme.colors.primary, theme.colors.secondary]}
+          style={styles.headerGradient}
+        >
+          <Ionicons name="trophy" size={32} color="white" />
+          <Text style={styles.headerTitle}>Create Tournament</Text>
+        </LinearGradient>
 
         {/* Form */}
         <View style={styles.form}>
@@ -610,23 +608,20 @@ const CreateTournamentScreen: React.FC = () => {
           </TouchableOpacity>
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 };
 
 const createStyles = (theme: any) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: theme.colors.background,
   },
   scrollView: {
     flex: 1,
   },
-  header: {
-    marginBottom: theme.spacing.lg,
-  },
   headerGradient: {
-    paddingVertical: theme.spacing.lg,
+    paddingTop: theme.spacing.xl, // Add top padding for status bar
+    paddingBottom: theme.spacing.lg,
     paddingHorizontal: theme.spacing.lg,
     alignItems: 'center',
     flexDirection: 'row',
@@ -640,6 +635,7 @@ const createStyles = (theme: any) => StyleSheet.create({
   form: {
     paddingHorizontal: theme.spacing.lg,
     paddingBottom: theme.spacing.xxl,
+    backgroundColor: theme.colors.background,
   },
   inputGroup: {
     marginBottom: theme.spacing.lg,

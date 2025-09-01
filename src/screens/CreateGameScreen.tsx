@@ -164,7 +164,7 @@ const CreateGameScreen: React.FC = () => {
   const styles = createStyles(theme);
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
       <Toast
         visible={toast.visible}
         message={toast.message}
@@ -174,15 +174,13 @@ const CreateGameScreen: React.FC = () => {
       />
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         {/* Header */}
-        <View style={styles.header}>
-          <LinearGradient
-            colors={[theme.colors.primary, theme.colors.secondary]}
-            style={styles.headerGradient}
-          >
-            <Ionicons name="add-circle" size={32} color="white" />
-            <Text style={styles.headerTitle}>Create New Game</Text>
-          </LinearGradient>
-        </View>
+        <LinearGradient
+          colors={[theme.colors.primary, theme.colors.secondary]}
+          style={styles.headerGradient}
+        >
+          <Ionicons name="add-circle" size={32} color="white" />
+          <Text style={styles.headerTitle}>Create New Game</Text>
+        </LinearGradient>
 
         {/* Form */}
         <View style={styles.form}>
@@ -526,23 +524,20 @@ const CreateGameScreen: React.FC = () => {
           }
         }}
       />
-    </SafeAreaView>
+    </View>
   );
 };
 
 const createStyles = (theme: any) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: theme.colors.background,
   },
   scrollView: {
     flex: 1,
   },
-  header: {
-    marginBottom: theme.spacing.lg,
-  },
   headerGradient: {
-    paddingVertical: theme.spacing.lg,
+    paddingTop: theme.spacing.xl, // Add top padding for status bar
+    paddingBottom: theme.spacing.lg,
     paddingHorizontal: theme.spacing.lg,
     alignItems: 'center',
     flexDirection: 'row',
@@ -556,6 +551,7 @@ const createStyles = (theme: any) => StyleSheet.create({
   form: {
     paddingHorizontal: theme.spacing.lg,
     paddingBottom: theme.spacing.xxl,
+    backgroundColor: theme.colors.background,
   },
   inputGroup: {
     marginBottom: theme.spacing.lg,

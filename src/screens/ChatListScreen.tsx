@@ -177,7 +177,7 @@ const ChatListScreen: React.FC = () => {
   const totalUnreadCount = getUnreadCount();
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
       <ScrollView 
         style={styles.scrollView} 
         showsVerticalScrollIndicator={false}
@@ -186,19 +186,17 @@ const ChatListScreen: React.FC = () => {
         }
       >
         {/* Header */}
-        <View style={styles.header}>
-          <LinearGradient
-            colors={[theme.colors.primary, theme.colors.secondary]}
-            style={styles.headerGradient}
-          >
-            <View style={styles.headerContent}>
-              <Text style={styles.headerTitle}>Messages</Text>
-              <Text style={styles.headerSubtitle}>
-                {conversations.length} conversations • {totalUnreadCount} unread
-              </Text>
-            </View>
-          </LinearGradient>
-        </View>
+        <LinearGradient
+          colors={[theme.colors.primary, theme.colors.secondary]}
+          style={styles.headerGradient}
+        >
+          <View style={styles.headerContent}>
+            <Text style={styles.headerTitle}>Messages</Text>
+            <Text style={styles.headerSubtitle}>
+              {conversations.length} conversations • {totalUnreadCount} unread
+            </Text>
+          </View>
+        </LinearGradient>
 
         {/* Search Bar */}
         <View style={styles.searchSection}>
@@ -426,7 +424,7 @@ const ChatListScreen: React.FC = () => {
           </LinearGradient>
         </TouchableOpacity>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 };
 

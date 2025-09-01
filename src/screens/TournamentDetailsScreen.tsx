@@ -183,28 +183,26 @@ const TournamentDetailsScreen: React.FC = () => {
                      tournament.currentParticipants < tournament.maxParticipants;
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         {/* Header */}
-        <View style={styles.header}>
-          <LinearGradient
-            colors={[theme.colors.primary, theme.colors.secondary]}
-            style={styles.headerGradient}
+        <LinearGradient
+          colors={[theme.colors.primary, theme.colors.secondary]}
+          style={styles.headerGradient}
+        >
+          <TouchableOpacity 
+            style={styles.backButton}
+            onPress={() => navigation.goBack()}
           >
-            <TouchableOpacity 
-              style={styles.backButton}
-              onPress={() => navigation.goBack()}
-            >
-              <Ionicons name="arrow-back" size={24} color="white" />
-            </TouchableOpacity>
-            <View style={styles.headerContent}>
-              <Text style={styles.headerTitle}>{tournament.name}</Text>
-              <View style={[styles.statusBadge, { backgroundColor: getStatusColor(tournament.status) }]}>
-                <Text style={styles.statusText}>{getStatusText(tournament.status)}</Text>
-              </View>
+            <Ionicons name="arrow-back" size={24} color="white" />
+          </TouchableOpacity>
+          <View style={styles.headerContent}>
+            <Text style={styles.headerTitle}>{tournament.name}</Text>
+            <View style={[styles.statusBadge, { backgroundColor: getStatusColor(tournament.status) }]}>
+              <Text style={styles.statusText}>{getStatusText(tournament.status)}</Text>
             </View>
-          </LinearGradient>
-        </View>
+          </View>
+        </LinearGradient>
 
         {/* Tournament Info */}
         <View style={styles.content}>
@@ -393,23 +391,20 @@ const TournamentDetailsScreen: React.FC = () => {
           </View>
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 };
 
 const createStyles = (theme: any) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: theme.colors.background,
   },
   scrollView: {
     flex: 1,
   },
-  header: {
-    marginBottom: theme.spacing.lg,
-  },
   headerGradient: {
-    paddingVertical: theme.spacing.lg,
+    paddingTop: theme.spacing.xl, // Add top padding for status bar
+    paddingBottom: theme.spacing.lg,
     paddingHorizontal: theme.spacing.lg,
     flexDirection: 'row',
     alignItems: 'center',
@@ -442,6 +437,7 @@ const createStyles = (theme: any) => StyleSheet.create({
   content: {
     paddingHorizontal: theme.spacing.lg,
     paddingBottom: theme.spacing.xxl,
+    backgroundColor: theme.colors.background,
   },
   section: {
     marginBottom: theme.spacing.xl,

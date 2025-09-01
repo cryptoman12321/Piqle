@@ -150,28 +150,26 @@ const NewConversationScreen: React.FC = () => {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         {/* Header */}
-        <View style={styles.header}>
-          <LinearGradient
-            colors={[theme.colors.primary, theme.colors.secondary]}
-            style={styles.headerGradient}
-          >
-            <View style={styles.headerContent}>
-              <TouchableOpacity
-                style={styles.backButton}
-                onPress={() => navigation.goBack()}
-              >
-                <Ionicons name="arrow-back" size={24} color="white" />
-              </TouchableOpacity>
-              
-              <Text style={styles.headerTitle}>New Conversation</Text>
-              
-              <View style={styles.headerSpacer} />
-            </View>
-          </LinearGradient>
-        </View>
+        <LinearGradient
+          colors={[theme.colors.primary, theme.colors.secondary]}
+          style={styles.headerGradient}
+        >
+          <View style={styles.headerContent}>
+            <TouchableOpacity
+              style={styles.backButton}
+              onPress={() => navigation.goBack()}
+            >
+              <Ionicons name="arrow-back" size={24} color="white" />
+            </TouchableOpacity>
+            
+            <Text style={styles.headerTitle}>New Conversation</Text>
+            
+            <View style={styles.headerSpacer} />
+          </View>
+        </LinearGradient>
 
         {/* Conversation Type Selector */}
         <View style={styles.typeSelector}>
@@ -327,23 +325,21 @@ const NewConversationScreen: React.FC = () => {
           </TouchableOpacity>
         )}
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 };
 
 const createStyles = (theme: any) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: theme.colors.background,
   },
   scrollView: {
     flex: 1,
   },
-  header: {
-    marginBottom: theme.spacing.lg,
-  },
   headerGradient: {
-    padding: theme.spacing.lg,
+    paddingTop: theme.spacing.xl, // Add top padding for status bar
+    paddingBottom: theme.spacing.lg,
+    paddingHorizontal: theme.spacing.lg,
     borderBottomLeftRadius: 24,
     borderBottomRightRadius: 24,
   },
@@ -369,6 +365,7 @@ const createStyles = (theme: any) => StyleSheet.create({
     paddingHorizontal: theme.spacing.lg,
     marginBottom: theme.spacing.lg,
     gap: theme.spacing.md,
+    backgroundColor: theme.colors.background,
   },
   typeButton: {
     flex: 1,

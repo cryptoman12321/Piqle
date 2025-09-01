@@ -247,7 +247,7 @@ const ChatRoomScreen: React.FC = () => {
 
   if (!conversation) {
     return (
-      <SafeAreaView style={styles.container}>
+      <View style={styles.container}>
         <View style={styles.errorContainer}>
           <Ionicons name="alert-circle" size={64} color={theme.colors.error} />
           <Text style={styles.errorTitle}>Conversation Not Found</Text>
@@ -259,18 +259,17 @@ const ChatRoomScreen: React.FC = () => {
             <Text style={styles.backButtonText}>Go Back</Text>
           </TouchableOpacity>
         </View>
-      </SafeAreaView>
+      </View>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
       {/* Header */}
-      <View style={styles.header}>
-        <LinearGradient
-          colors={[theme.colors.primary, theme.colors.secondary]}
-          style={styles.headerGradient}
-        >
+      <LinearGradient
+        colors={[theme.colors.primary, theme.colors.secondary]}
+        style={styles.headerGradient}
+      >
           <View style={styles.headerContent}>
             <TouchableOpacity
               style={styles.backButton}
@@ -303,7 +302,6 @@ const ChatRoomScreen: React.FC = () => {
             </TouchableOpacity>
           </View>
         </LinearGradient>
-      </View>
 
       {/* Messages */}
       <KeyboardAvoidingView 
@@ -402,20 +400,18 @@ const ChatRoomScreen: React.FC = () => {
           )}
         </View>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </View>
   );
 };
 
 const createStyles = (theme: any) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: theme.colors.background,
-  },
-  header: {
-    marginBottom: theme.spacing.sm,
   },
   headerGradient: {
-    padding: theme.spacing.md,
+    paddingTop: theme.spacing.xl, // Add top padding for status bar
+    paddingBottom: theme.spacing.md,
+    paddingHorizontal: theme.spacing.md,
     borderBottomLeftRadius: 24,
     borderBottomRightRadius: 24,
   },
@@ -445,6 +441,7 @@ const createStyles = (theme: any) => StyleSheet.create({
   },
   messagesContainer: {
     flex: 1,
+    backgroundColor: theme.colors.background,
   },
   messagesScroll: {
     flex: 1,

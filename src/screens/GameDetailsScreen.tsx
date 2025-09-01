@@ -40,7 +40,7 @@ const GameDetailsScreen: React.FC = () => {
     }
   }, [gameId, getGameById]);
 
-  const handleLeaveGame = () => {
+  const handleLeaveGame = async () => {
     if (!game || !user?.id) return;
     
     Alert.alert(
@@ -51,8 +51,8 @@ const GameDetailsScreen: React.FC = () => {
         {
           text: 'Leave',
           style: 'destructive',
-          onPress: () => {
-            leaveGame(game.id, user.id);
+          onPress: async () => {
+            await leaveGame(game.id, user.id);
             // Navigate back to Games list instead of just going back
             navigation.navigate('Games' as any);
           },
@@ -168,28 +168,26 @@ const GameDetailsScreen: React.FC = () => {
   const canJoinGame = !isPlayerInGame && game.currentPlayers < game.maxPlayers;
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         {/* Header */}
-        <View style={styles.header}>
-          <LinearGradient
-            colors={[theme.colors.primary, theme.colors.secondary]}
-            style={styles.headerGradient}
+        <LinearGradient
+          colors={[theme.colors.primary, theme.colors.secondary]}
+          style={styles.headerGradient}
+        >
+          <TouchableOpacity 
+            style={styles.backButton}
+            onPress={() => navigation.goBack()}
           >
-            <TouchableOpacity 
-              style={styles.backButton}
-              onPress={() => navigation.goBack()}
-            >
-              <Ionicons name="arrow-back" size={24} color="white" />
-            </TouchableOpacity>
-            <View style={styles.headerContent}>
-              <Text style={styles.headerTitle}>{game.title}</Text>
-              <View style={[styles.statusBadge, { backgroundColor: getStatusColor(game.status) }]}>
-                <Text style={styles.statusText}>{getStatusText(game.status)}</Text>
-              </View>
+            <Ionicons name="arrow-back" size={24} color="white" />
+          </TouchableOpacity>
+          <View style={styles.headerContent}>
+            <Text style={styles.headerTitle}>{game.title}</Text>
+            <View style={[styles.statusBadge, { backgroundColor: getStatusColor(game.status) }]}>
+              <Text style={styles.statusText}>{getStatusText(game.status)}</Text>
             </View>
-          </LinearGradient>
-        </View>
+          </View>
+        </LinearGradient>
 
         {/* Game Info */}
         <View style={styles.content}>
@@ -474,23 +472,20 @@ const GameDetailsScreen: React.FC = () => {
         game={game}
         onPlayerAdded={handlePlayerAdded}
       />
-    </SafeAreaView>
+    </View>
   );
 };
 
 const createStyles = (theme: any) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: theme.colors.background,
   },
   scrollView: {
     flex: 1,
   },
-  header: {
-    marginBottom: theme.spacing.lg,
-  },
   headerGradient: {
-    paddingVertical: theme.spacing.lg,
+    paddingTop: theme.spacing.xl, // Add top padding for status bar
+    paddingBottom: theme.spacing.lg,
     paddingHorizontal: theme.spacing.lg,
     flexDirection: 'row',
     alignItems: 'center',
@@ -523,6 +518,7 @@ const createStyles = (theme: any) => StyleSheet.create({
   content: {
     paddingHorizontal: theme.spacing.lg,
     paddingBottom: theme.spacing.xxl,
+    backgroundColor: theme.colors.background,
   },
   section: {
     marginBottom: theme.spacing.xl,

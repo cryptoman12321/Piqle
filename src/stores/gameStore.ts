@@ -144,7 +144,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
     }
   },
 
-  leaveGame: (gameId, userId) => {
+  leaveGame: async (gameId, userId) => {
     set((state) => ({
       games: state.games.map((game) => {
         if (game.id === gameId) {
@@ -157,6 +157,23 @@ export const useGameStore = create<GameStore>((set, get) => ({
         return game;
       }),
     }));
+    
+    // Save to AsyncStorage
+    try {
+      const updatedGames = get().games.map((game) => {
+        if (game.id === gameId) {
+          return {
+            ...game,
+            currentPlayers: Math.max(0, game.currentPlayers - 1),
+            players: game.players.filter((id) => id !== userId),
+          };
+        }
+        return game;
+      });
+      await AsyncStorage.setItem('games', JSON.stringify(updatedGames));
+    } catch (error) {
+      console.error('Error saving leave game to AsyncStorage:', error);
+    }
   },
 
   loadGames: async () => {
