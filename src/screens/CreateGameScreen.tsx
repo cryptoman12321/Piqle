@@ -149,9 +149,9 @@ const CreateGameScreen: React.FC = () => {
       // Show success toast
       showSuccess('Game created successfully!');
       
-      // Navigate to Games screen after a short delay
+      // Navigate to GamesList screen after a short delay
       setTimeout(() => {
-        (navigation as any).navigate('Games');
+        (navigation as any).navigate('GamesList');
       }, 1000);
       
     } catch (error) {
