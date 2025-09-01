@@ -219,7 +219,7 @@ const StartMatchScreen: React.FC = () => {
         text2: 'Match results have been saved successfully.',
         position: 'top',
         visibilityTime: 2000,
-        onHide: () => navigation.navigate('GameDetails', { gameId: game?.id })
+        onHide: () => navigation.navigate('Games')
       });
     } catch (error) {
       Toast.show({
@@ -252,22 +252,21 @@ const StartMatchScreen: React.FC = () => {
 
   if (isLoading || !game) {
     return (
-      <SafeAreaView style={styles.container}>
+      <View style={styles.container}>
         <View style={styles.loadingContainer}>
           <Text style={styles.loadingText}>Loading game...</Text>
         </View>
-      </SafeAreaView>
+      </View>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={styles.container}>
       {/* Header */}
-      <View style={styles.header}>
-        <LinearGradient
-          colors={[theme.colors.primary, theme.colors.secondary]}
-          style={styles.headerGradient}
-        >
+      <LinearGradient
+        colors={[theme.colors.primary, theme.colors.secondary]}
+        style={styles.headerGradient}
+      >
           <TouchableOpacity 
             style={styles.backButton}
             onPress={() => navigation.goBack()}
@@ -280,7 +279,6 @@ const StartMatchScreen: React.FC = () => {
             <Text style={styles.headerSubtitle}>{game.title}</Text>
           </View>
         </LinearGradient>
-      </View>
 
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         {/* Team Assignment Section */}
@@ -477,20 +475,17 @@ const StartMatchScreen: React.FC = () => {
           </TouchableOpacity>
         </TouchableOpacity>
       </Modal>
-    </SafeAreaView>
+    </View>
   );
 };
 
 const createStyles = (theme: any) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: theme.colors.background,
-  },
-  header: {
-    marginBottom: theme.spacing.lg,
   },
   headerGradient: {
-    paddingVertical: theme.spacing.lg,
+    paddingTop: theme.spacing.xl, // Add top padding for status bar
+    paddingBottom: theme.spacing.lg,
     paddingHorizontal: theme.spacing.lg,
     flexDirection: 'row',
     alignItems: 'center',
@@ -515,6 +510,7 @@ const createStyles = (theme: any) => StyleSheet.create({
   scrollView: {
     flex: 1,
     paddingHorizontal: theme.spacing.lg,
+    backgroundColor: theme.colors.background,
   },
   section: {
     marginBottom: theme.spacing.xl,
