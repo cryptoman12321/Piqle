@@ -219,7 +219,7 @@ const StartMatchScreen: React.FC = () => {
         text2: 'Match results have been saved successfully.',
         position: 'top',
         visibilityTime: 2000,
-        onHide: () => navigation.navigate('GamesList')
+        onHide: () => navigation.replace('Games')
       });
     } catch (error) {
       Toast.show({

@@ -252,9 +252,9 @@ const CreateTournamentScreen: React.FC = () => {
       // Show success toast
       showSuccess(`Tournament "${tournamentData.name}" created successfully!`);
       
-      // Navigate to TournamentsList screen after a short delay
+      // Navigate to TournamentDetails and replace CreateTournament in navigation stack
       setTimeout(() => {
-        (navigation as any).navigate('TournamentsList');
+        (navigation as any).replace('TournamentDetails', { tournamentId: createdTournament.id });
       }, 1000);
       
     } catch (error) {
