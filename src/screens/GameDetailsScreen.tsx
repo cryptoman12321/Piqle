@@ -16,6 +16,7 @@ import { useAuthStore } from '../stores/authStore';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { Game, GameFormat, SkillLevel, GameStatus } from '../types';
 import AddPlayersModal from '../components/AddPlayersModal';
+import ShareModal from '../components/ShareModal';
 import { userService } from '../services/userService';
 
 const GameDetailsScreen: React.FC = () => {
@@ -29,6 +30,7 @@ const GameDetailsScreen: React.FC = () => {
   const [game, setGame] = useState<Game | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [showAddPlayersModal, setShowAddPlayersModal] = useState(false);
+  const [showShareModal, setShowShareModal] = useState(false);
 
   const styles = createStyles(theme);
 
@@ -63,15 +65,7 @@ const GameDetailsScreen: React.FC = () => {
 
   const handleShareGame = () => {
     if (!game) return;
-    
-    Alert.alert(
-      'Share Game',
-      `Share "${game.title}" with other players!`,
-      [
-        { text: 'Copy Link', onPress: () => Alert.alert('Copied!', 'Game link copied to clipboard') },
-        { text: 'Cancel', style: 'cancel' },
-      ]
-    );
+    setShowShareModal(true);
   };
 
   const handlePlayerAdded = (playerId: string) => {
@@ -471,6 +465,18 @@ const GameDetailsScreen: React.FC = () => {
         onClose={() => setShowAddPlayersModal(false)}
         game={game}
         onPlayerAdded={handlePlayerAdded}
+      />
+
+      {/* Share Modal */}
+      <ShareModal
+        visible={showShareModal}
+        onClose={() => setShowShareModal(false)}
+        shareData={{
+          type: 'game',
+          id: game?.id || '',
+          title: game?.title || '',
+          description: game?.description,
+        }}
       />
     </View>
   );

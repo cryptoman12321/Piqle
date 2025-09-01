@@ -34,8 +34,8 @@
     "web": {
       "favicon": "./assets/favicon.png"
     },
+    "scheme": "piqle",
     "plugins": [
-
       "expo-image-picker",
       "expo-notifications"
     ]

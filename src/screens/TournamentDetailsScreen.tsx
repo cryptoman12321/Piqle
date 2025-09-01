@@ -21,6 +21,7 @@ import {
   TournamentStatus,
   Prize 
 } from '../types';
+import ShareModal from '../components/ShareModal';
 
 const TournamentDetailsScreen: React.FC = () => {
   const { theme } = useThemeStore();
@@ -32,6 +33,7 @@ const TournamentDetailsScreen: React.FC = () => {
   const tournamentId = (route.params as any)?.tournamentId;
   const [tournament, setTournament] = useState<Tournament | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [showShareModal, setShowShareModal] = useState(false);
 
   const styles = createStyles(theme);
 
@@ -66,15 +68,7 @@ const TournamentDetailsScreen: React.FC = () => {
 
   const handleShareTournament = () => {
     if (!tournament) return;
-    
-    Alert.alert(
-      'Share Tournament',
-      `Share "${tournament.name}" with other players!`,
-      [
-        { text: 'Copy Link', onPress: () => Alert.alert('Copied!', 'Tournament link copied to clipboard') },
-        { text: 'Cancel', style: 'cancel' },
-      ]
-    );
+    setShowShareModal(true);
   };
 
   const getFormatDisplayName = (format: TournamentFormat) => {
@@ -391,6 +385,18 @@ const TournamentDetailsScreen: React.FC = () => {
           </View>
         </View>
       </ScrollView>
+
+      {/* Share Modal */}
+      <ShareModal
+        visible={showShareModal}
+        onClose={() => setShowShareModal(false)}
+        shareData={{
+          type: 'tournament',
+          id: tournament?.id || '',
+          title: tournament?.name || '',
+          description: tournament?.description,
+        }}
+      />
     </View>
   );
 };

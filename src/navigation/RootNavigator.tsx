@@ -3,6 +3,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useAuthStore } from '../stores/authStore';
 import { RootStackParamList } from '../types';
+import DeepLinkInitializer from '../components/DeepLinkInitializer';
 
 // Import screens
 import AuthScreen from '../screens/AuthScreen';
@@ -30,6 +31,7 @@ const RootNavigator: React.FC = () => {
 
   return (
     <NavigationContainer>
+      <DeepLinkInitializer />
       <Stack.Navigator
         screenOptions={{
           headerShown: false,
