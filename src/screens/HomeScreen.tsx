@@ -15,15 +15,101 @@ import { useThemeStore } from '../stores/themeStore';
 import { useAuthStore } from '../stores/authStore';
 import { useGameStore } from '../stores/gameStore';
 import { useTournamentStore } from '../stores/tournamentStore';
+import { userService } from '../services/userService';
 import { useNavigation } from '@react-navigation/native';
 import { Game, Court, GameFormat, SkillLevel, GameStatus, CourtType, CourtSurface, Tournament, TournamentFormat, TournamentStatus } from '../types';
 
 const HomeScreen: React.FC = () => {
   const { getCurrentTheme } = useThemeStore();
   const { user } = useAuthStore();
-  const { games, getUpcomingGames } = useGameStore();
+  const { games, getUpcomingGames, joinGame } = useGameStore();
   const { tournaments, getUpcomingTournaments } = useTournamentStore();
   const navigation = useNavigation<any>();
+
+  // Render player circles (same as in GamesScreen)
+  const renderPlayerCircles = (game: Game) => {
+    const circles = [];
+    
+    // Add existing players
+    for (let i = 0; i < game.players.length; i++) {
+      const playerId = game.players[i];
+      const player = userService.getUserById(playerId);
+      const initials = player ? `${player.firstName[0]}${player.lastName[0]}` : '?';
+      const isCurrentUser = playerId === user?.id;
+      
+      circles.push(
+        <View key={`player-${i}`} style={[styles.playerCircle, isCurrentUser && styles.currentUserCircle]}>
+          <Text style={styles.playerInitials}>{initials}</Text>
+        </View>
+      );
+    }
+    
+    // Add empty slots or plus buttons
+    for (let i = game.players.length; i < game.maxPlayers; i++) {
+      if (!game.players.includes(user?.id || '')) {
+        // Show plus button for joining if user is not in the game
+        circles.push(
+          <TouchableOpacity 
+            key={`plus-${i}`} 
+            style={styles.plusCircle}
+            onPress={(e) => {
+              e.stopPropagation();
+              handleJoinGame(game);
+            }}
+          >
+            <Ionicons name="add" size={16} color={theme.colors.primary} />
+          </TouchableOpacity>
+        );
+      } else {
+        // Show empty slot if user is already in the game
+        circles.push(
+          <View key={`empty-${i}`} style={styles.emptyCircle} />
+        );
+      }
+    }
+    
+    // Add VS between teams for all games
+    let displayCircles = circles;
+    if (game.format === GameFormat.SINGLES && game.maxPlayers === 2) {
+      // Insert VS between 1v1 players
+      displayCircles = [
+        circles[0],
+        <View key="vs" style={styles.vsContainer}>
+          <Text style={styles.vsText}>VS</Text>
+        </View>,
+        circles[1]
+      ];
+    } else if (game.format === GameFormat.DOUBLES && game.maxPlayers === 4) {
+      // Insert VS after 2nd player for 2v2 games
+      displayCircles = [
+        ...circles.slice(0, 2),
+        <View key="vs" style={styles.vsContainer}>
+          <Text style={styles.vsText}>VS</Text>
+        </View>,
+        ...circles.slice(2)
+      ];
+    }
+    
+    return (
+      <View style={styles.playersContainer}>
+        <Text style={styles.playersLabel}>Players ({game.players.length}/{game.maxPlayers})</Text>
+        <View style={styles.playerCircles}>
+          {displayCircles}
+        </View>
+        
+        {/* Show match result if completed */}
+        {game.result && (
+          <View style={styles.resultContainer}>
+            <Text style={styles.resultText}>
+              {game.result.matches.map((match, index) => 
+                `${match.team1Score}-${match.team2Score}`
+              ).join(', ')}
+            </Text>
+          </View>
+        )}
+      </View>
+    );
+  };
   
   const theme = getCurrentTheme();
 
@@ -67,6 +153,22 @@ const HomeScreen: React.FC = () => {
 
   const handleFindGame = () => {
     navigation.navigate('Games' as never);
+  };
+
+  const handleJoinGame = async (game: Game) => {
+    if (game.currentPlayers >= game.maxPlayers) {
+      return; // Game is full
+    }
+    
+    if (!user?.id) {
+      return; // User not logged in
+    }
+    
+    // Join the game using the store
+    await joinGame(game.id, user.id);
+    
+    // Navigate to game details
+    navigation.navigate('GameDetails' as never, { gameId: game.id } as never);
   };
 
   const handleFindTournament = () => {
@@ -317,13 +419,10 @@ const HomeScreen: React.FC = () => {
                       <Text style={styles.gameStatusText}>{game.status}</Text>
                     </View>
                   </View>
+                  {/* Player Circles */}
+                  {renderPlayerCircles(game)}
+                  
                   <View style={styles.gameDetails}>
-                    <View style={styles.gameDetail}>
-                      <Ionicons name="people" size={16} color={theme.colors.textSecondary} />
-                      <Text style={styles.gameDetailText}>
-                        {game.currentPlayers}/{game.maxPlayers} players
-                      </Text>
-                    </View>
                     <View style={styles.gameDetail}>
                       <Ionicons name="time" size={16} color={theme.colors.textSecondary} />
                       <Text style={styles.gameDetailText}>
@@ -754,6 +853,85 @@ const createStyles = (theme: any) => StyleSheet.create({
   availabilityText: {
     fontSize: 12,
     color: theme.colors.textSecondary,
+  },
+  // Player circles styles
+  playersContainer: {
+    marginBottom: theme.spacing.sm,
+    alignItems: 'center',
+  },
+  playersLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: theme.colors.text,
+    marginBottom: theme.spacing.xs,
+    textAlign: 'center',
+  },
+  playerCircles: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing.xs,
+    justifyContent: 'center',
+  },
+  playerCircle: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: theme.colors.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  currentUserCircle: {
+    backgroundColor: theme.colors.success,
+    borderWidth: 1,
+    borderColor: theme.colors.text,
+  },
+  playerInitials: {
+    color: 'white',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  emptyCircle: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: theme.colors.surface,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+  },
+  plusCircle: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: theme.colors.surface,
+    borderWidth: 2,
+    borderColor: theme.colors.primary,
+    borderStyle: 'dashed',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  vsContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: theme.spacing.xs,
+  },
+  vsText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: theme.colors.primary,
+    textTransform: 'uppercase',
+  },
+  resultContainer: {
+    marginTop: theme.spacing.xs,
+    alignItems: 'center',
+  },
+  resultText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: theme.colors.success,
+    backgroundColor: theme.colors.success + '20',
+    paddingHorizontal: theme.spacing.xs,
+    paddingVertical: 2,
+    borderRadius: theme.borderRadius.sm,
   },
 });
 

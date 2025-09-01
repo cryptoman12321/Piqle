@@ -23,6 +23,7 @@ import { CompositeNavigationProp } from '@react-navigation/native';
 import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Game, GameFormat, SkillLevel, GameStatus, MainTabParamList, GamesStackParamList } from '../types';
+import { userService } from '../services/userService';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
@@ -74,7 +75,7 @@ const GamesScreen: React.FC = () => {
     }
     
     // Join the game using the store
-    joinGame(game.id, user.id);
+    await joinGame(game.id, user.id);
     
     // Navigate to the game lobby/details
     navigation.navigate('GameDetails', { gameId: game.id });
@@ -114,6 +115,91 @@ const GamesScreen: React.FC = () => {
     return user?.id === game.createdBy;
   };
 
+  // Render player circles
+  const renderPlayerCircles = (game: Game) => {
+    const circles = [];
+    
+    // Add existing players
+    for (let i = 0; i < game.players.length; i++) {
+      const playerId = game.players[i];
+      const player = userService.getUserById(playerId);
+      const initials = player ? `${player.firstName[0]}${player.lastName[0]}` : '?';
+      const isCurrentUser = playerId === user?.id;
+      
+      circles.push(
+        <View key={`player-${i}`} style={[styles.playerCircle, isCurrentUser && styles.currentUserCircle]}>
+          <Text style={styles.playerInitials}>{initials}</Text>
+        </View>
+      );
+    }
+    
+    // Add empty slots or plus buttons
+    for (let i = game.players.length; i < game.maxPlayers; i++) {
+      if (!game.players.includes(user?.id || '')) {
+        // Show plus button for joining if user is not in the game
+        circles.push(
+          <TouchableOpacity 
+            key={`plus-${i}`} 
+            style={styles.plusCircle}
+            onPress={(e) => {
+              e.stopPropagation();
+              handleJoinGame(game);
+            }}
+          >
+            <Ionicons name="add" size={20} color={theme.colors.primary} />
+          </TouchableOpacity>
+        );
+      } else {
+        // Show empty slot if user is already in the game
+        circles.push(
+          <View key={`empty-${i}`} style={styles.emptyCircle} />
+        );
+      }
+    }
+    
+    // Add VS between teams for all games
+    let displayCircles = circles;
+    if (game.format === GameFormat.SINGLES && game.maxPlayers === 2) {
+      // Insert VS between 1v1 players
+      displayCircles = [
+        circles[0],
+        <View key="vs" style={styles.vsContainer}>
+          <Text style={styles.vsText}>VS</Text>
+        </View>,
+        circles[1]
+      ];
+    } else if (game.format === GameFormat.DOUBLES && game.maxPlayers === 4) {
+      // Insert VS after 2nd player for 2v2 games
+      displayCircles = [
+        ...circles.slice(0, 2),
+        <View key="vs" style={styles.vsContainer}>
+          <Text style={styles.vsText}>VS</Text>
+        </View>,
+        ...circles.slice(2)
+      ];
+    }
+    
+    return (
+      <View style={styles.playersContainer}>
+        <Text style={styles.playersLabel}>Players ({game.players.length}/{game.maxPlayers})</Text>
+        <View style={styles.playerCircles}>
+          {displayCircles}
+        </View>
+        
+        {/* Show match result if completed */}
+        {game.result && (
+          <View style={styles.resultContainer}>
+            <Text style={styles.resultText}>
+              {game.result.matches.map((match, index) => 
+                `${match.team1Score}-${match.team2Score}`
+              ).join(', ')}
+            </Text>
+          </View>
+        )}
+      </View>
+    );
+  };
+
   const renderGameCard = ({ item: game }: { item: Game }) => (
     <TouchableOpacity 
       style={styles.gameCard}
@@ -130,14 +216,10 @@ const GamesScreen: React.FC = () => {
         <Text style={styles.gameDescription}>{game.description}</Text>
       )}
       
+      {/* Player Circles */}
+      {renderPlayerCircles(game)}
+      
       <View style={styles.gameDetails}>
-        <View style={styles.gameDetail}>
-          <Ionicons name="people" size={16} color={theme.colors.textSecondary} />
-          <Text style={styles.gameDetailText}>
-            {game.currentPlayers}/{game.maxPlayers} players
-          </Text>
-        </View>
-        
         <View style={styles.gameDetail}>
           <Ionicons name="game-controller" size={16} color={theme.colors.textSecondary} />
           <Text style={styles.gameDetailText}>
@@ -165,30 +247,20 @@ const GamesScreen: React.FC = () => {
       </View>
       
       <View style={styles.gameActions}>
-        <TouchableOpacity 
-          style={[styles.joinButton, game.currentPlayers >= game.maxPlayers && styles.joinButtonDisabled]}
-          onPress={() => handleJoinGame(game)}
-          disabled={game.currentPlayers >= game.maxPlayers}
-        >
-          <Text style={styles.joinButtonText}>
-            {game.currentPlayers >= game.maxPlayers ? 'Full' : 'Join Game'}
-          </Text>
-        </TouchableOpacity>
-        
-            <View style={styles.actionButtons}>
-      <TouchableOpacity style={styles.shareButton}>
-        <Ionicons name="share-outline" size={20} color={theme.colors.primary} />
-      </TouchableOpacity>
-      
-      {canDeleteGame(game) && (
-        <TouchableOpacity 
-          style={styles.deleteButton}
-          onPress={() => handleDeleteGame(game.id)}
-        >
-          <Ionicons name="trash-outline" size={20} color={theme.colors.error} />
-        </TouchableOpacity>
-      )}
-    </View>
+        <View style={styles.actionButtons}>
+          <TouchableOpacity style={styles.shareButton}>
+            <Ionicons name="share-outline" size={20} color={theme.colors.primary} />
+          </TouchableOpacity>
+          
+          {canDeleteGame(game) && (
+            <TouchableOpacity 
+              style={styles.deleteButton}
+              onPress={() => handleDeleteGame(game.id)}
+            >
+              <Ionicons name="trash-outline" size={20} color={theme.colors.error} />
+            </TouchableOpacity>
+          )}
+        </View>
       </View>
     </TouchableOpacity>
   );
@@ -608,6 +680,85 @@ const createStyles = (theme: any) => StyleSheet.create({
     color: 'white',
     fontSize: 16,
     fontWeight: '600',
+  },
+  // Player circles styles
+  playersContainer: {
+    marginBottom: theme.spacing.md,
+    alignItems: 'center',
+  },
+  playersLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: theme.colors.text,
+    marginBottom: theme.spacing.sm,
+    textAlign: 'center',
+  },
+  playerCircles: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing.xs,
+    justifyContent: 'center',
+  },
+  playerCircle: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: theme.colors.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  currentUserCircle: {
+    backgroundColor: theme.colors.success,
+    borderWidth: 2,
+    borderColor: theme.colors.text,
+  },
+  playerInitials: {
+    color: 'white',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  plusCircle: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: theme.colors.surface,
+    borderWidth: 2,
+    borderColor: theme.colors.primary,
+    borderStyle: 'dashed',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  emptyCircle: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: theme.colors.surface,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+  },
+  vsContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: theme.spacing.sm,
+  },
+  vsText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: theme.colors.primary,
+    textTransform: 'uppercase',
+  },
+  resultContainer: {
+    marginTop: theme.spacing.sm,
+    alignItems: 'center',
+  },
+  resultText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: theme.colors.success,
+    backgroundColor: theme.colors.success + '20',
+    paddingHorizontal: theme.spacing.sm,
+    paddingVertical: theme.spacing.xs,
+    borderRadius: theme.borderRadius.sm,
   },
 });
 
