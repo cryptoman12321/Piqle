@@ -21,6 +21,7 @@ import AICoachScreen from '../screens/AICoachScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 import CalendarScreen from '../screens/CalendarScreen';
 import TournamentDetailsScreen from '../screens/TournamentDetailsScreen';
+import StartMatchScreen from '../screens/StartMatchScreen';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -91,6 +92,11 @@ const RootNavigator: React.FC = () => {
               name="GameDetails" 
               component={GameDetailsScreen}
               options={{ headerShown: true, title: 'Game Details' }}
+            />
+            <Stack.Screen 
+              name="StartMatch" 
+              component={StartMatchScreen}
+              options={{ headerShown: true, title: 'Start Match' }}
             />
             <Stack.Screen 
               name="AICoach" 

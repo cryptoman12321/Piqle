@@ -338,45 +338,131 @@ const GameDetailsScreen: React.FC = () => {
             </View>
           )}
 
+          {/* Match Results */}
+          {game.result && (
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Match Results</Text>
+              <View style={styles.resultContainer}>
+                {/* Team Headers */}
+                <View style={styles.resultHeader}>
+                  <View style={styles.teamColumn}>
+                    <Text style={styles.teamHeaderText}>Team 1</Text>
+                    {game.result.team1Players.map((playerId) => {
+                      const player = userService.getUserById(playerId);
+                      return (
+                        <Text key={playerId} style={styles.playerResultName}>
+                          {player ? `${player.firstName} ${player.lastName}` : 'Unknown'}
+                        </Text>
+                      );
+                    })}
+                  </View>
+                  <View style={styles.vsColumn}>
+                    <Text style={styles.vsResultText}>VS</Text>
+                  </View>
+                  <View style={styles.teamColumn}>
+                    <Text style={styles.teamHeaderText}>Team 2</Text>
+                    {game.result.team2Players.map((playerId) => {
+                      const player = userService.getUserById(playerId);
+                      return (
+                        <Text key={playerId} style={styles.playerResultName}>
+                          {player ? `${player.firstName} ${player.lastName}` : 'Unknown'}
+                        </Text>
+                      );
+                    })}
+                  </View>
+                </View>
+
+                {/* Match Scores */}
+                {game.result.matches.map((match) => (
+                  <View key={match.gameNumber} style={styles.matchRow}>
+                    <View style={styles.scoreColumn}>
+                      <Text style={styles.scoreText}>{match.team1Score}</Text>
+                    </View>
+                    <View style={styles.gameColumn}>
+                      <Text style={styles.gameText}>Game {match.gameNumber}</Text>
+                    </View>
+                    <View style={styles.scoreColumn}>
+                      <Text style={styles.scoreText}>{match.team2Score}</Text>
+                    </View>
+                  </View>
+                ))}
+
+                {/* Completion Time */}
+                <View style={styles.completionTime}>
+                  <Text style={styles.completionText}>
+                    Completed on {new Date(game.result.completedAt).toLocaleDateString()} at {new Date(game.result.completedAt).toLocaleTimeString()}
+                  </Text>
+                </View>
+              </View>
+            </View>
+          )}
+
           {/* Actions */}
           <View style={styles.actionsSection}>
-            {isPlayerInGame ? (
+            {game.result ? (
+              // Match is completed - only show share button
               <TouchableOpacity 
-                style={[styles.actionButton, styles.leaveButton]}
-                onPress={handleLeaveGame}
+                style={[styles.actionButton, styles.shareButton]}
+                onPress={handleShareGame}
               >
-                <Ionicons name="exit-outline" size={20} color="white" />
-                <Text style={styles.actionButtonText}>Leave Game</Text>
-              </TouchableOpacity>
-            ) : canJoinGame ? (
-              <TouchableOpacity 
-                style={[styles.actionButton, styles.joinButton]}
-                onPress={async () => {
-                  if (game && user?.id) {
-                    // Actually join the game using the store
-                    await joinGame(game.id, user.id);
-                    // Navigate back to Games list to show updated state
-                    navigation.navigate('Games' as any);
-                  }
-                }}
-              >
-                <Ionicons name="enter-outline" size={20} color="white" />
-                <Text style={styles.actionButtonText}>Join Game</Text>
+                <Ionicons name="share-outline" size={20} color={theme.colors.primary} />
+                <Text style={[styles.actionButtonText, { color: theme.colors.primary }]}>Share Results</Text>
               </TouchableOpacity>
             ) : (
-              <View style={[styles.actionButton, styles.fullButton]}>
-                <Ionicons name="close-circle" size={20} color="white" />
-                <Text style={styles.actionButtonText}>Game Full</Text>
-              </View>
+              // Match is not completed - show normal buttons
+              <>
+                {isPlayerInGame ? (
+                  <>
+                    <TouchableOpacity 
+                      style={[styles.actionButton, styles.leaveButton]}
+                      onPress={handleLeaveGame}
+                    >
+                      <Ionicons name="exit-outline" size={20} color="white" />
+                      <Text style={styles.actionButtonText}>Leave Game</Text>
+                    </TouchableOpacity>
+                    
+                    {/* Start Match Button - only for game creator when game is full */}
+                    {user?.id === game.createdBy && game.currentPlayers === game.maxPlayers && (
+                      <TouchableOpacity 
+                        style={[styles.actionButton, styles.startButton]}
+                        onPress={() => navigation.navigate('StartMatch', { gameId: game.id })}
+                      >
+                        <Ionicons name="play" size={20} color="white" />
+                        <Text style={styles.actionButtonText}>Start Match</Text>
+                      </TouchableOpacity>
+                    )}
+                  </>
+                ) : canJoinGame ? (
+                  <TouchableOpacity 
+                    style={[styles.actionButton, styles.joinButton]}
+                    onPress={async () => {
+                      if (game && user?.id) {
+                        // Actually join the game using the store
+                        await joinGame(game.id, user.id);
+                        // Navigate back to Games list to show updated state
+                        navigation.navigate('Games' as any);
+                      }
+                    }}
+                  >
+                    <Ionicons name="enter-outline" size={20} color="white" />
+                    <Text style={styles.actionButtonText}>Join Game</Text>
+                  </TouchableOpacity>
+                ) : (
+                  <View style={[styles.actionButton, styles.fullButton]}>
+                    <Ionicons name="close-circle" size={20} color="white" />
+                    <Text style={styles.actionButtonText}>Game Full</Text>
+                  </View>
+                )}
+                
+                <TouchableOpacity 
+                  style={[styles.actionButton, styles.shareButton]}
+                  onPress={handleShareGame}
+                >
+                  <Ionicons name="share-outline" size={20} color={theme.colors.primary} />
+                  <Text style={[styles.actionButtonText, { color: theme.colors.primary }]}>Share</Text>
+                </TouchableOpacity>
+              </>
             )}
-            
-            <TouchableOpacity 
-              style={[styles.actionButton, styles.shareButton]}
-              onPress={handleShareGame}
-            >
-              <Ionicons name="share-outline" size={20} color={theme.colors.primary} />
-              <Text style={[styles.actionButtonText, { color: theme.colors.primary }]}>Share</Text>
-            </TouchableOpacity>
           </View>
         </View>
       </ScrollView>
@@ -606,7 +692,7 @@ const createStyles = (theme: any) => StyleSheet.create({
     fontStyle: 'italic',
   },
   actionsSection: {
-    flexDirection: 'row',
+    flexDirection: 'column',
     gap: theme.spacing.md,
     marginTop: theme.spacing.lg,
   },
@@ -634,6 +720,9 @@ const createStyles = (theme: any) => StyleSheet.create({
     backgroundColor: theme.colors.surface,
     borderWidth: 1,
     borderColor: theme.colors.border,
+  },
+  startButton: {
+    backgroundColor: theme.colors.success,
   },
   actionButtonText: {
     color: 'white',
@@ -670,6 +759,81 @@ const createStyles = (theme: any) => StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
   },
+  resultContainer: {
+    backgroundColor: theme.colors.surface,
+    borderRadius: theme.borderRadius.md,
+    padding: theme.spacing.lg,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+  },
+  resultHeader: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    marginBottom: theme.spacing.lg,
+    paddingBottom: theme.spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.colors.border,
+  },
+  teamColumn: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  vsColumn: {
+    width: 60,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  teamHeaderText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: theme.colors.text,
+    marginBottom: theme.spacing.sm,
+  },
+  playerResultName: {
+    fontSize: 14,
+    color: theme.colors.textSecondary,
+    marginBottom: theme.spacing.xs,
+  },
+  vsResultText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: theme.colors.primary,
+  },
+  matchRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: theme.spacing.sm,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.colors.border,
+  },
+  scoreColumn: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  gameColumn: {
+    width: 80,
+    alignItems: 'center',
+  },
+  scoreText: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: theme.colors.text,
+  },
+  gameText: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: theme.colors.textSecondary,
+  },
+  completionTime: {
+    marginTop: theme.spacing.md,
+    alignItems: 'center',
+  },
+  completionText: {
+    fontSize: 12,
+    color: theme.colors.textSecondary,
+    fontStyle: 'italic',
+  },
+
 });
 
 export default GameDetailsScreen;

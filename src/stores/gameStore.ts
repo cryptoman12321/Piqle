@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Game, GameFormat, SkillLevel, GameStatus } from '../types';
+import { Game, GameFormat, SkillLevel, GameStatus, GameResult } from '../types';
 
 interface GameState {
   games: Game[];
@@ -15,6 +15,7 @@ interface GameActions {
   deleteGame: (id: string, userId?: string) => Promise<void>;
   joinGame: (gameId: string, userId: string) => Promise<void>;
   leaveGame: (gameId: string, userId: string) => void;
+  saveGameResult: (gameId: string, result: GameResult) => Promise<void>;
   
   // Data loading
   loadGames: () => Promise<void>;
@@ -279,5 +280,28 @@ export const useGameStore = create<GameStore>((set, get) => ({
     return games
       .filter((game) => game.startTime > now)
       .sort((a, b) => a.startTime.getTime() - b.startTime.getTime());
+  },
+
+  saveGameResult: async (gameId, result) => {
+    try {
+      set((state) => ({
+        games: state.games.map((game) =>
+          game.id === gameId
+            ? { 
+                ...game, 
+                result,
+                status: GameStatus.COMPLETED 
+              }
+            : game
+        ),
+      }));
+
+      // Save to AsyncStorage
+      const { games } = get();
+      await AsyncStorage.setItem('games', JSON.stringify(games));
+    } catch (error) {
+      console.error('Failed to save game result:', error);
+      set({ error: 'Failed to save game result' });
+    }
   },
 }));

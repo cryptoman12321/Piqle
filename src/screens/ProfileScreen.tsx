@@ -18,13 +18,16 @@ import * as ImagePicker from 'expo-image-picker';
 import { useThemeStore } from '../stores/themeStore';
 import { useAuthStore } from '../stores/authStore';
 import { useAchievementsStore } from '../stores/achievementsStore';
+import { useGameStore } from '../stores/gameStore';
 import { SkillLevel } from '../types';
 import RatingChart from '../components/RatingChart';
+import { userService } from '../services/userService';
 
 const ProfileScreen: React.FC = () => {
   const { theme } = useThemeStore();
   const { user, updateUser } = useAuthStore();
   const { achievements, userStats } = useAchievementsStore();
+  const { games, loadGames } = useGameStore();
   
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -40,6 +43,35 @@ const ProfileScreen: React.FC = () => {
 
   const styles = createStyles(theme);
 
+  // Get user's completed matches
+  const getUserMatches = () => {
+    if (!user?.id) return [];
+    
+    return games.filter(game => 
+      game.result && 
+      game.players.includes(user.id)
+    ).sort((a, b) => 
+      new Date(b.result!.completedAt).getTime() - new Date(a.result!.completedAt).getTime()
+    );
+  };
+
+  const userMatches = getUserMatches();
+
+  // Helper function to calculate time ago
+  const getTimeAgo = (date: Date) => {
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    
+    if (diffDays === 0) return 'Today';
+    if (diffDays === 1) return '1 day ago';
+    if (diffDays < 7) return `${diffDays} days ago`;
+    if (diffDays < 14) return '1 week ago';
+    if (diffDays < 30) return `${Math.floor(diffDays / 7)} weeks ago`;
+    if (diffDays < 60) return '1 month ago';
+    return `${Math.floor(diffDays / 30)} months ago`;
+  };
+
   useEffect(() => {
     if (user) {
       setProfileData({
@@ -53,6 +85,11 @@ const ProfileScreen: React.FC = () => {
       });
     }
   }, [user]);
+
+  // Load games when component mounts
+  useEffect(() => {
+    loadGames();
+  }, [loadGames]);
 
   const handleSave = async () => {
     if (!profileData.firstName.trim() || !profileData.lastName.trim()) {
@@ -397,39 +434,76 @@ const ProfileScreen: React.FC = () => {
 
             {/* Recent Matches */}
             <View style={styles.matchesSection}>
-              <Text style={styles.matchesSubtitle}>Recent Matches</Text>
-              <View style={styles.matchItem}>
-                <View style={styles.matchInfo}>
-                  <Text style={styles.matchType}>Doubles</Text>
-                  <Text style={styles.matchResult}>W 11-8, 11-6</Text>
-                </View>
-                <View style={styles.matchDetails}>
-                  <Text style={styles.matchDate}>2 days ago</Text>
-                  <Text style={styles.matchRating}>+0.08</Text>
-                </View>
-              </View>
+              <Text style={styles.matchesSubtitle}>Recent Matches ({userMatches.length})</Text>
               
-              <View style={styles.matchItem}>
-                <View style={styles.matchInfo}>
-                  <Text style={styles.matchType}>Singles</Text>
-                  <Text style={styles.matchResult}>L 9-11, 11-9, 8-11</Text>
+              {userMatches.length > 0 ? (
+                userMatches.slice(0, 5).map((game) => {
+                  const result = game.result!;
+                  const isUserInTeam1 = result.team1Players.includes(user!.id);
+                  const userTeamScores = result.matches.map(match => 
+                    isUserInTeam1 ? match.team1Score : match.team2Score
+                  );
+                  const opponentTeamScores = result.matches.map(match => 
+                    isUserInTeam1 ? match.team2Score : match.team1Score
+                  );
+                  
+                  // Determine if user won
+                  const userWins = result.matches.filter(match => 
+                    isUserInTeam1 ? match.team1Score > match.team2Score : match.team2Score > match.team1Score
+                  ).length;
+                  const opponentWins = result.matches.length - userWins;
+                  const didUserWin = userWins > opponentWins;
+                  
+                  // Format score string
+                  const scoreString = result.matches.map((match, index) => 
+                    `${userTeamScores[index]}-${opponentTeamScores[index]}`
+                  ).join(', ');
+                  
+                  // Get partner and opponent names
+                  const userTeam = isUserInTeam1 ? result.team1Players : result.team2Players;
+                  const opponentPlayers = isUserInTeam1 ? result.team2Players : result.team1Players;
+                  
+                  // Find partner (other player in user's team)
+                  const partnerId = userTeam.find(id => id !== user!.id);
+                  const partnerName = partnerId ? userService.getUserById(partnerId)?.firstName : null;
+                  
+                  // Get opponent names
+                  const opponentNames = opponentPlayers.map(id => {
+                    const player = userService.getUserById(id);
+                    return player ? `${player.firstName} ${player.lastName}` : 'Unknown';
+                  }).join(' & ');
+                  
+                  // Calculate time ago
+                  const timeAgo = getTimeAgo(new Date(result.completedAt));
+                  
+                  return (
+                    <View key={game.id} style={styles.matchItem}>
+                      <View style={styles.matchInfo}>
+                        <Text style={styles.matchType}>{game.format === 'SINGLES' ? 'Singles' : 'Doubles'}</Text>
+                        {game.format !== 'SINGLES' && partnerName && (
+                          <Text style={styles.matchPartner}>with {partnerName}</Text>
+                        )}
+                        <Text style={styles.matchOpponent}>vs {opponentNames}</Text>
+                        <Text style={[
+                          styles.matchResult,
+                          { color: didUserWin ? theme.colors.success : theme.colors.error }
+                        ]}>
+                          {didUserWin ? 'W' : 'L'} {scoreString}
+                        </Text>
+                      </View>
+                      <View style={styles.matchDetails}>
+                        <Text style={styles.matchDate}>{timeAgo}</Text>
+                      </View>
+                    </View>
+                  );
+                })
+              ) : (
+                <View style={styles.noMatchesContainer}>
+                  <Ionicons name="trophy-outline" size={48} color={theme.colors.textSecondary} />
+                  <Text style={styles.noMatchesText}>No completed matches yet</Text>
+                  <Text style={styles.noMatchesSubtext}>Play and complete your first match to see results here!</Text>
                 </View>
-                <View style={styles.matchDetails}>
-                  <Text style={styles.matchDate}>1 week ago</Text>
-                  <Text style={styles.matchRating}>-0.12</Text>
-                </View>
-              </View>
-              
-              <View style={styles.matchItem}>
-                <View style={styles.matchInfo}>
-                  <Text style={styles.matchType}>Doubles</Text>
-                  <Text style={styles.matchResult}>W 11-7, 11-4</Text>
-                </View>
-                <View style={styles.matchDetails}>
-                  <Text style={styles.matchDate}>2 weeks ago</Text>
-                  <Text style={styles.matchRating}>+0.10</Text>
-                </View>
-              </View>
+              )}
             </View>
 
             {/* View All Matches Button */}
@@ -1100,6 +1174,34 @@ const createStyles = (theme: any) => StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     color: theme.colors.primary,
+  },
+  matchOpponent: {
+    fontSize: 12,
+    color: theme.colors.textSecondary,
+    marginBottom: theme.spacing.xs,
+  },
+  matchPartner: {
+    fontSize: 12,
+    color: theme.colors.primary,
+    marginBottom: theme.spacing.xs,
+  },
+  noMatchesContainer: {
+    alignItems: 'center',
+    paddingVertical: theme.spacing.xl,
+    paddingHorizontal: theme.spacing.lg,
+  },
+  noMatchesText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: theme.colors.textSecondary,
+    marginTop: theme.spacing.md,
+    marginBottom: theme.spacing.sm,
+  },
+  noMatchesSubtext: {
+    fontSize: 14,
+    color: theme.colors.textSecondary,
+    textAlign: 'center',
+    lineHeight: 20,
   },
 });
 

@@ -2,6 +2,7 @@ import React from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import Toast from 'react-native-toast-message';
 import { ThemeProvider } from './src/providers/ThemeProvider';
 import { useThemeStore } from './src/stores/themeStore';
 import RootNavigator from './src/navigation/RootNavigator';
@@ -14,6 +15,7 @@ function AppContent() {
       <SafeAreaProvider>
         <StatusBar style={isDarkMode ? 'light' : 'dark'} />
         <RootNavigator />
+        <Toast />
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );

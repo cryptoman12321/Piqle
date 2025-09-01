@@ -15,6 +15,19 @@ export interface User {
   createdAt: Date;
 }
 
+export interface MatchResult {
+  gameNumber: number;
+  team1Score: number;
+  team2Score: number;
+}
+
+export interface GameResult {
+  team1Players: string[];
+  team2Players: string[];
+  matches: MatchResult[];
+  completedAt: Date;
+}
+
 export interface Game {
   id: string;
   title: string;
@@ -29,6 +42,7 @@ export interface Game {
   createdBy: string;
   players: string[];
   status: GameStatus;
+  result?: GameResult;
   createdAt: Date;
 }
 
@@ -289,6 +303,7 @@ export interface GamesStackParamList extends ParamListBase {
   GamesList: undefined;
   GameDetails: { gameId: string };
   CreateGame: undefined;
+  StartMatch: { gameId: string };
 }
 
 export interface TournamentsStackParamList extends ParamListBase {

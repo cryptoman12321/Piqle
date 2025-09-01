@@ -5,6 +5,7 @@ import { GamesStackParamList } from '../types';
 import GamesScreen from '../screens/GamesScreen';
 import GameDetailsScreen from '../screens/GameDetailsScreen';
 import CreateGameScreen from '../screens/CreateGameScreen';
+import StartMatchScreen from '../screens/StartMatchScreen';
 
 const GamesStack = createNativeStackNavigator<GamesStackParamList>();
 
@@ -37,6 +38,11 @@ const GamesStackNavigator: React.FC = () => {
         name="CreateGame" 
         component={CreateGameScreen}
         options={{ title: 'Create Game' }}
+      />
+      <GamesStack.Screen 
+        name="StartMatch" 
+        component={StartMatchScreen}
+        options={{ title: 'Start Match' }}
       />
     </GamesStack.Navigator>
   );
