@@ -264,106 +264,109 @@ const TournamentsScreen: React.FC = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Tournaments</Text>
-        <TouchableOpacity style={styles.createButton} onPress={handleCreateTournament}>
-          <LinearGradient
-            colors={[theme.colors.primary, theme.colors.secondary]}
-            style={styles.createButtonGradient}
-          >
-            <Ionicons name="add" size={20} color="white" />
-            <Text style={styles.createButtonText}>Create</Text>
-          </LinearGradient>
-        </TouchableOpacity>
+      {/* Compact Header with Search */}
+      <View style={styles.compactHeader}>
+        <View style={styles.searchRow}>
+          <View style={styles.searchContainer}>
+            <Ionicons name="search" size={18} color={theme.colors.textSecondary} />
+            <TextInput
+              style={styles.searchInput}
+              placeholder="Search tournaments..."
+              placeholderTextColor={theme.colors.textSecondary}
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+            />
+          </View>
+          <TouchableOpacity style={styles.createButton} onPress={handleCreateTournament}>
+            <LinearGradient
+              colors={[theme.colors.primary, theme.colors.secondary]}
+              style={styles.createButtonGradient}
+            >
+              <Ionicons name="add" size={18} color="white" />
+              <Text style={styles.createButtonText}>Create</Text>
+            </LinearGradient>
+          </TouchableOpacity>
+        </View>
       </View>
 
-      {/* Search Bar */}
-      <View style={styles.searchContainer}>
-        <Ionicons name="search" size={20} color={theme.colors.textSecondary} />
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Search tournaments..."
-          placeholderTextColor={theme.colors.textSecondary}
-          value={searchQuery}
-          onChangeText={setSearchQuery}
-        />
+
+
+      {/* Compact Filters */}
+      <View style={styles.filtersContainer}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filtersScroll}>
+          {/* Format Filter */}
+          <View style={styles.filterChip}>
+            <Text style={styles.filterChipLabel}>Format</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterChipOptions}>
+              {['ALL', ...Object.values(TournamentFormat)].map((format) => (
+                <TouchableOpacity
+                  key={format}
+                  style={[
+                    styles.filterChipOption,
+                    selectedFormat === format && styles.filterChipOptionSelected
+                  ]}
+                  onPress={() => setSelectedFormat(format as any)}
+                >
+                  <Text style={[
+                    styles.filterChipOptionText,
+                    selectedFormat === format && styles.filterChipOptionTextSelected
+                  ]}>
+                    {format === 'ALL' ? 'All' : getFormatDisplayName(format as TournamentFormat)}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+          
+          {/* Skill Level Filter */}
+          <View style={styles.filterChip}>
+            <Text style={styles.filterChipLabel}>Skill</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterChipOptions}>
+              {['ALL', ...Object.values(SkillLevel)].map((skill) => (
+                <TouchableOpacity
+                  key={skill}
+                  style={[
+                    styles.filterChipOption,
+                    selectedSkillLevel === skill && styles.filterChipOptionSelected
+                  ]}
+                  onPress={() => setSelectedSkillLevel(skill as any)}
+                >
+                  <Text style={[
+                    styles.filterChipOptionText,
+                    selectedSkillLevel === skill && styles.filterChipOptionTextSelected
+                  ]}>
+                    {skill === 'ALL' ? 'All' : skill}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+          
+          {/* Status Filter */}
+          <View style={styles.filterChip}>
+            <Text style={styles.filterChipLabel}>Status</Text>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filterChipOptions}>
+              {['ALL', ...Object.values(TournamentStatus)].map((status) => (
+                <TouchableOpacity
+                  key={status}
+                  style={[
+                    styles.filterChipOption,
+                    selectedStatus === status && styles.filterChipOptionSelected
+                  ]}
+                  onPress={() => setSelectedStatus(status as any)}
+                >
+                  <Text style={[
+                    styles.filterChipOptionText,
+                    selectedStatus === status && styles.filterChipOptionTextSelected
+                  ]}>
+                    {status === 'ALL' ? 'All' : getStatusText(status as TournamentStatus)}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+        </ScrollView>
       </View>
-
-      {/* Filters */}
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filtersContainer}>
-        {/* Format Filter */}
-        <View style={styles.filterGroup}>
-          <Text style={styles.filterLabel}>Format:</Text>
-          <View style={styles.filterOptions}>
-            {['ALL', ...Object.values(TournamentFormat)].map((format) => (
-              <TouchableOpacity
-                key={format}
-                style={[
-                  styles.filterOption,
-                  selectedFormat === format && styles.filterOptionSelected
-                ]}
-                onPress={() => setSelectedFormat(format as any)}
-              >
-                <Text style={[
-                  styles.filterOptionText,
-                  selectedFormat === format && styles.filterOptionTextSelected
-                ]}>
-                  {format === 'ALL' ? 'All' : getFormatDisplayName(format as TournamentFormat)}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </View>
-
-        {/* Skill Level Filter */}
-        <View style={styles.filterGroup}>
-          <Text style={styles.filterLabel}>Skill:</Text>
-          <View style={styles.filterOptions}>
-            {['ALL', ...Object.values(SkillLevel)].map((level) => (
-              <TouchableOpacity
-                key={level}
-                style={[
-                  styles.filterOption,
-                  selectedSkillLevel === level && styles.filterOptionSelected
-                ]}
-                onPress={() => setSelectedSkillLevel(level as any)}
-              >
-                <Text style={[
-                  styles.filterOptionText,
-                  selectedSkillLevel === level && styles.filterOptionTextSelected
-                ]}>
-                  {level === 'ALL' ? 'All' : level}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </View>
-
-        {/* Status Filter */}
-        <View style={styles.filterGroup}>
-          <Text style={styles.filterLabel}>Status:</Text>
-          <View style={styles.filterOptions}>
-            {['ALL', ...Object.values(TournamentStatus)].map((status) => (
-              <TouchableOpacity
-                key={status}
-                style={[
-                  styles.filterOption,
-                  selectedStatus === status && styles.filterOptionSelected
-                ]}
-                onPress={() => setSelectedStatus(status as any)}
-              >
-                <Text style={[
-                  styles.filterOptionText,
-                  selectedStatus === status && styles.filterOptionTextSelected
-                ]}>
-                  {status === 'ALL' ? 'All' : getStatusText(status as TournamentStatus)}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </View>
-      </ScrollView>
 
       {/* Loading State */}
       {isLoading && !refreshing && (
@@ -420,6 +423,16 @@ const createStyles = (theme: any) => StyleSheet.create({
     flex: 1,
     backgroundColor: theme.colors.background,
   },
+  compactHeader: {
+    paddingHorizontal: theme.spacing.lg,
+    paddingVertical: theme.spacing.sm,
+    paddingBottom: theme.spacing.md,
+  },
+  searchRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing.md,
+  },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -435,6 +448,7 @@ const createStyles = (theme: any) => StyleSheet.create({
   createButton: {
     borderRadius: theme.borderRadius.md,
     overflow: 'hidden',
+    minWidth: 80,
   },
   createButtonGradient: {
     flexDirection: 'row',
@@ -445,15 +459,14 @@ const createStyles = (theme: any) => StyleSheet.create({
   },
   createButtonText: {
     color: 'white',
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '600',
   },
   searchContainer: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: theme.colors.surface,
-    marginHorizontal: theme.spacing.lg,
-    marginBottom: theme.spacing.md,
     paddingHorizontal: theme.spacing.md,
     borderRadius: theme.borderRadius.md,
     borderWidth: 1,
@@ -468,10 +481,52 @@ const createStyles = (theme: any) => StyleSheet.create({
   },
   filtersContainer: {
     paddingHorizontal: theme.spacing.lg,
-    marginBottom: theme.spacing.md,
+    marginBottom: theme.spacing.sm,
     paddingBottom: theme.spacing.sm,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.border,
+  },
+  filtersScroll: {
+    paddingRight: theme.spacing.lg,
+  },
+  filterChip: {
+    backgroundColor: theme.colors.surface,
+    borderRadius: theme.borderRadius.lg,
+    padding: theme.spacing.sm,
+    marginRight: theme.spacing.md,
+    minWidth: 120,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+  },
+  filterChipLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: theme.colors.textSecondary,
+    marginBottom: theme.spacing.xs,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  filterChipOptions: {
+    flexDirection: 'row',
+    gap: theme.spacing.xs,
+  },
+  filterChipOption: {
+    paddingHorizontal: theme.spacing.sm,
+    paddingVertical: theme.spacing.xs,
+    borderRadius: theme.borderRadius.sm,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    backgroundColor: theme.colors.background,
+  },
+  filterChipOptionSelected: {
+    backgroundColor: theme.colors.primary,
+    borderColor: theme.colors.primary,
+  },
+  filterChipOptionText: {
+    fontSize: 11,
+    fontWeight: '500',
+    color: theme.colors.text,
+  },
+  filterChipOptionTextSelected: {
+    color: 'white',
   },
   filterGroup: {
     marginRight: theme.spacing.lg,
