@@ -261,7 +261,7 @@ const HomeScreen: React.FC = () => {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Quick Actions</Text>
           <View style={styles.quickActions}>
-            {/* Row 1: Create Game */}
+            {/* Row 1: Create Game & Find Tournaments */}
             <View style={styles.actionRow}>
               <TouchableOpacity style={styles.actionButton} onPress={handleCreateGame}>
                 <LinearGradient
@@ -270,6 +270,16 @@ const HomeScreen: React.FC = () => {
                 >
                   <Ionicons name="add-circle" size={24} color="white" />
                   <Text style={styles.actionText}>Create Game</Text>
+                </LinearGradient>
+              </TouchableOpacity>
+              
+              <TouchableOpacity style={styles.actionButton} onPress={handleFindTournaments}>
+                <LinearGradient
+                  colors={[theme.colors.warning, '#D97706']}
+                  style={styles.actionGradient}
+                >
+                  <Ionicons name="trophy" size={24} color="white" />
+                  <Text style={styles.actionText}>Find Tournaments</Text>
                 </LinearGradient>
               </TouchableOpacity>
             </View>
@@ -320,18 +330,7 @@ const HomeScreen: React.FC = () => {
               </TouchableOpacity>
             </View>
 
-            {/* Row 4: Find Tournaments */}
-            <View style={styles.actionRow}>
-              <TouchableOpacity style={styles.actionButton} onPress={handleFindTournaments}>
-                <LinearGradient
-                  colors={[theme.colors.secondary, '#8B5CF6']}
-                  style={styles.actionGradient}
-                >
-                  <Ionicons name="trophy-outline" size={24} color="white" />
-                  <Text style={styles.actionText}>Find Tournaments</Text>
-                </LinearGradient>
-              </TouchableOpacity>
-            </View>
+
           </View>
         </View>
 
