@@ -35,9 +35,9 @@ const CreateTournamentScreen: React.FC = () => {
   const [tournamentData, setTournamentData] = useState({
     name: '',
     description: '',
-    format: TournamentFormat.DOUBLES_KNOCKOUT,
+    format: TournamentFormat.SINGLES_ROUND_ROBIN,
     skillLevel: SkillLevel.INTERMEDIATE,
-    maxParticipants: 16,
+    maxParticipants: 8,
     entryFee: '',
     startDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 1 week from now
     endDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000 + 2 * 24 * 60 * 60 * 1000), // 1 week + 2 days
@@ -51,89 +51,104 @@ const CreateTournamentScreen: React.FC = () => {
 
   const tournamentFormats = [
     {
-      format: TournamentFormat.MILP,
-      name: 'Major League Pickleball (MiLP)',
-      description: 'Professional tournament format with team-based competition',
-      icon: '🏆'
-    },
-    {
-      format: TournamentFormat.SINGLES_KNOCKOUT,
-      name: 'Singles Knockout',
-      description: 'Single elimination tournament for individual players',
-      icon: '👤'
-    },
-    {
-      format: TournamentFormat.DOUBLES_KNOCKOUT,
-      name: 'Doubles Knockout',
-      description: 'Single elimination tournament for doubles teams',
-      icon: '👥'
-    },
-    {
       format: TournamentFormat.SINGLES_ROUND_ROBIN,
       name: 'Singles Round Robin',
       description: 'Everyone plays everyone in singles format',
-      icon: '🔄'
-    },
-    {
-      format: TournamentFormat.DOUBLES_ROUND_ROBIN,
-      name: 'Doubles Round Robin',
-      description: 'Everyone plays everyone in doubles format',
-      icon: '🔄'
-    },
-    {
-      format: TournamentFormat.MIXED_DOUBLES_ROUND_ROBIN,
-      name: 'Round Robin Mixed Doubles League',
-      description: 'Mixed gender doubles teams compete in round robin format',
-      icon: '👫'
-    },
-    {
-      format: TournamentFormat.RANDOM_TEAMS_ROUND_ROBIN,
-      name: 'Random Teams Round Robin',
-      description: 'Random team assignments with round robin play',
-      icon: '🎲'
-    },
-    {
-      format: TournamentFormat.INDIVIDUAL_LADDER,
-      name: 'Individual Ladder',
-      description: 'Players challenge each other to move up the ladder',
-      icon: '📈'
-    },
-    {
-      format: TournamentFormat.LADDER_LEAGUE,
-      name: 'Ladder League',
-      description: 'Team-based ladder competition',
-      icon: '🏗️'
-    },
-    {
-      format: TournamentFormat.SWISS_SYSTEM,
-      name: 'Swiss System',
-      description: 'Players are paired against similar skill levels',
-      icon: '🇨🇭'
-    },
-    {
-      format: TournamentFormat.CONSOLATION_BRACKET,
-      name: 'Consolation Bracket',
-      description: 'Losers bracket for second chances',
-      icon: '🔄'
-    },
-    {
-      format: TournamentFormat.DOUBLE_ELIMINATION,
-      name: 'Double Elimination',
-      description: 'Players must lose twice to be eliminated',
-      icon: '⚡'
-    },
-    {
-      format: TournamentFormat.ROUND_ROBIN_PLUS_KNOCKOUT,
-      name: 'Round Robin + Knockout',
-      description: 'Group stage followed by elimination rounds',
-      icon: '🏁'
-    },
-    {
-      format: TournamentFormat.TEAM_FORMAT,
-      name: 'Team Format',
-      description: 'Team-based competition with multiple players',
-      icon: '👥'
+      icon: '🔄',
+      isFullyImplemented: true
     }
+    // TODO: Uncomment and implement these formats later
+    // {
+    //   format: TournamentFormat.MILP,
+    //   name: 'Major League Pickleball (MiLP)',
+    //   description: 'Professional tournament format with team-based competition',
+    //   icon: '🏆',
+    //   isFullyImplemented: false
+    // },
+    // {
+    //   format: TournamentFormat.SINGLES_KNOCKOUT,
+    //   name: 'Singles Knockout',
+    //   description: 'Single elimination tournament for individual players',
+    //   icon: '👤',
+    //   isFullyImplemented: false
+    // },
+    // {
+    //   format: TournamentFormat.DOUBLES_KNOCKOUT,
+    //   name: 'Doubles Knockout',
+    //   description: 'Single elimination tournament for doubles teams',
+    //   icon: '👥',
+    //   isFullyImplemented: false
+    // },
+    // {
+    //   format: TournamentFormat.DOUBLES_ROUND_ROBIN,
+    //   name: 'Doubles Round Robin',
+    //   description: 'Everyone plays everyone in doubles format',
+    //   icon: '🔄',
+    //   isFullyImplemented: false
+    // },
+    // {
+    //   format: TournamentFormat.MIXED_DOUBLES_ROUND_ROBIN,
+    //   name: 'Round Robin Mixed Doubles League',
+    //   description: 'Mixed gender doubles teams compete in round robin format',
+    //   icon: '👫',
+    //   isFullyImplemented: false
+    // },
+    // {
+    //   format: TournamentFormat.RANDOM_TEAMS_ROUND_ROBIN,
+    //   name: 'Random Teams Round Robin',
+    //   description: 'Random team assignments with round robin format',
+    //   icon: '🎲',
+    //   isFullyImplemented: false
+    // },
+    // {
+    //   format: TournamentFormat.INDIVIDUAL_LADDER,
+    //   name: 'Individual Ladder',
+    //   description: 'Players challenge each other to move up the ladder',
+    //   icon: '📈',
+    //   isFullyImplemented: false
+    // },
+    // {
+    //   format: TournamentFormat.LADDER_LEAGUE,
+    //   name: 'Ladder League',
+    //   description: 'Team-based ladder competition',
+    //   icon: '🏗️',
+    //   isFullyImplemented: false
+    // },
+    // {
+    //   format: TournamentFormat.SWISS_SYSTEM,
+    //   name: 'Swiss System',
+    //   description: 'Players are paired against similar skill levels',
+    //   icon: '🇨🇭',
+    //   isFullyImplemented: false
+    // },
+    // {
+    //   format: TournamentFormat.CONSOLATION_BRACKET,
+    //   name: 'Consolation Bracket',
+    //   description: 'Losers bracket for second chances',
+    //   icon: '🔄',
+    //   isFullyImplemented: false
+    // },
+    // {
+    //   format: TournamentFormat.DOUBLE_ELIMINATION,
+    //   name: 'Double Elimination',
+    //   description: 'Players must lose twice to be eliminated',
+    //   icon: '⚡',
+    //   isFullyImplemented: false
+    // },
+    // {
+    //   format: TournamentFormat.ROUND_ROBIN_PLUS_KNOCKOUT,
+    //   name: 'Round Robin + Knockout',
+    //   description: 'Group stage followed by elimination rounds',
+    //   icon: '🏁',
+    //   isFullyImplemented: false
+    // },
+    // {
+    //   format: TournamentFormat.TEAM_FORMAT,
+    //   name: 'Team Format',
+    //   description: 'Team-based competition with multiple players',
+    //   icon: '👥',
+    //   isFullyImplemented: false
+    // }
   ];
 
   // Mixed Doubles Round Robin League Calculations
