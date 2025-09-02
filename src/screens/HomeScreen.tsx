@@ -168,7 +168,9 @@ const HomeScreen: React.FC = () => {
     navigation.navigate('CreateTournament' as never);
   };
 
-
+  const handleFindGame = () => {
+    navigation.navigate('Games' as never);
+  };
 
   const handleJoinGame = async (game: Game) => {
     if (game.currentPlayers >= game.maxPlayers) {
@@ -259,18 +261,8 @@ const HomeScreen: React.FC = () => {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Quick Actions</Text>
           <View style={styles.quickActions}>
-            {/* Row 1: Create Game & Find Tournaments */}
+            {/* Row 1: Find Tournaments & Find Game */}
             <View style={styles.actionRow}>
-              <TouchableOpacity style={styles.actionButton} onPress={handleCreateGame}>
-                <LinearGradient
-                  colors={[theme.colors.primary, theme.colors.secondary]}
-                  style={styles.actionGradient}
-                >
-                  <Ionicons name="add-circle" size={24} color="white" />
-                  <Text style={styles.actionText}>Create Game</Text>
-                </LinearGradient>
-              </TouchableOpacity>
-              
               <TouchableOpacity style={styles.actionButton} onPress={handleFindTournaments}>
                 <LinearGradient
                   colors={[theme.colors.warning, '#D97706']}
@@ -280,9 +272,19 @@ const HomeScreen: React.FC = () => {
                   <Text style={styles.actionText}>Find Tournaments</Text>
                 </LinearGradient>
               </TouchableOpacity>
+              
+              <TouchableOpacity style={styles.actionButton} onPress={handleFindGame}>
+                <LinearGradient
+                  colors={[theme.colors.success, '#059669']}
+                  style={styles.actionGradient}
+                >
+                  <Ionicons name="search" size={24} color="white" />
+                  <Text style={styles.actionText}>Find Game</Text>
+                </LinearGradient>
+              </TouchableOpacity>
             </View>
             
-            {/* Row 2: Clubs */}
+            {/* Row 2: Clubs & AI Coach */}
             <View style={styles.actionRow}>
               <TouchableOpacity style={styles.actionButton} onPress={() => navigation.navigate('ClubsList' as never)}>
                 <LinearGradient
@@ -293,17 +295,14 @@ const HomeScreen: React.FC = () => {
                   <Text style={styles.actionText}>Clubs</Text>
                 </LinearGradient>
               </TouchableOpacity>
-            </View>
-            
-            {/* Row 3: Map */}
-            <View style={styles.actionRow}>
-              <TouchableOpacity style={styles.actionButton} onPress={() => navigation.navigate('Map' as never)}>
+              
+              <TouchableOpacity style={styles.actionButton} onPress={() => navigation.navigate('AICoach' as never)}>
                 <LinearGradient
-                  colors={[theme.colors.error, '#DC2626']}
+                  colors={[theme.colors.info, '#0EA5E9']}
                   style={styles.actionGradient}
                 >
-                  <Ionicons name="map" size={24} color="white" />
-                  <Text style={styles.actionText}>Map</Text>
+                  <Ionicons name="bulb" size={24} color="white" />
+                  <Text style={styles.actionText}>AI Coach</Text>
                 </LinearGradient>
               </TouchableOpacity>
             </View>
@@ -374,6 +373,9 @@ const HomeScreen: React.FC = () => {
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Recent Games</Text>
+            <TouchableOpacity onPress={handleFindGame}>
+              <Text style={styles.seeAllText}>See All</Text>
+            </TouchableOpacity>
           </View>
           {recentGames.length > 0 ? (
             <ScrollView horizontal showsHorizontalScrollIndicator={false}>
