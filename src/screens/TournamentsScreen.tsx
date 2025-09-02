@@ -16,6 +16,7 @@ import { useThemeStore } from '../stores/themeStore';
 import { useTournamentStore } from '../stores/tournamentStore';
 import { useAuthStore } from '../stores/authStore';
 import { useNavigation } from '@react-navigation/native';
+import { useToast } from '../hooks/useToast';
 import { 
   Tournament, 
   TournamentFormat, 
@@ -29,6 +30,7 @@ const TournamentsScreen: React.FC = () => {
   const { tournaments, loadTournaments, registerForTournament, isLoading, error } = useTournamentStore();
   const { user } = useAuthStore();
   const navigation = useNavigation<any>();
+  const { showSuccess } = useToast();
   
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFormat, setSelectedFormat] = useState<TournamentFormat | 'ALL'>('ALL');
@@ -75,6 +77,9 @@ const TournamentsScreen: React.FC = () => {
     
     // Register for the tournament using the store
     registerForTournament(tournament.id, user.id);
+    
+    // Show success toast
+    showSuccess(`Successfully registered for "${tournament.name}"!`);
     
     // Navigate to the tournament lobby/details
     navigation.navigate('TournamentDetails', { tournamentId: tournament.id });

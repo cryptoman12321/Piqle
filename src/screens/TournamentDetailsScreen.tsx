@@ -14,6 +14,7 @@ import { useThemeStore } from '../stores/themeStore';
 import { useTournamentStore } from '../stores/tournamentStore';
 import { useAuthStore } from '../stores/authStore';
 import { useNavigation, useRoute } from '@react-navigation/native';
+import { useToast } from '../hooks/useToast';
 import { 
   Tournament, 
   TournamentFormat, 
@@ -29,6 +30,7 @@ const TournamentDetailsScreen: React.FC = () => {
   const { user } = useAuthStore();
   const navigation = useNavigation<any>();
   const route = useRoute();
+  const { showSuccess } = useToast();
   
   const tournamentId = (route.params as any)?.tournamentId;
   const [tournament, setTournament] = useState<Tournament | null>(null);
@@ -58,8 +60,12 @@ const TournamentDetailsScreen: React.FC = () => {
           style: 'destructive',
           onPress: () => {
             unregisterFromTournament(tournament.id, user.id);
-                // Navigate back to Tournaments list instead of just going back
-    navigation.navigate('TournamentsList' as any);
+            
+            // Show success toast
+            showSuccess(`Successfully unregistered from "${tournament.name}"`);
+            
+            // Navigate back to Tournaments list instead of just going back
+            navigation.navigate('TournamentsList' as any);
           },
         },
       ]
@@ -358,8 +364,12 @@ const TournamentDetailsScreen: React.FC = () => {
                   if (tournament && user?.id) {
                     // Actually register for the tournament using the store
                     registerForTournament(tournament.id, user.id);
-                          // Navigate back to Tournaments list to show updated state
-      navigation.navigate('TournamentsList' as any);
+                    
+                    // Show success toast
+                    showSuccess(`Successfully registered for "${tournament.name}"!`);
+                    
+                    // Navigate back to Tournaments list to show updated state
+                    navigation.navigate('TournamentsList' as any);
                   }
                 }}
               >
