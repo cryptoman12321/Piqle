@@ -44,6 +44,7 @@ const CreateTournamentScreen: React.FC = () => {
     registrationDeadline: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000), // 5 days from now
     location: '',
     isDUPR: false,
+    courtsCount: 2, // Default to 2 courts
     prizes: [] as Prize[],
   });
 
@@ -259,6 +260,7 @@ const CreateTournamentScreen: React.FC = () => {
         brackets: [], // Empty brackets initially
         status: TournamentStatus.REGISTRATION_OPEN,
         isDUPR: tournamentData.isDUPR,
+        courtsCount: tournamentData.courtsCount,
         createdBy: user?.id || 'currentUser',
       };
 
@@ -501,6 +503,35 @@ const CreateTournamentScreen: React.FC = () => {
                 ? 'Must be even number ≥ 16 (8 teams minimum)'
                 : 'Must be divisible by 4 for doubles tournaments'
               }
+            </Text>
+          </View>
+
+          {/* Courts Count */}
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Number of Courts</Text>
+            <View style={styles.participantCountContainer}>
+              <TouchableOpacity
+                style={styles.participantCountButton}
+                onPress={() => setTournamentData({
+                  ...tournamentData, 
+                  courtsCount: Math.max(1, tournamentData.courtsCount - 1)
+                })}
+              >
+                <Ionicons name="remove" size={20} color={theme.colors.primary} />
+              </TouchableOpacity>
+              <Text style={styles.participantCount}>{tournamentData.courtsCount}</Text>
+              <TouchableOpacity
+                style={styles.participantCountButton}
+                onPress={() => setTournamentData({
+                  ...tournamentData, 
+                  courtsCount: tournamentData.courtsCount + 1
+                })}
+              >
+                <Ionicons name="add" size={20} color={theme.colors.primary} />
+              </TouchableOpacity>
+            </View>
+            <Text style={styles.helperText}>
+              Number of courts available for simultaneous matches
             </Text>
           </View>
 

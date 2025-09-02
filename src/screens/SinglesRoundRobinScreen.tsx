@@ -17,6 +17,8 @@ import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import TournamentTable from '../components/TournamentTable';
 import { Tournament, TournamentStatus } from '../types';
 import { TournamentsStackParamList } from '../types';
+import Toast from '../components/Toast';
+import { useToast } from '../hooks/useToast';
 
 type SinglesRoundRobinRouteProp = RouteProp<TournamentsStackParamList, 'SinglesRoundRobin'>;
 
@@ -27,6 +29,7 @@ const SinglesRoundRobinScreen: React.FC = () => {
   const navigation = useNavigation();
   const route = useRoute<SinglesRoundRobinRouteProp>();
   const { tournamentId } = route.params;
+  const { toast, showSuccess, showError, hideToast } = useToast();
 
   const styles = createStyles(theme);
 
@@ -74,13 +77,13 @@ const SinglesRoundRobinScreen: React.FC = () => {
 
     // Проверяем, не присоединился ли уже пользователь
     if (tournament.players.includes(user.id)) {
-      Alert.alert('Already Joined', 'You are already a participant in this tournament.');
+      showError('You are already a participant in this tournament.');
       return;
     }
 
     // Проверяем, есть ли место
     if (tournament.currentParticipants >= tournament.maxParticipants) {
-      Alert.alert('Tournament Full', 'This tournament has reached its maximum capacity.');
+      showError('This tournament has reached its maximum capacity.');
       return;
     }
 
@@ -106,11 +109,67 @@ const SinglesRoundRobinScreen: React.FC = () => {
       // Reload tournaments to ensure fresh data
       await loadTournaments();
 
-      Alert.alert('Success!', 'You have successfully joined the tournament!');
+      showSuccess('You have successfully joined the tournament!');
     } catch (error) {
-      Alert.alert('Error', 'Failed to join tournament. Please try again.');
+      showError('Failed to join tournament. Please try again.');
     } finally {
       setIsJoining(false);
+    }
+  };
+
+  const formatTimeUntilTournament = (startDate: Date) => {
+    const now = new Date();
+    const timeDiff = startDate.getTime() - now.getTime();
+    
+    if (timeDiff <= 0) {
+      return 'Tournament time has arrived!';
+    }
+    
+    const days = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((timeDiff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const minutes = Math.floor((timeDiff % (1000 * 60 * 60)) / (1000 * 60));
+    
+    if (days > 1) {
+      return `${days} days until tournament`;
+    } else if (days === 1) {
+      return `1 day and ${hours} hours until tournament`;
+    } else if (hours > 0) {
+      return `${hours} hours and ${minutes} minutes until tournament`;
+    } else {
+      return `${minutes} minutes until tournament`;
+    }
+  };
+
+  const handleStartTournament = () => {
+    if (!tournament) return;
+    
+    const now = new Date();
+    const tournamentStartTime = tournament.startDate;
+    
+    if (now < tournamentStartTime) {
+      // Tournament hasn't started yet - ask for confirmation
+      const timeUntil = formatTimeUntilTournament(tournamentStartTime);
+      Alert.alert(
+        'Start Tournament Early?',
+        `${timeUntil}\n\nAre you sure you want to start the tournament now?`,
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Start Now',
+            style: 'destructive',
+            onPress: () => {
+              console.log('Starting tournament early...');
+              // TODO: Implement tournament start logic
+              Alert.alert('Tournament Started', 'The tournament has been started early!');
+            }
+          }
+        ]
+      );
+    } else {
+      // Tournament time has arrived - start normally
+      console.log('Starting tournament on time...');
+      // TODO: Implement tournament start logic
+      Alert.alert('Tournament Started', 'The tournament has been started!');
     }
   };
 
@@ -123,6 +182,7 @@ const SinglesRoundRobinScreen: React.FC = () => {
       ? 'You are the tournament creator. If you leave, you will no longer be able to manage this tournament. Are you sure you want to leave?'
       : 'Are you sure you want to leave this tournament?';
 
+    // Показываем подтверждение через Alert, но успех/ошибку через тост
     Alert.alert(
       alertTitle,
       alertMessage,
@@ -154,9 +214,9 @@ const SinglesRoundRobinScreen: React.FC = () => {
                 ? 'You have left the tournament as creator. You can still view it but cannot manage it.'
                 : 'You have left the tournament.';
               
-              Alert.alert('Left Tournament', successMessage);
+              showSuccess(successMessage);
             } catch (error) {
-              Alert.alert('Error', 'Failed to leave tournament. Please try again.');
+              showError('Failed to leave tournament. Please try again.');
             }
           }
         }
@@ -300,6 +360,13 @@ const SinglesRoundRobinScreen: React.FC = () => {
 
   return (
     <SafeAreaView style={styles.container}>
+      <Toast
+        visible={toast.visible}
+        message={toast.message}
+        type={toast.type}
+        duration={toast.duration}
+        onClose={hideToast}
+      />
       {/* Header */}
       <View style={styles.header}>
         <LinearGradient
@@ -344,6 +411,30 @@ const SinglesRoundRobinScreen: React.FC = () => {
             </Text>
           </View>
           
+          <View style={styles.infoRow}>
+            <Ionicons name="time" size={20} color={theme.colors.primary} />
+            <Text style={styles.infoText}>
+              <Text style={styles.timeLabel}>Time until start: </Text>
+              <Text style={[
+                styles.timeValue,
+                { color: (() => {
+                  const now = new Date();
+                  const timeDiff = tournament.startDate.getTime() - now.getTime();
+                  const days = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
+                  const hours = Math.floor((timeDiff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                  
+                  if (timeDiff <= 0) return theme.colors.success; // Зеленый - время наступило
+                  if (days > 1) return theme.colors.info; // Синий - много времени
+                  if (days === 1) return theme.colors.warning; // Желтый - день до турнира
+                  if (hours > 2) return theme.colors.warning; // Желтый - несколько часов
+                  return theme.colors.error; // Красный - мало времени
+                })() }
+              ]}>
+                {formatTimeUntilTournament(tournament.startDate)}
+              </Text>
+            </Text>
+          </View>
+          
           {tournament.endDate && tournament.endDate.getTime() !== tournament.startDate.getTime() && (
             <View style={styles.infoRow}>
               <Ionicons name="calendar-outline" size={20} color={theme.colors.primary} />
@@ -366,6 +457,13 @@ const SinglesRoundRobinScreen: React.FC = () => {
             <Ionicons name="location" size={20} color={theme.colors.primary} />
             <Text style={styles.infoText}>
               {tournament.location.city}
+            </Text>
+          </View>
+          
+          <View style={styles.infoRow}>
+            <Ionicons name="basketball" size={20} color={theme.colors.primary} />
+            <Text style={styles.infoText}>
+              {tournament.courtsCount} court{tournament.courtsCount !== 1 ? 's' : ''} available
             </Text>
           </View>
         </View>
@@ -410,14 +508,42 @@ const SinglesRoundRobinScreen: React.FC = () => {
             </TouchableOpacity>
           )}
 
-          {isUserJoined && (
-            <View style={styles.joinedBadge}>
-              <Ionicons name="checkmark-circle" size={20} color={theme.colors.success} />
-              <Text style={[styles.joinedText, { color: theme.colors.success }]}>
-                You're in!
-              </Text>
-            </View>
+          {/* Start Tournament Button - only show to creator if tournament hasn't started */}
+          {isCreator && tournament && tournament.status === TournamentStatus.REGISTRATION_OPEN && (
+            <TouchableOpacity
+              style={[styles.actionButton, styles.startButton]}
+              onPress={handleStartTournament}
+            >
+              <LinearGradient
+                colors={[theme.colors.success, '#059669']}
+                style={styles.buttonGradient}
+              >
+                <Ionicons name="play" size={20} color="white" />
+                <Text style={styles.buttonText}>Start Tournament</Text>
+              </LinearGradient>
+            </TouchableOpacity>
           )}
+
+          {/* Edit Tournament Button - only show to creator if tournament hasn't started */}
+          {isCreator && tournament && tournament.status === TournamentStatus.REGISTRATION_OPEN && (
+            <TouchableOpacity
+              style={[styles.actionButton, styles.editButton]}
+              onPress={() => {
+                console.log('Opening tournament edit...');
+                (navigation as any).navigate('EditTournament', { tournamentId: tournament.id });
+              }}
+            >
+              <LinearGradient
+                colors={[theme.colors.warning, '#F59E0B']}
+                style={styles.buttonGradient}
+              >
+                <Ionicons name="create" size={20} color="white" />
+                <Text style={styles.buttonText}>Edit Tournament</Text>
+              </LinearGradient>
+            </TouchableOpacity>
+          )}
+
+
 
           {isCreator && !isUserJoined && (
             <View style={styles.creatorInfo}>
@@ -568,6 +694,15 @@ const createStyles = (theme: any) => StyleSheet.create({
     color: theme.colors.text,
     marginLeft: 12,
   },
+  timeLabel: {
+    fontSize: 16,
+    color: theme.colors.text,
+    fontWeight: '500',
+  },
+  timeValue: {
+    fontSize: 16,
+    fontWeight: '700',
+  },
   actionSection: {
     marginBottom: 20,
   },
@@ -591,6 +726,12 @@ const createStyles = (theme: any) => StyleSheet.create({
   chatButton: {
     // Uses LinearGradient instead of backgroundColor
   },
+  startButton: {
+    // Uses LinearGradient instead of backgroundColor
+  },
+  editButton: {
+    // Uses LinearGradient instead of backgroundColor
+  },
   deleteButton: {
     // Default styles
   },
@@ -608,22 +749,7 @@ const createStyles = (theme: any) => StyleSheet.create({
     fontWeight: '600',
     marginLeft: 8,
   },
-  joinedBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: theme.colors.surface,
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderRadius: 12,
-    borderWidth: 2,
-    borderColor: theme.colors.success,
-  },
-  joinedText: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginLeft: 8,
-  },
+
   tableSection: {
     marginBottom: 20,
   },

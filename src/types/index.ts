@@ -104,6 +104,7 @@ export interface Tournament {
   brackets: TournamentBracket[];
   status: TournamentStatus;
   isDUPR: boolean;
+  courtsCount: number; // Number of courts available for the tournament
   createdBy: string;
   createdAt: Date;
 }
@@ -289,6 +290,8 @@ export interface RootStackParamList extends ParamListBase {
   GameDetails: { gameId: string };
   Calendar: undefined;
   TournamentDetails: { tournamentId: string };
+  SinglesRoundRobin: { tournamentId: string };
+  EditTournament: { tournamentId: string };
 }
 
 export interface MainTabParamList extends ParamListBase {

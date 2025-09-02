@@ -23,6 +23,7 @@ import SettingsScreen from '../screens/SettingsScreen';
 import CalendarScreen from '../screens/CalendarScreen';
 import TournamentDetailsScreen from '../screens/TournamentDetailsScreen';
 import SinglesRoundRobinScreen from '../screens/SinglesRoundRobinScreen';
+import EditTournamentScreen from '../screens/EditTournamentScreen';
 import StartMatchScreen from '../screens/StartMatchScreen';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -125,6 +126,11 @@ const RootNavigator: React.FC = () => {
               name="SinglesRoundRobin" 
               component={SinglesRoundRobinScreen}
               options={{ headerShown: true, title: 'Round Robin Tournament' }}
+            />
+            <Stack.Screen 
+              name="EditTournament" 
+              component={EditTournamentScreen}
+              options={{ headerShown: true, title: 'Edit Tournament' }}
             />
           </>
         )}
