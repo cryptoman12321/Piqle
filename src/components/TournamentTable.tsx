@@ -4,6 +4,7 @@ import {
   Text,
   StyleSheet,
   ScrollView,
+  TouchableOpacity,
 } from 'react-native';
 import { useThemeStore } from '../stores/themeStore';
 
@@ -11,7 +12,6 @@ interface TournamentPlayer {
   id: string;
   firstName: string;
   lastName: string;
-  isBot?: boolean;
   matchesWon: number;
   matchesLost: number;
   pointsWon: number;
@@ -20,9 +20,10 @@ interface TournamentPlayer {
 
 interface TournamentTableProps {
   players: TournamentPlayer[];
+  onPlayerPress?: (player: TournamentPlayer) => void;
 }
 
-const TournamentTable: React.FC<TournamentTableProps> = ({ players }) => {
+const TournamentTable: React.FC<TournamentTableProps> = ({ players, onPlayerPress }) => {
   const { theme } = useThemeStore();
 
   // Простая сортировка по ID для отладки
@@ -49,16 +50,18 @@ const TournamentTable: React.FC<TournamentTableProps> = ({ players }) => {
           const pointsDiff = player.pointsWon - player.pointsLost;
           
           return (
-            <View key={player.id} style={styles.playerRow}>
+            <TouchableOpacity 
+              key={player.id} 
+              style={styles.playerRow}
+              onPress={() => onPlayerPress?.(player)}
+              activeOpacity={0.7}
+            >
               <View style={[styles.playerCell, styles.playerNameCell]}>
                 <Text style={styles.position}>#{index + 1}</Text>
                 <View style={styles.nameContainer}>
                   <Text style={styles.playerName}>
                     {player.firstName} {player.lastName}
                   </Text>
-                  {player.isBot && (
-                    <Text style={styles.botBadge}>🤖</Text>
-                  )}
                 </View>
               </View>
               
@@ -88,7 +91,7 @@ const TournamentTable: React.FC<TournamentTableProps> = ({ players }) => {
                   {pointsDiff > 0 ? `+${pointsDiff}` : pointsDiff}
                 </Text>
               </View>
-            </View>
+            </TouchableOpacity>
           );
         })}
       </ScrollView>
@@ -174,10 +177,7 @@ const createStyles = (theme: any) => StyleSheet.create({
     alignItems: 'center',
     gap: 8,
   },
-  botBadge: {
-    fontSize: 14,
-    marginLeft: 4,
-  },
+
   matchesText: {
     fontSize: 16,
     fontWeight: '600',

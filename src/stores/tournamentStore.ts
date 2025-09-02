@@ -173,140 +173,7 @@ export const useTournamentStore = create<TournamentStore>((set, get) => ({
         console.log('loadTournaments: no saved tournaments, loading mock data');
         // Load mock data if no saved tournaments (only for demo purposes)
         // In production, this would be removed
-        const mockTournaments: Tournament[] = [
-          {
-            id: 'spring1',
-            name: 'Spring 1',
-            description: 'Spring tournament with 8 participants',
-            format: TournamentFormat.SINGLES_ROUND_ROBIN,
-            clubId: 'club1',
-            location: { latitude: 40.7128, longitude: -74.0060, city: 'New York' },
-            startDate: new Date('2025-12-09T00:05:00'), // December 9, 2025 at 12:05 AM
-            endDate: new Date('2025-12-09T00:05:00'),
-            registrationDeadline: new Date('2025-12-06T00:05:00'), // 3 days before start
-            maxParticipants: 8,
-            currentParticipants: 8,
-            players: ['user1', 'user2', 'user3', 'user4', 'user5', 'user6', 'user7', 'user8'],
-            skillLevel: SkillLevel.INTERMEDIATE,
-            entryFee: 35,
-            prizes: [
-              { place: 1, amount: 500, description: 'Spring Champion Trophy' },
-              { place: 2, amount: 250, description: 'Runner-up Medal' },
-              { place: 3, amount: 100, description: 'Third Place Prize' }
-            ],
-            brackets: [],
-            status: TournamentStatus.REGISTRATION_OPEN,
-            isDUPR: true,
-            courtsCount: 4,
-            createdBy: 'user1',
-            createdAt: new Date(),
-          },
-          {
-            id: 'summer1',
-            name: 'Summer Championship 2024',
-            description: 'Annual summer tournament with prizes for all divisions',
-            format: TournamentFormat.DOUBLES_KNOCKOUT,
-            clubId: 'club1',
-            location: { latitude: 40.7128, longitude: -74.0060, city: 'New York' },
-            startDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-            endDate: new Date(Date.now() + 9 * 24 * 60 * 60 * 1000),
-            registrationDeadline: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000),
-            maxParticipants: 32,
-            currentParticipants: 24,
-            players: ['user1', 'user2', 'user3', 'user4', 'user5', 'user6', 'user7', 'user8', 'user9', 'user10', 'user11', 'user12', 'user13', 'user14', 'user15', 'user16', 'user17', 'user18', 'user19', 'user20', 'user21', 'user22', 'user23', 'user24'],
-            skillLevel: SkillLevel.INTERMEDIATE,
-            entryFee: 50,
-            prizes: [
-              { place: 1, amount: 1000, description: 'Championship Trophy' },
-              { place: 2, amount: 500, description: 'Runner-up Medal' },
-              { place: 3, amount: 250, description: 'Bronze Medal' }
-            ],
-            brackets: [],
-            status: TournamentStatus.REGISTRATION_OPEN,
-            isDUPR: true,
-            courtsCount: 4,
-            createdBy: 'user1',
-            createdAt: new Date(),
-          },
-          {
-            id: 'milp1',
-            name: 'MiLP Pro Series',
-            description: 'Professional tournament following Major League Pickleball format',
-            format: TournamentFormat.MILP,
-            clubId: 'club2',
-            location: { latitude: 40.7128, longitude: -74.0060, city: 'New York' },
-            startDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
-            endDate: new Date(Date.now() + 16 * 24 * 60 * 60 * 1000),
-            registrationDeadline: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000),
-            maxParticipants: 16,
-            currentParticipants: 16,
-            players: ['user1', 'user2', 'user3', 'user4', 'user5', 'user6', 'user7', 'user8', 'user9', 'user10', 'user11', 'user12', 'user13', 'user14', 'user15', 'user16'],
-            skillLevel: SkillLevel.PROFESSIONAL,
-            entryFee: 200,
-            prizes: [
-              { place: 1, amount: 5000, description: 'Championship Ring' },
-              { place: 2, amount: 2500, description: 'Runner-up Prize' }
-            ],
-            brackets: [],
-            status: TournamentStatus.REGISTRATION_CLOSED,
-            isDUPR: true,
-            courtsCount: 6,
-            createdBy: 'user2',
-            createdAt: new Date(),
-          },
-          {
-            id: 'beginner1',
-            name: 'Beginner Friendly Round Robin',
-            description: 'Perfect for new players to learn tournament play',
-            format: TournamentFormat.DOUBLES_ROUND_ROBIN,
-            clubId: 'club3',
-            location: { latitude: 40.7128, longitude: -74.0060, city: 'New York' },
-            startDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
-            endDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
-            registrationDeadline: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
-            maxParticipants: 20,
-            currentParticipants: 12,
-            players: ['user1', 'user2', 'user3', 'user4', 'user5', 'user6', 'user7', 'user8', 'user9', 'user10', 'user11', 'user12'],
-            skillLevel: SkillLevel.BEGINNER,
-            entryFee: 0,
-            prizes: [
-              { place: 1, amount: 0, description: 'Participation Certificate' }
-            ],
-            brackets: [],
-            status: TournamentStatus.REGISTRATION_OPEN,
-            isDUPR: false,
-            courtsCount: 2,
-            createdBy: 'user3',
-            createdAt: new Date(),
-          },
-          {
-            id: 'ladder1',
-            name: 'Ladder League Season 2',
-            description: 'Ongoing ladder competition - join anytime!',
-            format: TournamentFormat.LADDER_LEAGUE,
-            clubId: 'club4',
-            location: { latitude: 40.7128, longitude: -74.0060, city: 'New York' },
-            startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
-            endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-            registrationDeadline: new Date(Date.now() + 25 * 24 * 60 * 60 * 1000),
-            maxParticipants: 100,
-            currentParticipants: 67,
-            players: Array.from({ length: 67 }, (_, i) => `user${i + 1}`),
-            skillLevel: SkillLevel.ADVANCED,
-            entryFee: 25,
-            prizes: [
-              { place: 1, amount: 500, description: 'Season Champion' },
-              { place: 2, amount: 250, description: 'Season Runner-up' },
-              { place: 3, amount: 100, description: 'Season Bronze' }
-            ],
-            brackets: [],
-            status: TournamentStatus.IN_PROGRESS,
-            isDUPR: true,
-            courtsCount: 8,
-            createdBy: 'user4',
-            createdAt: new Date(),
-          },
-        ];
+        const mockTournaments: Tournament[] = [];
         
         set({ tournaments: mockTournaments, isLoading: false });
       }
@@ -346,5 +213,16 @@ export const useTournamentStore = create<TournamentStore>((set, get) => ({
   getTournamentsByStatus: (status) => {
     const { tournaments } = get();
     return tournaments.filter((tournament) => tournament.status === status);
+  },
+
+  // Clear all tournaments (for demo purposes)
+  clearAllTournaments: async () => {
+    try {
+      await AsyncStorage.removeItem('tournaments');
+      set({ tournaments: [], isLoading: false });
+      console.log('All tournaments cleared from AsyncStorage and state');
+    } catch (error) {
+      console.error('Failed to clear tournaments:', error);
+    }
   },
 }));

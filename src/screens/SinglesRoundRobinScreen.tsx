@@ -6,6 +6,7 @@ import {
   ScrollView,
   TouchableOpacity,
   Alert,
+  Modal,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -35,6 +36,9 @@ const SinglesRoundRobinScreen: React.FC = () => {
 
   const [tournament, setTournament] = useState<Tournament | null>(null);
   const [isJoining, setIsJoining] = useState(false);
+  const [testBots, setTestBots] = useState<any[]>([]);
+  const [selectedPlayer, setSelectedPlayer] = useState<any>(null);
+  const [showPlayerModal, setShowPlayerModal] = useState(false);
 
   useEffect(() => {
     console.log('useEffect triggered with tournamentId:', tournamentId);
@@ -268,51 +272,92 @@ const SinglesRoundRobinScreen: React.FC = () => {
     return knownUsers[playerId] || { firstName: `Player${playerId}`, lastName: 'Unknown' };
   };
 
-  // Добавляем ботов для демонстрации, если участников меньше 8
-  const addBotsIfNeeded = (players: string[]) => {
-    if (players.length >= 8) return players;
-    
-    const bots = [
-      'bot1', 'bot2', 'bot3', 'bot4', 'bot5', 'bot6', 'bot7'
-    ];
-    
-    const botsToAdd = 8 - players.length;
-    return [...players, ...bots.slice(0, botsToAdd)];
-  };
+  // Используем только реальных участников (без ботов)
+  const allPlayers = tournament.players;
 
-  // Получаем данные ботов
-  const getBotData = (botId: string) => {
-    const botNames: { [key: string]: { firstName: string; lastName: string } } = {
-      'bot1': { firstName: 'Alpha', lastName: 'Bot' },
-      'bot2': { firstName: 'Beta', lastName: 'Bot' },
-      'bot3': { firstName: 'Gamma', lastName: 'Bot' },
-      'bot4': { firstName: 'Delta', lastName: 'Bot' },
-      'bot5': { firstName: 'Epsilon', lastName: 'Bot' },
-      'bot6': { firstName: 'Zeta', lastName: 'Bot' },
-      'bot7': { firstName: 'Eta', lastName: 'Bot' },
+  // Bot management functions (Dev/Test Only)
+  const addTestBot = () => {
+    if (allPlayers.length + testBots.length >= tournament.maxParticipants) return;
+    
+    const newBot = {
+      id: `testBot${Date.now()}`,
+      firstName: `Test${testBots.length + 1}`,
+      lastName: 'Bot',
+      isBot: true,
+      matchesWon: 0,
+      matchesLost: 0,
+      pointsWon: 0,
+      pointsLost: 0,
     };
     
-    return botNames[botId] || { firstName: 'Bot', lastName: 'Unknown' };
+    setTestBots([...testBots, newBot]);
   };
 
-  // Добавляем ботов для демонстрации
-  const allPlayers = addBotsIfNeeded(tournament.players);
+  const getBotCount = () => {
+    return testBots.length;
+  };
+
+  const handlePlayerPress = (player: any) => {
+    setSelectedPlayer(player);
+    setShowPlayerModal(true);
+  };
+
+  const handleDeletePlayer = async (playerId: string) => {
+    if (!tournament || !user) return;
+    
+    // Только создатель может удалять игроков
+    if (tournament.createdBy !== user.id) {
+      showError('Only tournament creator can remove players.');
+      return;
+    }
+
+    try {
+      // Проверяем, это бот или реальный игрок
+      const isBot = testBots.some(bot => bot.id === playerId);
+      
+      if (isBot) {
+        // Удаляем бота из локального состояния
+        const updatedTestBots = testBots.filter(bot => bot.id !== playerId);
+        setTestBots(updatedTestBots);
+        showSuccess('Bot removed successfully!');
+      } else {
+        // Убираем реального игрока из турнира
+        const updatedPlayers = tournament.players.filter(id => id !== playerId);
+        const updatedCurrentParticipants = tournament.currentParticipants - 1;
+
+        await updateTournament(tournament.id, {
+          players: updatedPlayers,
+          currentParticipants: updatedCurrentParticipants,
+        });
+
+        // Обновляем локальное состояние
+        setTournament({
+          ...tournament,
+          players: updatedPlayers,
+          currentParticipants: updatedCurrentParticipants,
+        });
+
+        // Reload tournaments
+        await loadTournaments();
+        showSuccess('Player removed from tournament successfully!');
+      }
+
+      setShowPlayerModal(false);
+      setSelectedPlayer(null);
+    } catch (error) {
+      showError('Failed to remove player. Please try again.');
+    }
+  };
+
+  const handleViewProfile = (playerId: string) => {
+    // TODO: Navigate to player profile
+    showSuccess('Profile view coming soon!');
+    setShowPlayerModal(false);
+    setSelectedPlayer(null);
+  };
   
-  const demoPlayers = allPlayers.map((playerId, index) => {
-    // Проверяем, является ли это ботом
-    if (playerId.startsWith('bot')) {
-      const botData = getBotData(playerId);
-      return {
-        id: playerId,
-        firstName: botData.firstName,
-        lastName: botData.lastName,
-        isBot: true,
-        matchesWon: 0,
-        matchesLost: 0,
-        pointsWon: 0,
-        pointsLost: 0,
-      };
-    } else {
+  const demoPlayers = [
+    ...allPlayers.map((playerId, index) => {
       const playerData = getPlayerData(playerId);
       return {
         id: playerId,
@@ -324,8 +369,9 @@ const SinglesRoundRobinScreen: React.FC = () => {
         pointsWon: 0,
         pointsLost: 0,
       };
-    }
-  });
+    }),
+    ...testBots
+  ];
 
   const isUserJoined = tournament.players.includes(user?.id || '');
   const isCreator = tournament.createdBy === user?.id;
@@ -374,13 +420,6 @@ const SinglesRoundRobinScreen: React.FC = () => {
           style={styles.headerGradient}
         >
           <View style={styles.headerContent}>
-            <TouchableOpacity
-              style={styles.backButton}
-              onPress={() => navigation.goBack()}
-            >
-              <Ionicons name="arrow-back" size={24} color="white" />
-            </TouchableOpacity>
-            
             <View style={styles.headerTextContainer}>
               <Text style={styles.headerTitle}>{tournament.name}</Text>
               <Text style={styles.headerSubtitle}>Singles Round Robin</Text>
@@ -390,19 +429,27 @@ const SinglesRoundRobinScreen: React.FC = () => {
       </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        {/* Tournament Info */}
-        <View style={styles.infoSection}>
-          <View style={styles.infoRow}>
-            <Ionicons name="people" size={20} color={theme.colors.primary} />
-            <Text style={styles.infoText}>
-              {tournament.currentParticipants}/{tournament.maxParticipants} participants
-              {demoPlayers.length > tournament.currentParticipants && (
-                <Text style={{ color: theme.colors.textSecondary }}>
-                  {' '}(+{demoPlayers.length - tournament.currentParticipants} bots)
-                </Text>
-              )}
-            </Text>
-          </View>
+                  {/* Tournament Info */}
+          <View style={styles.infoSection}>
+            <View style={styles.infoRow}>
+              <Ionicons name="people" size={20} color={theme.colors.primary} />
+              <Text style={styles.infoText}>
+                {tournament.currentParticipants}/{tournament.maxParticipants} participants
+              </Text>
+            </View>
+            
+            {/* Bot Management (Dev/Test Only) */}
+            <View style={styles.botManagementRow}>
+              <Text style={styles.botManagementLabel}>Add Test Bots:</Text>
+              <TouchableOpacity 
+                style={styles.addBotButton} 
+                onPress={() => addTestBot()}
+                disabled={allPlayers.length >= tournament.maxParticipants}
+              >
+                <Ionicons name="add" size={20} color="white" />
+              </TouchableOpacity>
+              <Text style={styles.botCount}>Bots: {getBotCount()}</Text>
+            </View>
           
           <View style={styles.infoRow}>
             <Ionicons name="calendar" size={20} color={theme.colors.primary} />
@@ -558,7 +605,7 @@ const SinglesRoundRobinScreen: React.FC = () => {
         {/* Tournament Table */}
         <View style={styles.tableSection}>
           {demoPlayers.length > 0 ? (
-            <TournamentTable players={demoPlayers} />
+            <TournamentTable players={demoPlayers} onPlayerPress={handlePlayerPress} />
           ) : (
             <View style={styles.emptyTable}>
               <Ionicons name="people-outline" size={48} color={theme.colors.text} />
@@ -591,7 +638,7 @@ const SinglesRoundRobinScreen: React.FC = () => {
           
           {isCreator && (
             <TouchableOpacity
-              style={[styles.bottomActionButton, styles.deleteButton]}
+                              style={[styles.bottomActionButton, styles.bottomDeleteButton]}
               onPress={() => {
                 Alert.alert(
                   'Delete Tournament',
@@ -635,10 +682,55 @@ const SinglesRoundRobinScreen: React.FC = () => {
           <Text style={styles.debugText}>Can Join: {canJoin ? 'Yes' : 'No'}</Text>
           <Text style={styles.debugText}>Is Creator: {isCreator ? 'Yes' : 'No'}</Text>
         </View>
-      </ScrollView>
-    </SafeAreaView>
-  );
-};
+              </ScrollView>
+
+        {/* Player Management Modal */}
+        <Modal
+          visible={showPlayerModal}
+          transparent={true}
+          animationType="fade"
+          onRequestClose={() => setShowPlayerModal(false)}
+        >
+          <TouchableOpacity
+            style={styles.modalOverlay}
+            activeOpacity={1}
+            onPress={() => setShowPlayerModal(false)}
+          >
+            <View style={styles.modalContent}>
+              <TouchableOpacity
+                activeOpacity={1}
+                onPress={(e) => e.stopPropagation()}
+              >
+                <View style={styles.modalHeader}>
+                  <Text style={styles.modalTitle}>
+                    {selectedPlayer?.firstName} {selectedPlayer?.lastName}
+                  </Text>
+                </View>
+                
+                <View style={styles.modalButtons}>
+                  <TouchableOpacity
+                    style={styles.profileButton}
+                    onPress={() => handleViewProfile(selectedPlayer?.id)}
+                  >
+                    <Text style={styles.profileButtonText}>Profile</Text>
+                  </TouchableOpacity>
+                  
+                  {isCreator && (
+                    <TouchableOpacity
+                      style={styles.deleteButton}
+                      onPress={() => handleDeletePlayer(selectedPlayer?.id)}
+                    >
+                      <Text style={styles.deleteButtonText}>Delete</Text>
+                    </TouchableOpacity>
+                  )}
+                </View>
+              </TouchableOpacity>
+            </View>
+          </TouchableOpacity>
+        </Modal>
+      </SafeAreaView>
+    );
+  };
 
 const createStyles = (theme: any) => StyleSheet.create({
   container: {
@@ -732,7 +824,7 @@ const createStyles = (theme: any) => StyleSheet.create({
   editButton: {
     // Uses LinearGradient instead of backgroundColor
   },
-  deleteButton: {
+  bottomDeleteButton: {
     // Default styles
   },
   buttonGradient: {
@@ -817,6 +909,97 @@ const createStyles = (theme: any) => StyleSheet.create({
     fontSize: 14,
     color: theme.colors.text,
     marginBottom: 4,
+  },
+  botManagementRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: 12,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: theme.colors.border,
+  },
+  botManagementLabel: {
+    fontSize: 14,
+    color: theme.colors.textSecondary,
+    flex: 1,
+  },
+  addBotButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: theme.colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginHorizontal: 12,
+  },
+  botCount: {
+    fontSize: 14,
+    color: theme.colors.textSecondary,
+    minWidth: 60,
+    textAlign: 'right',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    backgroundColor: theme.colors.surface,
+    borderRadius: 16,
+    padding: 20,
+    marginHorizontal: 20,
+    minWidth: 280,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  modalHeader: {
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: theme.colors.text,
+    textAlign: 'center',
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    gap: 12,
+  },
+  profileButton: {
+    flex: 1,
+    backgroundColor: theme.colors.primary,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  profileButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  deleteButton: {
+    flex: 1,
+    backgroundColor: theme.colors.error || '#ff4444',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  deleteButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
   },
 
 });

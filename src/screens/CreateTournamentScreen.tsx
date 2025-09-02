@@ -272,12 +272,13 @@ const CreateTournamentScreen: React.FC = () => {
       // Show success toast
       showSuccess(`Tournament "${tournamentData.name}" created successfully!`);
       
-      // Navigate to appropriate screen based on tournament format
+      // Navigate to tournament table for Singles Round Robin, or to tournaments list for others
       setTimeout(() => {
         if (tournamentData.format === TournamentFormat.SINGLES_ROUND_ROBIN) {
           (navigation as any).navigate('SinglesRoundRobin', { tournamentId: createdTournament.id });
         } else {
-          (navigation as any).navigate('TournamentDetails', { tournamentId: createdTournament.id });
+          // For other formats, go to tournaments list instead of TournamentDetails
+          (navigation as any).navigate('Tournaments');
         }
       }, 1000);
       

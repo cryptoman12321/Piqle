@@ -160,17 +160,8 @@ const TournamentsScreen: React.FC = () => {
     <TouchableOpacity 
       style={styles.tournamentCard}
       onPress={() => {
-        // If user is already registered, go directly to tournament table
-        if (user?.id && tournament.players.includes(user.id)) {
-          if (tournament.format === TournamentFormat.SINGLES_ROUND_ROBIN) {
-            navigation.navigate('SinglesRoundRobin', { tournamentId: tournament.id });
-          } else {
-            navigation.navigate('TournamentDetails', { tournamentId: tournament.id });
-          }
-        } else {
-          // If not registered, go to details to register
-          navigation.navigate('TournamentDetails', { tournamentId: tournament.id });
-        }
+        // All tournaments go to the same tournament table page
+        navigation.navigate('SinglesRoundRobin', { tournamentId: tournament.id });
       }}
     >
       <View style={styles.tournamentCardHeader}>
