@@ -379,6 +379,9 @@ const SinglesRoundRobinScreen: React.FC = () => {
   const canJoin = !isUserJoined && tournament.currentParticipants < tournament.maxParticipants;
   // Показываем кнопку Leave для всех участников, включая создателя
   const canLeave = isUserJoined;
+  
+  // Проверяем, можно ли запустить турнир (должно быть ровно 8 игроков)
+  const canStartTournament = demoPlayers.length === 8;
 
   // Отладочная информация
   console.log('Tournament Debug:', {
@@ -558,15 +561,22 @@ const SinglesRoundRobinScreen: React.FC = () => {
           {/* Start Tournament Button - only show to creator if tournament hasn't started */}
           {isCreator && tournament && tournament.status === TournamentStatus.REGISTRATION_OPEN && (
             <TouchableOpacity
-              style={[styles.actionButton, styles.startButton]}
+              style={[
+                styles.actionButton, 
+                styles.startButton,
+                !canStartTournament && styles.disabledButton
+              ]}
               onPress={handleStartTournament}
+              disabled={!canStartTournament}
             >
               <LinearGradient
-                colors={[theme.colors.success, '#059669']}
+                colors={canStartTournament ? [theme.colors.success, '#059669'] : [theme.colors.textSecondary, theme.colors.border]}
                 style={styles.buttonGradient}
               >
                 <Ionicons name="play" size={20} color="white" />
-                <Text style={styles.buttonText}>Start Tournament</Text>
+                <Text style={styles.buttonText}>
+                  {canStartTournament ? 'Start Tournament' : `Need ${8 - demoPlayers.length} more players`}
+                </Text>
               </LinearGradient>
             </TouchableOpacity>
           )}
@@ -1000,6 +1010,9 @@ const createStyles = (theme: any) => StyleSheet.create({
     color: 'white',
     fontSize: 16,
     fontWeight: '600',
+  },
+  disabledButton: {
+    opacity: 0.6,
   },
 
 });
