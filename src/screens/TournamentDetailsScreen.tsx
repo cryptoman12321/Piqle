@@ -350,13 +350,32 @@ const TournamentDetailsScreen: React.FC = () => {
           {/* Actions */}
           <View style={styles.actionsSection}>
             {isPlayerRegistered ? (
-              <TouchableOpacity 
-                style={[styles.actionButton, styles.unregisterButton]}
-                onPress={handleUnregister}
-              >
-                <Ionicons name="exit-outline" size={20} color="white" />
-                <Text style={styles.actionButtonText}>Unregister</Text>
-              </TouchableOpacity>
+              <View style={styles.registeredActions}>
+                <TouchableOpacity 
+                  style={[styles.actionButton, styles.viewButton]}
+                  onPress={() => {
+                    if (tournament?.format === TournamentFormat.SINGLES_ROUND_ROBIN) {
+                      navigation.navigate('SinglesRoundRobin', { tournamentId: tournament.id });
+                    }
+                  }}
+                >
+                  <LinearGradient
+                    colors={[theme.colors.primary, theme.colors.secondary]}
+                    style={styles.buttonGradient}
+                  >
+                    <Ionicons name="trophy" size={20} color="white" />
+                    <Text style={styles.actionButtonText}>View Tournament</Text>
+                  </LinearGradient>
+                </TouchableOpacity>
+                
+                <TouchableOpacity 
+                  style={[styles.actionButton, styles.unregisterButton]}
+                  onPress={handleUnregister}
+                >
+                  <Ionicons name="exit-outline" size={20} color="white" />
+                  <Text style={styles.actionButtonText}>Unregister</Text>
+                </TouchableOpacity>
+              </View>
             ) : canRegister ? (
               <TouchableOpacity 
                 style={[styles.actionButton, styles.registerButton]}
@@ -368,8 +387,13 @@ const TournamentDetailsScreen: React.FC = () => {
                     // Show success toast
                     showSuccess(`Successfully registered for "${tournament.name}"!`);
                     
-                    // Navigate back to Tournaments list to show updated state
-                    navigation.navigate('TournamentsList' as any);
+                    // Navigate directly to tournament table if it's Singles Round Robin
+                    if (tournament.format === TournamentFormat.SINGLES_ROUND_ROBIN) {
+                      navigation.navigate('SinglesRoundRobin', { tournamentId: tournament.id });
+                    } else {
+                      // Navigate back to Tournaments list for other formats
+                      navigation.navigate('TournamentsList' as any);
+                    }
                   }
                 }}
               >
@@ -594,6 +618,10 @@ const createStyles = (theme: any) => StyleSheet.create({
     gap: theme.spacing.md,
     marginTop: theme.spacing.lg,
   },
+  registeredActions: {
+    flex: 1,
+    gap: theme.spacing.md,
+  },
   actionButton: {
     flex: 1,
     flexDirection: 'row',
@@ -604,6 +632,18 @@ const createStyles = (theme: any) => StyleSheet.create({
     paddingHorizontal: theme.spacing.md,
     borderRadius: theme.borderRadius.md,
     ...theme.shadows?.md,
+  },
+  viewButton: {
+    // Uses LinearGradient instead of backgroundColor
+  },
+  buttonGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: theme.spacing.sm,
+    paddingVertical: theme.spacing.md,
+    paddingHorizontal: theme.spacing.md,
+    borderRadius: theme.borderRadius.md,
   },
   registerButton: {
     backgroundColor: theme.colors.primary,
