@@ -390,9 +390,65 @@ const SinglesRoundRobinScreen: React.FC = () => {
             </TouchableOpacity>
           )}
 
+          {/* Chat Button - only show if user is joined */}
+          {isUserJoined && (
+            <TouchableOpacity
+              style={[styles.actionButton, styles.chatButton]}
+              onPress={() => {
+                console.log('Opening tournament chat...');
+                // TODO: Navigate to chat screen or open chat modal
+                Alert.alert('Chat', 'Tournament chat will be available soon!');
+              }}
+            >
+              <LinearGradient
+                colors={[theme.colors.info, '#0EA5E9']}
+                style={styles.buttonGradient}
+              >
+                <Ionicons name="chatbubbles" size={20} color="white" />
+                <Text style={styles.buttonText}>Open Chat</Text>
+              </LinearGradient>
+            </TouchableOpacity>
+          )}
+
+          {isUserJoined && (
+            <View style={styles.joinedBadge}>
+              <Ionicons name="checkmark-circle" size={20} color={theme.colors.success} />
+              <Text style={[styles.joinedText, { color: theme.colors.success }]}>
+                You're in!
+              </Text>
+            </View>
+          )}
+
+          {isCreator && !isUserJoined && (
+            <View style={styles.creatorInfo}>
+              <Ionicons name="information-circle" size={20} color={theme.colors.primary} />
+              <Text style={[styles.creatorText, { color: theme.colors.primary }]}>
+                You created this tournament. Click "Join Tournament" to participate!
+              </Text>
+            </View>
+          )}
+        </View>
+
+        {/* Tournament Table */}
+        <View style={styles.tableSection}>
+          {demoPlayers.length > 0 ? (
+            <TournamentTable players={demoPlayers} />
+          ) : (
+            <View style={styles.emptyTable}>
+              <Ionicons name="people-outline" size={48} color={theme.colors.text} />
+              <Text style={styles.emptyText}>No participants yet</Text>
+              <Text style={styles.emptySubtext}>Be the first to join!</Text>
+            </View>
+          )}
+        </View>
+
+
+
+        {/* Bottom Action Buttons */}
+        <View style={styles.bottomActionsSection}>
           {canLeave && (
             <TouchableOpacity
-              style={[styles.actionButton, styles.leaveButton]}
+              style={[styles.bottomActionButton, styles.leaveButton]}
               onPress={handleLeaveTournament}
             >
               <LinearGradient
@@ -409,7 +465,7 @@ const SinglesRoundRobinScreen: React.FC = () => {
           
           {isCreator && (
             <TouchableOpacity
-              style={[styles.actionButton, styles.deleteButton]}
+              style={[styles.bottomActionButton, styles.deleteButton]}
               onPress={() => {
                 Alert.alert(
                   'Delete Tournament',
@@ -441,38 +497,6 @@ const SinglesRoundRobinScreen: React.FC = () => {
                 <Text style={styles.buttonText}>Delete Tournament</Text>
               </LinearGradient>
             </TouchableOpacity>
-          )}
-
-          {isUserJoined && (
-            <View style={styles.joinedBadge}>
-              <Ionicons name="checkmark-circle" size={20} color={theme.colors.success} />
-              <Text style={[styles.joinedText, { color: theme.colors.success }]}>
-                You're in!
-              </Text>
-            </View>
-          )}
-
-          {isCreator && !isUserJoined && (
-            <View style={styles.creatorInfo}>
-              <Ionicons name="information-circle" size={20} color={theme.colors.primary} />
-              <Text style={[styles.creatorText, { color: theme.colors.primary }]}>
-                You created this tournament. Click "Join Tournament" to participate!
-              </Text>
-            </View>
-          )}
-        </View>
-
-        {/* Tournament Table */}
-        <View style={styles.tableSection}>
-          <Text style={styles.sectionTitle}>Tournament Standings</Text>
-          {demoPlayers.length > 0 ? (
-            <TournamentTable players={demoPlayers} />
-          ) : (
-            <View style={styles.emptyTable}>
-              <Ionicons name="people-outline" size={48} color={theme.colors.text} />
-              <Text style={styles.emptyText}>No participants yet</Text>
-              <Text style={styles.emptySubtext}>Be the first to join!</Text>
-            </View>
           )}
         </View>
 
@@ -550,11 +574,22 @@ const createStyles = (theme: any) => StyleSheet.create({
   actionButton: {
     marginBottom: 12,
   },
+  bottomActionsSection: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 20,
+  },
+  bottomActionButton: {
+    flex: 1,
+  },
   joinButton: {
     // Default styles
   },
   leaveButton: {
     // Default styles
+  },
+  chatButton: {
+    // Uses LinearGradient instead of backgroundColor
   },
   deleteButton: {
     // Default styles
@@ -657,6 +692,7 @@ const createStyles = (theme: any) => StyleSheet.create({
     color: theme.colors.text,
     marginBottom: 4,
   },
+
 });
 
 export default SinglesRoundRobinScreen;
