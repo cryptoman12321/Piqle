@@ -496,10 +496,10 @@ const createStyles = (theme: any) => StyleSheet.create({
     backgroundColor: theme.colors.background,
   },
   header: {
-    marginBottom: 16,
+    marginBottom: 0,
   },
   headerGradient: {
-    paddingVertical: 20,
+    paddingVertical: 16,
     paddingHorizontal: 16,
   },
   headerContent: {
@@ -526,6 +526,7 @@ const createStyles = (theme: any) => StyleSheet.create({
   content: {
     flex: 1,
     paddingHorizontal: 16,
+    paddingTop: 0,
   },
   infoSection: {
     backgroundColor: theme.colors.surface,
