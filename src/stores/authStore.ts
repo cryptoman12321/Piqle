@@ -49,6 +49,19 @@ const predefinedUsers: User[] = [
     lastOnlineTime: new Date(),
     createdAt: new Date('2024-01-01'),
   },
+  {
+    id: 'user3',
+    email: '3',
+    firstName: 'Andrew',
+    lastName: 'Smith',
+    city: 'New York',
+    country: 'USA',
+    skillLevel: SkillLevel.INTERMEDIATE,
+    hand: Hand.RIGHT,
+    isOnline: true,
+    lastOnlineTime: new Date(),
+    createdAt: new Date('2024-01-01'),
+  },
 ];
 
 export const useAuthStore = create<AuthStore>((set, get) => ({

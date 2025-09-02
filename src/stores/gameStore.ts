@@ -265,6 +265,22 @@ export const useGameStore = create<GameStore>((set, get) => ({
             status: GameStatus.UPCOMING,
             createdAt: new Date(),
           },
+          {
+            id: '5',
+            title: 'Weekend Round Robin',
+            description: 'Fun round robin tournament for all skill levels',
+            format: GameFormat.OPEN_PLAY,
+            maxPlayers: 8,
+            currentPlayers: 6,
+            skillLevel: SkillLevel.INTERMEDIATE,
+            location: { latitude: 40.7128, longitude: -74.0060, city: 'New York' },
+            startTime: new Date(Date.now() + 48 * 60 * 60 * 1000),
+            isPrivate: false,
+            createdBy: 'user3',
+            players: [],
+            status: GameStatus.UPCOMING,
+            createdAt: new Date(),
+          },
         ];
         set({ games: mockGames, isLoading: false });
       }

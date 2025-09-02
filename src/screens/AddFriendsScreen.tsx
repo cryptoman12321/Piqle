@@ -93,6 +93,16 @@ const AddFriendsScreen: React.FC = () => {
       isAlreadyFriend: false,
       hasPendingRequest: false,
     },
+    {
+      id: 'user6',
+      firstName: 'Andrew',
+      lastName: 'Smith',
+      email: '3',
+      city: 'New York',
+      skillLevel: SkillLevel.INTERMEDIATE,
+      isAlreadyFriend: false,
+      hasPendingRequest: false,
+    },
   ];
 
   useEffect(() => {

@@ -14,7 +14,7 @@ import ProfileScreen from '../screens/ProfileScreen';
 import CreateGameScreen from '../screens/CreateGameScreen';
 import CreateTournamentScreen from '../screens/CreateTournamentScreen';
 import CreateClubScreen from '../screens/CreateClubScreen';
-import TournamentsListScreen from '../screens/TournamentsListScreen';
+import TournamentsScreen from '../screens/TournamentsScreen';
 import ClubsListScreen from '../screens/ClubsListScreen';
 import GamesScreen from '../screens/GamesScreen';
 import GameDetailsScreen from '../screens/GameDetailsScreen';
@@ -22,6 +22,7 @@ import AICoachScreen from '../screens/AICoachScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 import CalendarScreen from '../screens/CalendarScreen';
 import TournamentDetailsScreen from '../screens/TournamentDetailsScreen';
+import SinglesRoundRobinScreen from '../screens/SinglesRoundRobinScreen';
 import StartMatchScreen from '../screens/StartMatchScreen';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -77,7 +78,7 @@ const RootNavigator: React.FC = () => {
             />
             <Stack.Screen 
               name="TournamentsList" 
-              component={TournamentsListScreen}
+              component={TournamentsScreen}
               options={{ headerShown: true, title: 'Tournaments' }}
             />
             <Stack.Screen 
@@ -119,6 +120,11 @@ const RootNavigator: React.FC = () => {
               name="TournamentDetails" 
               component={TournamentDetailsScreen}
               options={{ headerShown: true, title: 'Tournament Details' }}
+            />
+            <Stack.Screen 
+              name="SinglesRoundRobin" 
+              component={SinglesRoundRobinScreen}
+              options={{ headerShown: true, title: 'Round Robin Tournament' }}
             />
           </>
         )}

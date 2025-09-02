@@ -27,7 +27,7 @@ import {
 
 const CreateTournamentScreen: React.FC = () => {
   const { theme } = useThemeStore();
-  const { addTournament } = useTournamentStore();
+  const { addTournament, loadTournaments } = useTournamentStore();
   const { user } = useAuthStore();
   const navigation = useNavigation();
   const { toast, showSuccess, showError, hideToast } = useToast();
@@ -236,8 +236,8 @@ const CreateTournamentScreen: React.FC = () => {
         endDate: tournamentData.endDate,
         registrationDeadline: tournamentData.registrationDeadline,
         maxParticipants: tournamentData.maxParticipants,
-        currentParticipants: 1, // Creator is automatically added
-        players: [user?.id || 'currentUser'], // Creator is automatically added as first player
+        currentParticipants: 0, // Creator is NOT automatically added
+        players: [], // Creator is NOT automatically added
         skillLevel: tournamentData.skillLevel,
         entryFee: tournamentData.entryFee ? parseFloat(tournamentData.entryFee) : undefined,
         prizes: tournamentData.prizes,
@@ -249,12 +249,19 @@ const CreateTournamentScreen: React.FC = () => {
 
       const createdTournament = await addTournament(newTournament);
       
+      // Reload tournaments to ensure fresh data
+      await loadTournaments();
+      
       // Show success toast
       showSuccess(`Tournament "${tournamentData.name}" created successfully!`);
       
-      // Navigate to TournamentDetails and replace CreateTournament in navigation stack
+      // Navigate to appropriate screen based on tournament format
       setTimeout(() => {
-        (navigation as any).replace('TournamentDetails', { tournamentId: createdTournament.id });
+        if (tournamentData.format === TournamentFormat.SINGLES_ROUND_ROBIN) {
+          (navigation as any).navigate('SinglesRoundRobin', { tournamentId: createdTournament.id });
+        } else {
+          (navigation as any).navigate('TournamentDetails', { tournamentId: createdTournament.id });
+        }
       }, 1000);
       
     } catch (error) {
@@ -451,8 +458,10 @@ const CreateTournamentScreen: React.FC = () => {
                 onPress={() => setTournamentData({
                   ...tournamentData, 
                   maxParticipants: Math.max(
+                    tournamentData.format === TournamentFormat.SINGLES_ROUND_ROBIN ? 4 : 
                     tournamentData.format === TournamentFormat.MIXED_DOUBLES_ROUND_ROBIN ? 16 : 4, 
-                    tournamentData.maxParticipants - (tournamentData.format === TournamentFormat.MIXED_DOUBLES_ROUND_ROBIN ? 2 : 4)
+                    tournamentData.maxParticipants - (tournamentData.format === TournamentFormat.SINGLES_ROUND_ROBIN ? 1 :
+                    tournamentData.format === TournamentFormat.MIXED_DOUBLES_ROUND_ROBIN ? 2 : 4)
                   )
                 })}
               >
@@ -463,14 +472,17 @@ const CreateTournamentScreen: React.FC = () => {
                 style={styles.participantCountButton}
                 onPress={() => setTournamentData({
                   ...tournamentData, 
-                  maxParticipants: tournamentData.maxParticipants + (tournamentData.format === TournamentFormat.MIXED_DOUBLES_ROUND_ROBIN ? 2 : 4)
+                  maxParticipants: tournamentData.maxParticipants + (tournamentData.format === TournamentFormat.SINGLES_ROUND_ROBIN ? 1 :
+                  tournamentData.format === TournamentFormat.MIXED_DOUBLES_ROUND_ROBIN ? 2 : 4)
                 })}
               >
                 <Ionicons name="add" size={20} color={theme.colors.primary} />
               </TouchableOpacity>
             </View>
             <Text style={styles.helperText}>
-              {tournamentData.format === TournamentFormat.MIXED_DOUBLES_ROUND_ROBIN 
+              {tournamentData.format === TournamentFormat.SINGLES_ROUND_ROBIN 
+                ? 'Each player will play against every other player'
+                : tournamentData.format === TournamentFormat.MIXED_DOUBLES_ROUND_ROBIN 
                 ? 'Must be even number ≥ 16 (8 teams minimum)'
                 : 'Must be divisible by 4 for doubles tournaments'
               }

@@ -231,6 +231,32 @@ export const useFriendsStore = create<FriendsStore>((set, get) => ({
           friendshipDate: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
           lastInteraction: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
         },
+        {
+          id: '4',
+          userId: 'currentUser',
+          friendId: 'friend4',
+          user: {
+            id: 'currentUser',
+            email: 'current@user.com',
+            firstName: 'Current',
+            lastName: 'User',
+            isOnline: true,
+            createdAt: new Date(),
+          } as User,
+          friend: {
+            id: 'friend4',
+            email: '3',
+            firstName: 'Andrew',
+            lastName: 'Smith',
+            city: 'New York',
+            skillLevel: 'INTERMEDIATE',
+            isOnline: true,
+            lastOnlineTime: new Date(),
+            createdAt: new Date(),
+          } as User,
+          friendshipDate: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
+          lastInteraction: new Date(Date.now() - 12 * 60 * 60 * 1000),
+        },
       ];
       
       set({ friends: mockFriends, isLoading: false });

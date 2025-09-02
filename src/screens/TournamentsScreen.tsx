@@ -384,30 +384,32 @@ const TournamentsScreen: React.FC = () => {
 
       {/* Tournaments List */}
       {!isLoading && !error && (
-        <FlatList
-          data={filteredTournaments}
-          renderItem={renderTournamentCard}
-          keyExtractor={(item) => item.id}
-          contentContainerStyle={styles.tournamentsList}
-          refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-          }
-          showsVerticalScrollIndicator={false}
-          ListEmptyComponent={
-            <View style={styles.emptyContainer}>
-              <Ionicons name="trophy-outline" size={64} color={theme.colors.textSecondary} />
-              <Text style={styles.emptyTitle}>No tournaments found</Text>
-              <Text style={styles.emptySubtitle}>
-                {searchQuery || selectedFormat !== 'ALL' || selectedSkillLevel !== 'ALL' || selectedStatus !== 'ALL'
-                  ? 'Try adjusting your search or filters'
-                  : 'Be the first to create a tournament!'}
-              </Text>
-              <TouchableOpacity style={styles.createFirstTournamentButton} onPress={handleCreateTournament}>
-                <Text style={styles.createFirstTournamentButtonText}>Create First Tournament</Text>
-              </TouchableOpacity>
-            </View>
-          }
-        />
+        <View style={styles.tournamentsContainer}>
+          <FlatList
+            data={filteredTournaments}
+            renderItem={renderTournamentCard}
+            keyExtractor={(item) => item.id}
+            contentContainerStyle={styles.tournamentsList}
+            refreshControl={
+              <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+            }
+            showsVerticalScrollIndicator={false}
+            ListEmptyComponent={
+              <View style={styles.emptyContainer}>
+                <Ionicons name="trophy-outline" size={64} color={theme.colors.textSecondary} />
+                <Text style={styles.emptyTitle}>No tournaments found</Text>
+                <Text style={styles.emptySubtitle}>
+                  {searchQuery || selectedFormat !== 'ALL' || selectedSkillLevel !== 'ALL' || selectedStatus !== 'ALL'
+                    ? 'Try adjusting your search or filters'
+                    : 'Be the first to create a tournament!'}
+                </Text>
+                <TouchableOpacity style={styles.createFirstTournamentButton} onPress={handleCreateTournament}>
+                  <Text style={styles.createFirstTournamentButtonText}>Create First Tournament</Text>
+                </TouchableOpacity>
+              </View>
+            }
+          />
+        </View>
       )}
     </SafeAreaView>
   );
@@ -467,6 +469,9 @@ const createStyles = (theme: any) => StyleSheet.create({
   filtersContainer: {
     paddingHorizontal: theme.spacing.lg,
     marginBottom: theme.spacing.md,
+    paddingBottom: theme.spacing.sm,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.colors.border,
   },
   filterGroup: {
     marginRight: theme.spacing.lg,
@@ -532,8 +537,13 @@ const createStyles = (theme: any) => StyleSheet.create({
     color: 'white',
     fontWeight: '600',
   },
+  tournamentsContainer: {
+    flex: 1,
+    marginTop: theme.spacing.xs,
+  },
   tournamentsList: {
     paddingHorizontal: theme.spacing.lg,
+    paddingTop: theme.spacing.xs,
     paddingBottom: theme.spacing.xxl,
   },
   tournamentCard: {

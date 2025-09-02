@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Piqle - UX/UI Дизайн Концепции</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f5f7; color: #1d1d1f; line-height: 1.6; }
+        .container { max-width: 1400px; margin: 0 auto; padding: 20px; }
+        .header { text-align: center; margin-bottom: 40px; padding: 40px 0; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 20px; }
+        .header h1 { font-size: 3rem; margin-bottom: 10px; font-weight: 800; }
+        .header p { font-size: 1.2rem; opacity: 0.9; }
+        
+        .designs-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 30px; margin-bottom: 40px; }
+        .design-card { background: white; border-radius: 20px; padding: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); transition: transform 0.3s ease; cursor: pointer; }
+        .design-card:hover { transform: translateY(-5px); }
+        .design-card.selected { border: 3px solid #007AFF; box-shadow: 0 0 0 3px rgba(0,122,255,0.2); }
+        
+        .design-title { font-size: 1.5rem; font-weight: 700; margin-bottom: 15px; color: #1d1d1f; }
+        .design-description { color: #6e6e73; margin-bottom: 20px; font-size: 0.95rem; }
+        
+        .screen-preview { background: #f8f9fa; border-radius: 15px; padding: 20px; margin-bottom: 20px; }
+        .screen-title { font-weight: 600; font-size: 1rem; margin-bottom: 15px; color: #1d1d1f; text-align: center; }
+        
+        .mockup-phone { width: 200px; height: 400px; background: #1d1d1f; border-radius: 25px; padding: 10px; margin: 0 auto 20px; position: relative; }
+        .mockup-screen { width: 100%; height: 100%; background: white; border-radius: 20px; overflow: hidden; position: relative; }
+        .mockup-status { height: 25px; background: #f0f0f0; display: flex; justify-content: space-between; align-items: center; padding: 0 10px; font-size: 10px; }
+        .mockup-content { padding: 15px; height: calc(100% - 25px); overflow: hidden; }
+        
+        .design-features { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 15px; }
+        .feature-tag { background: #e3f2fd; color: #1976d2; padding: 4px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: 500; }
+        
+        .select-button { background: #007AFF; color: white; border: none; padding: 10px 20px; border-radius: 10px; font-weight: 600; cursor: pointer; transition: background 0.3s ease; width: 100%; }
+        .select-button:hover { background: #0056CC; }
+        .select-button.selected { background: #34C759; }
+        
+        .inspiration { font-size: 0.8rem; color: #8e8e93; margin-top: 10px; text-align: center; }
+        
+        .final-selection { background: white; border-radius: 20px; padding: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); text-align: center; margin-top: 40px; display: none; }
+        .final-selection h2 { font-size: 2rem; margin-bottom: 20px; color: #1d1d1f; }
+        .selected-design { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; border-radius: 15px; margin: 20px 0; }
+        .selected-design h3 { font-size: 1.5rem; margin-bottom: 10px; }
+        
+        .implementation-steps { text-align: left; margin-top: 20px; }
+        .implementation-steps h4 { margin-bottom: 15px; color: #1d1d1f; }
+        .implementation-steps ol { padding-left: 20px; }
+        .implementation-steps li { margin-bottom: 8px; color: #6e6e73; }
+        
+        /* Apple-inspired styles */
+        .apple-minimal .mockup-content { background: #ffffff; }
+        .apple-minimal .header-section { background: linear-gradient(135deg, #f5f5f7 0%, #e5e5e7 100%); padding: 20px; border-radius: 15px; margin-bottom: 15px; }
+        .apple-minimal .action-button { background: #007AFF; color: white; padding: 12px 20px; border-radius: 12px; margin-bottom: 10px; text-align: center; font-weight: 600; }
+        .apple-minimal .card { background: #f8f9fa; padding: 15px; border-radius: 12px; margin-bottom: 10px; border: 1px solid #e5e5e7; }
+        
+        /* Material You styles */
+        .material-you .mockup-content { background: #fafafa; }
+        .material-you .header-section { background: linear-gradient(135deg, #e8f5e8 0%, #f0f8f0 100%); padding: 20px; border-radius: 20px; margin-bottom: 15px; }
+        .material-you .action-button { background: linear-gradient(135deg, #4CAF50, #66BB6A); color: white; padding: 12px 20px; border-radius: 25px; margin-bottom: 10px; text-align: center; font-weight: 600; box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3); }
+        .material-you .card { background: white; padding: 15px; border-radius: 16px; margin-bottom: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        
+        /* Neumorphism styles */
+        .neumorphism .mockup-content { background: #e0e5ec; }
+        .neumorphism .header-section { background: #e0e5ec; padding: 20px; border-radius: 15px; margin-bottom: 15px; box-shadow: inset 2px 2px 5px #babecc, inset -2px -2px 5px #ffffff; }
+        .neumorphism .action-button { background: #e0e5ec; color: #4a5568; padding: 12px 20px; border-radius: 12px; margin-bottom: 10px; text-align: center; font-weight: 600; box-shadow: 5px 5px 10px #babecc, -5px -5px 10px #ffffff; }
+        .neumorphism .card { background: #e0e5ec; padding: 15px; border-radius: 12px; margin-bottom: 10px; box-shadow: inset 2px 2px 5px #babecc, inset -2px -2px 5px #ffffff; }
+        
+        /* Glassmorphism styles */
+        .glassmorphism .mockup-content { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .glassmorphism .header-section { background: rgba(255, 255, 255, 0.25); backdrop-filter: blur(10px); padding: 20px; border-radius: 15px; margin-bottom: 15px; border: 1px solid rgba(255, 255, 255, 0.18); }
+        .glassmorphism .action-button { background: rgba(255, 255, 255, 0.25); backdrop-filter: blur(10px); color: white; padding: 12px 20px; border-radius: 12px; margin-bottom: 10px; text-align: center; font-weight: 600; border: 1px solid rgba(255, 255, 255, 0.18); }
+        .glassmorphism .card { background: rgba(255, 255, 255, 0.25); backdrop-filter: blur(10px); padding: 15px; border-radius: 12px; margin-bottom: 10px; border: 1px solid rgba(255, 255, 255, 0.18); }
+        
+        /* Dark Premium styles */
+        .dark-premium .mockup-content { background: #0f0f23; }
+        .dark-premium .header-section { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); padding: 20px; border-radius: 15px; margin-bottom: 15px; border: 1px solid #2d3748; }
+        .dark-premium .action-button { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 12px 20px; border-radius: 12px; margin-bottom: 10px; text-align: center; font-weight: 600; }
+        .dark-premium .card { background: #1a1a2e; padding: 15px; border-radius: 12px; margin-bottom: 10px; border: 1px solid #2d3748; color: white; }
+        
+        @media (max-width: 768px) { .designs-grid { grid-template-columns: 1fr; } .header h1 { font-size: 2rem; } }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎾 Piqle</h1>
+            <p>UX/UI дизайн концепции с реальными макетами экранов</p>
+        </div>
+
+        <div class="designs-grid">
+            <!-- Apple-inspired Minimal -->
+            <div class="design-card apple-minimal" data-design="apple-minimal">
+                <div class="design-title">🍎 Apple-inspired Minimal</div>
+                <div class="design-description">Чистый, минималистичный дизайн с акцентом на типографику и пространство</div>
+                <div class="design-features">
+                    <span class="feature-tag">Минимализм</span>
+                    <span class="feature-tag">Типографика</span>
+                    <span class="feature-tag">Пространство</span>
+                </div>
+                
+                <div class="screen-preview">
+                    <div class="screen-title">Главная + Профиль + Игры</div>
+                    <div class="mockup-phone">
+                        <div class="mockup-screen">
+                            <div class="mockup-status">
+                                <span>1:53</span>
+                                <span>📶 📱</span>
+                            </div>
+                            <div class="mockup-content">
+                                <div class="header-section">
+                                    <div style="font-size: 18px; font-weight: 700; margin-bottom: 5px;">Good morning!</div>
+                                    <div style="font-size: 24px; font-weight: 800;">Sol</div>
+                                </div>
+                                
+                                <div class="action-button">Create Game</div>
+                                <div class="action-button">Find Court</div>
+                                
+                                <div class="card">
+                                    <div style="font-weight: 600; margin-bottom: 8px;">Today's Games</div>
+                                    <div style="font-size: 14px; color: #666;">2 games • 1 tournament</div>
+                                </div>
+                                
+                                <div class="card">
+                                    <div style="font-weight: 600; margin-bottom: 8px;">Quick Stats</div>
+                                    <div style="font-size: 14px; color: #666;">Rating: 8.5 • Level: Advanced</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <button class="select-button">Выбрать</button>
+                <div class="inspiration">Вдохновлено: Apple Music, Apple Fitness</div>
+            </div>
+
+            <!-- Material You -->
+            <div class="design-card material-you" data-design="material-you">
+                <div class="design-title">🎨 Material You</div>
+                <div class="design-description">Современный Material Design 3 с динамическими цветами</div>
+                <div class="design-features">
+                    <span class="feature-tag">Material 3</span>
+                    <span class="feature-tag">Динамические цвета</span>
+                    <span class="feature-tag">Адаптивность</span>
+                </div>
+                
+                <div class="screen-preview">
+                    <div class="screen-title">Главная + Профиль + Игры</div>
+                    <div class="mockup-phone">
+                        <div class="mockup-screen">
+                            <div class="mockup-status">
+                                <span>1:53</span>
+                                <span>📶 📱</span>
+                            </div>
+                            <div class="mockup-content">
+                                <div class="header-section">
+                                    <div style="font-size: 18px; font-weight: 600; margin-bottom: 5px;">Good morning!</div>
+                                    <div style="font-size: 24px; font-weight: 700;">Sol</div>
+                                </div>
+                                
+                                <div class="action-button">🎾 Create Game</div>
+                                <div class="action-button">🏆 Find Tournament</div>
+                                
+                                <div class="card">
+                                    <div style="font-weight: 600; margin-bottom: 8px;">Active Games</div>
+                                    <div style="font-size: 14px; color: #666;">2 games • 1 tournament</div>
+                                </div>
+                                
+                                <div class="card">
+                                    <div style="font-weight: 600; margin-bottom: 8px;">Progress</div>
+                                    <div style="font-size: 14px; color: #666;">Rating: 8.5 • Level: Advanced</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <button class="select-button">Выбрать</button>
+                <div class="inspiration">Вдохновлено: Google Apps, Android 12+</div>
+            </div>
+
+            <!-- Neumorphism -->
+            <div class="design-card neumorphism" data-design="neumorphism">
+                <div class="design-title">🕳️ Neumorphism</div>
+                <div class="design-description">Мягкий, объемный дизайн с тенями и светом</div>
+                <div class="design-features">
+                    <span class="feature-tag">Объемность</span>
+                    <span class="feature-tag">Мягкие тени</span>
+                    <span class="feature-tag">Тактильность</span>
+                </div>
+                
+                <div class="screen-preview">
+                    <div class="screen-title">Главная + Профиль + Игры</div>
+                    <div class="mockup-phone">
+                        <div class="mockup-screen">
+                            <div class="mockup-status">
+                                <span>1:53</span>
+                                <span>📶 📱</span>
+                            </div>
+                            <div class="mockup-content">
+                                <div class="header-section">
+                                    <div style="font-size: 18px; font-weight: 600; margin-bottom: 5px;">Good morning!</div>
+                                    <div style="font-size: 24px; font-weight: 700;">Sol</div>
+                                </div>
+                                
+                                <div class="action-button">🎾 Create Game</div>
+                                <div class="action-button">🏆 Find Tournament</div>
+                                
+                                <div class="card">
+                                    <div style="font-weight: 600; margin-bottom: 8px;">Active Games</div>
+                                    <div style="font-size: 14px; color: #666;">2 games • 1 tournament</div>
+                                </div>
+                                
+                                <div class="card">
+                                    <div style="font-weight: 600; margin-bottom: 8px;">Progress</div>
+                                    <div style="font-size: 14px; color: #666;">Rating: 8.5 • Level: Advanced</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <button class="select-button">Выбрать</button>
+                <div class="inspiration">Вдохновлено: iOS 7-13, Modern Banking Apps</div>
+            </div>
+
+            <!-- Glassmorphism -->
+            <div class="design-card glassmorphism" data-design="glassmorphism">
+                <div class="design-title">🔮 Glassmorphism</div>
+                <div class="design-description">Современный дизайн с эффектом матового стекла</div>
+                <div class="design-features">
+                    <span class="feature-tag">Стекло</span>
+                    <span class="feature-tag">Размытие</span>
+                    <span class="feature-tag">Прозрачность</span>
+                </div>
+                
+                <div class="screen-preview">
+                    <div class="screen-title">Главная + Профиль + Игры</div>
+                    <div class="mockup-phone">
+                        <div class="mockup-screen">
+                            <div class="mockup-status">
+                                <span>1:53</span>
+                                <span>📶 📱</span>
+                            </div>
+                            <div class="mockup-content">
+                                <div class="header-section">
+                                    <div style="font-size: 18px; font-weight: 600; margin-bottom: 5px;">Good morning!</div>
+                                    <div style="font-size: 24px; font-weight: 700;">Sol</div>
+                                </div>
+                                
+                                <div class="action-button">🎾 Create Game</div>
+                                <div class="action-button">🏆 Find Tournament</div>
+                                
+                                <div class="card">
+                                    <div style="font-weight: 600; margin-bottom: 8px;">Active Games</div>
+                                    <div style="font-size: 14px; color: white;">2 games • 1 tournament</div>
+                                </div>
+                                
+                                <div class="card">
+                                    <div style="font-weight: 600; margin-bottom: 8px;">Progress</div>
+                                    <div style="font-size: 14px; color: white;">Rating: 8.5 • Level: Advanced</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <button class="select-button">Выбрать</button>
+                <div class="inspiration">Вдохновлено: Windows 11, macOS Big Sur</div>
+            </div>
+
+            <!-- Dark Mode Premium -->
+            <div class="design-card dark-premium" data-design="dark-premium">
+                <div class="design-title">🌙 Dark Mode Premium</div>
+                <div class="design-description">Премиальный темный дизайн с акцентами и градиентами</div>
+                <div class="design-features">
+                    <span class="feature-tag">Темная тема</span>
+                    <span class="feature-tag">Премиум</span>
+                    <span class="feature-tag">Градиенты</span>
+                </div>
+                
+                <div class="screen-preview">
+                    <div class="screen-title">Главная + Профиль + Игры</div>
+                    <div class="mockup-phone">
+                        <div class="mockup-screen">
+                            <div class="mockup-status">
+                                <span>1:53</span>
+                                <span>📶 📱</span>
+                            </div>
+                            <div class="mockup-content">
+                                <div class="header-section">
+                                    <div style="font-size: 18px; font-weight: 600; margin-bottom: 5px; color: #a0aec0;">Good morning!</div>
+                                    <div style="font-size: 24px; font-weight: 700; color: white;">Sol</div>
+                                </div>
+                                
+                                <div class="action-button">🎾 Create Game</div>
+                                <div class="action-button">🏆 Find Tournament</div>
+                                
+                                <div class="card">
+                                    <div style="font-weight: 600; margin-bottom: 8px; color: white;">Active Games</div>
+                                    <div style="font-size: 14px; color: #a0aec0;">2 games • 1 tournament</div>
+                                </div>
+                                
+                                <div class="card">
+                                    <div style="font-weight: 600; margin-bottom: 8px; color: white;">Progress</div>
+                                    <div style="font-size: 14px; color: #a0aec0;">Rating: 8.5 • Level: Advanced</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <button class="select-button">Выбрать</button>
+                <div class="inspiration">Вдохновлено: Spotify, Discord, Telegram</div>
+            </div>
+
+            <!-- Card-based Layout -->
+            <div class="design-card" data-design="card-based">
+                <div class="design-title">🃏 Card-based Layout</div>
+                <div class="design-description">Дизайн на основе карточек с четкой иерархией</div>
+                <div class="design-features">
+                    <span class="feature-tag">Карточки</span>
+                    <span class="feature-tag">Иерархия</span>
+                    <span class="feature-tag">Навигация</span>
+                </div>
+                
+                <div class="screen-preview">
+                    <div class="screen-title">Главная + Профиль + Игры</div>
+                    <div class="mockup-phone">
+                        <div class="mockup-screen">
+                            <div class="mockup-status">
+                                <span>1:53</span>
+                                <span>📶 📱</span>
+                            </div>
+                            <div class="mockup-content" style="background: #f8f9fa;">
+                                <div style="background: white; padding: 20px; border-radius: 15px; margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                                    <div style="font-size: 18px; font-weight: 600; margin-bottom: 5px;">Good morning!</div>
+                                    <div style="font-size: 24px; font-weight: 700;">Sol</div>
+                                </div>
+                                
+                                <div style="background: white; padding: 15px; border-radius: 12px; margin-bottom: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); text-align: center;">
+                                    <div style="font-weight: 600;">🎾 Create Game</div>
+                                </div>
+                                <div style="background: white; padding: 15px; border-radius: 12px; margin-bottom: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); text-align: center;">
+                                    <div style="font-weight: 600;">🏆 Find Tournament</div>
+                                </div>
+                                
+                                <div style="background: white; padding: 15px; border-radius: 12px; margin-bottom: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                                    <div style="font-weight: 600; margin-bottom: 8px;">Active Games</div>
+                                    <div style="font-size: 14px; color: #666;">2 games • 1 tournament</div>
+                                </div>
+                                
+                                <div style="background: white; padding: 15px; border-radius: 12px; margin-bottom: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                                    <div style="font-weight: 600; margin-bottom: 8px;">Progress</div>
+                                    <div style="font-size: 14px; color: #666;">Rating: 8.5 • Level: Advanced</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <button class="select-button">Выбрать</button>
+                <div class="inspiration">Вдохновлено: Pinterest, Instagram, LinkedIn</div>
+            </div>
+        </div>
+
+        <div class="final-selection" id="final-selection">
+            <h2>🎯 Выбранный дизайн</h2>
+            <div class="selected-design" id="selected-design-info">
+                <!-- Здесь будет информация о выбранном дизайне -->
+            </div>
+            <div class="implementation-steps">
+                <h4>📋 План реализации UX/UI:</h4>
+                <ol>
+                    <li>Создать новую тему в themeStore с выбранным стилем</li>
+                    <li>Обновить компоненты HomeScreen, ProfileScreen, GameDetailsScreen</li>
+                    <li>Добавить новые стили для кнопок, карточек, заголовков</li>
+                    <li>Реализовать анимации и переходы в стиле выбранного дизайна</li>
+                    <li>Обновить иконки и цветовую схему</li>
+                    <li>Тестирование на разных устройствах</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let selectedDesign = null;
+
+        // Обработчик выбора дизайна
+        document.querySelectorAll('.select-button').forEach(button => {
+            button.addEventListener('click', function() {
+                const designCard = this.closest('.design-card');
+                const designId = designCard.dataset.design;
+                
+                // Убираем предыдущий выбор
+                document.querySelectorAll('.design-card').forEach(card => {
+                    card.classList.remove('selected');
+                });
+                document.querySelectorAll('.select-button').forEach(btn => {
+                    btn.classList.remove('selected');
+                    btn.textContent = 'Выбрать';
+                });
+                
+                // Выбираем новый дизайн
+                designCard.classList.add('selected');
+                this.classList.add('selected');
+                this.textContent = '✓ Выбрано';
+                
+                selectedDesign = designId;
+                showFinalSelection();
+            });
+        });
+
+        // Показываем финальный выбор
+        function showFinalSelection() {
+            const finalSelection = document.getElementById('final-selection');
+            const selectedDesignInfo = document.getElementById('selected-design-info');
+            
+            const designData = {
+                'apple-minimal': {
+                    name: '🍎 Apple-inspired Minimal',
+                    description: 'Чистый, минималистичный дизайн с акцентом на типографику и пространство',
+                    features: ['Минимализм', 'Типографика', 'Пространство'],
+                    inspiration: 'Apple Music, Apple Fitness',
+                    uxChanges: 'Упрощенная навигация, больше белого пространства, четкая иерархия'
+                },
+                'material-you': {
+                    name: '🎨 Material You',
+                    description: 'Современный Material Design 3 с динамическими цветами',
+                    features: ['Material 3', 'Динамические цвета', 'Адаптивность'],
+                    inspiration: 'Google Apps, Android 12+',
+                    uxChanges: 'Адаптивные компоненты, динамические цвета, плавные переходы'
+                },
+                'neumorphism': {
+                    name: '🕳️ Neumorphism',
+                    description: 'Мягкий, объемный дизайн с тенями и светом',
+                    features: ['Объемность', 'Мягкие тени', 'Тактильность'],
+                    inspiration: 'iOS 7-13, Modern Banking Apps',
+                    uxChanges: 'Тактильные элементы, объемные кнопки, мягкие тени'
+                },
+                'glassmorphism': {
+                    name: '🔮 Glassmorphism',
+                    description: 'Современный дизайн с эффектом матового стекла',
+                    features: ['Стекло', 'Размытие', 'Прозрачность'],
+                    inspiration: 'Windows 11, macOS Big Sur',
+                    uxChanges: 'Размытые фоны, прозрачные элементы, современный вид'
+                },
+                'dark-premium': {
+                    name: '🌙 Dark Mode Premium',
+                    description: 'Премиальный темный дизайн с акцентами и градиентами',
+                    features: ['Темная тема', 'Премиум', 'Градиенты'],
+                    inspiration: 'Spotify, Discord, Telegram',
+                    uxChanges: 'Темная тема, градиентные акценты, премиум ощущение'
+                },
+                'card-based': {
+                    name: '🃏 Card-based Layout',
+                    description: 'Дизайн на основе карточек с четкой иерархией',
+                    features: ['Карточки', 'Иерархия', 'Навигация'],
+                    inspiration: 'Pinterest, Instagram, LinkedIn',
+                    uxChanges: 'Карточная навигация, четкая иерархия, удобная группировка'
+                }
+            };
+            
+            const design = designData[selectedDesign];
+            
+            selectedDesignInfo.innerHTML = `
+                <h3>${design.name}</h3>
+                <p>${design.description}</p>
+                <div style="margin-top: 15px;">
+                    <strong>Особенности:</strong> ${design.features.join(', ')}
+                </div>
+                <div style="margin-top: 10px;">
+                    <strong>UX изменения:</strong> ${design.uxChanges}
+                </div>
+                <div style="margin-top: 10px; opacity: 0.9;">
+                    <strong>Вдохновлено:</strong> ${design.inspiration}
+                </div>
+            `;
+            
+            finalSelection.style.display = 'block';
+            finalSelection.scrollIntoView({ behavior: 'smooth' });
+        }
+    </script>
+</body>
+</html>

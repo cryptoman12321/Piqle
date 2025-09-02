@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
   View,
   Text,
@@ -18,6 +18,7 @@ import { useTournamentStore } from '../stores/tournamentStore';
 import { userService } from '../services/userService';
 import { useNavigation } from '@react-navigation/native';
 import { Game, Court, GameFormat, SkillLevel, GameStatus, CourtType, CourtSurface, Tournament, TournamentFormat, TournamentStatus } from '../types';
+import { getWeekDays, isDateInDay } from '../utils/dateUtils';
 
 const HomeScreen: React.FC = () => {
   const { getCurrentTheme } = useThemeStore();
@@ -113,6 +114,22 @@ const HomeScreen: React.FC = () => {
   
   const theme = getCurrentTheme();
 
+  // Load data when component mounts
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        await Promise.all([
+          getUpcomingGames(),
+          getUpcomingTournaments()
+        ]);
+      } catch (error) {
+        console.error('Failed to load home data:', error);
+      }
+    };
+    
+    loadData();
+  }, [getUpcomingGames, getUpcomingTournaments]);
+
   // Get recent games and tournaments from stores
   const recentGames = getUpcomingGames().slice(0, 2);
   const recentTournaments = getUpcomingTournaments().slice(0, 2);
@@ -175,43 +192,19 @@ const HomeScreen: React.FC = () => {
     navigation.navigate('TournamentsList' as never);
   };
 
-  // Calendar helper functions
-  const getWeekDays = () => {
-    const today = new Date();
-    const weekDays = [];
-    
-    // Start from TODAY and show next 7 days
-    for (let i = 0; i < 7; i++) {
-      const date = new Date(today);
-      date.setDate(today.getDate() + i);
-      
-      weekDays.push({
-        date: date.toISOString().split('T')[0],
-        shortName: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][date.getDay()],
-        dayNumber: date.getDate(),
-        isToday: i === 0, // First day (i === 0) is today
-      });
-    }
-    
-    return weekDays;
+  const handleFindTournaments = () => {
+    navigation.navigate('TournamentsList' as never);
+  };
+
+  // Calendar helper functions - now using dateUtils
+  const getLocalWeekDays = () => {
+    return getWeekDays(7);
   };
 
   const getEventsForDay = (dateString: string) => {
-    const date = new Date(dateString);
-    const dayStart = new Date(date);
-    dayStart.setHours(0, 0, 0, 0);
-    const dayEnd = new Date(date);
-    dayEnd.setHours(23, 59, 59, 999);
-    
     return {
-      games: games.filter(game => {
-        const gameTime = new Date(game.startTime);
-        return gameTime >= dayStart && gameTime <= dayEnd;
-      }),
-      tournaments: tournaments.filter(tournament => {
-        const tournamentDate = new Date(tournament.startDate);
-        return tournamentDate.toDateString() === date.toDateString();
-      }),
+      games: games.filter(game => isDateInDay(game.startTime, dateString)),
+      tournaments: tournaments.filter(tournament => isDateInDay(tournament.startDate, dateString)),
     };
   };
 
@@ -226,7 +219,7 @@ const HomeScreen: React.FC = () => {
   };
 
   const getTotalEventsThisWeek = () => {
-    const weekDays = getWeekDays();
+    const weekDays = getLocalWeekDays();
     let total = 0;
     
     weekDays.forEach(day => {
@@ -336,6 +329,19 @@ const HomeScreen: React.FC = () => {
                 </LinearGradient>
               </TouchableOpacity>
             </View>
+
+            {/* Row 4: Find Tournaments */}
+            <View style={styles.actionRow}>
+              <TouchableOpacity style={styles.actionButton} onPress={handleFindTournaments}>
+                <LinearGradient
+                  colors={[theme.colors.secondary, '#8B5CF6']}
+                  style={styles.actionGradient}
+                >
+                  <Ionicons name="trophy-outline" size={24} color="white" />
+                  <Text style={styles.actionText}>Find Tournaments</Text>
+                </LinearGradient>
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
 
@@ -357,7 +363,7 @@ const HomeScreen: React.FC = () => {
             </View>
             
             <View style={styles.weekDaysContainer}>
-              {getWeekDays().map((day, index) => {
+              {getLocalWeekDays().map((day, index) => {
                 const dayEvents = getEventsForDay(day.date);
                 const hasEvents = dayEvents.games.length > 0 || dayEvents.tournaments.length > 0;
                 

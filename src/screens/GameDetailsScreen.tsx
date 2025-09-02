@@ -17,11 +17,12 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import { Game, GameFormat, SkillLevel, GameStatus } from '../types';
 import AddPlayersModal from '../components/AddPlayersModal';
 import ShareModal from '../components/ShareModal';
+import EditGameModal from '../components/EditGameModal';
 import { userService } from '../services/userService';
 
 const GameDetailsScreen: React.FC = () => {
   const { theme } = useThemeStore();
-  const { getGameById, leaveGame, joinGame } = useGameStore();
+  const { getGameById, leaveGame, joinGame, updateGame } = useGameStore();
   const { user } = useAuthStore();
   const navigation = useNavigation<any>();
   const route = useRoute();
@@ -31,6 +32,7 @@ const GameDetailsScreen: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [showAddPlayersModal, setShowAddPlayersModal] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
+  const [showEditGameModal, setShowEditGameModal] = useState(false);
 
   const styles = createStyles(theme);
 
@@ -66,6 +68,23 @@ const GameDetailsScreen: React.FC = () => {
   const handleShareGame = () => {
     if (!game) return;
     setShowShareModal(true);
+  };
+
+  const handleEditGame = async (updatedGame: Partial<Game>) => {
+    if (!game || !user?.id) return;
+    
+    try {
+      // Update game in store
+      await updateGame(game.id, updatedGame);
+      
+      // Update local state
+      const updatedGameData = { ...game, ...updatedGame };
+      setGame(updatedGameData);
+      
+      // Success is handled by EditGameModal
+    } catch (error) {
+      Alert.alert('Error', 'Failed to update game. Please try again.');
+    }
   };
 
   const handlePlayerAdded = (playerId: string) => {
@@ -423,6 +442,17 @@ const GameDetailsScreen: React.FC = () => {
                         <Text style={styles.actionButtonText}>Start Match</Text>
                       </TouchableOpacity>
                     )}
+                    
+                    {/* Edit Game Button - only for game creator and upcoming games */}
+                    {user?.id === game.createdBy && game.status === 'UPCOMING' && (
+                      <TouchableOpacity 
+                        style={[styles.actionButton, styles.editButton]}
+                        onPress={() => setShowEditGameModal(true)}
+                      >
+                        <Ionicons name="create-outline" size={20} color="white" />
+                        <Text style={styles.actionButtonText}>Edit Game</Text>
+                      </TouchableOpacity>
+                    )}
                   </>
                 ) : canJoinGame ? (
                   <TouchableOpacity 
@@ -477,6 +507,14 @@ const GameDetailsScreen: React.FC = () => {
           title: game?.title || '',
           description: game?.description,
         }}
+      />
+
+      {/* Edit Game Modal */}
+      <EditGameModal
+        visible={showEditGameModal}
+        onClose={() => setShowEditGameModal(false)}
+        game={game}
+        onSave={handleEditGame}
       />
     </View>
   );
@@ -725,6 +763,9 @@ const createStyles = (theme: any) => StyleSheet.create({
   },
   startButton: {
     backgroundColor: theme.colors.success,
+  },
+  editButton: {
+    backgroundColor: theme.colors.warning,
   },
   actionButtonText: {
     color: 'white',

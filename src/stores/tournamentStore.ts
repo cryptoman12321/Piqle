@@ -55,6 +55,9 @@ export const useTournamentStore = create<TournamentStore>((set, get) => ({
         return state; // Don't add duplicate
       }
       
+      console.log('Adding tournament to state');
+      console.log('Current tournaments count:', state.tournaments.length);
+      console.log('New tournament:', newTournament);
       return {
         tournaments: [newTournament, ...state.tournaments], // Add to beginning of list
       };
@@ -63,7 +66,9 @@ export const useTournamentStore = create<TournamentStore>((set, get) => ({
     // Save to AsyncStorage
     try {
       const updatedTournaments = [newTournament, ...get().tournaments];
+      console.log('Saving to AsyncStorage:', updatedTournaments.length, 'tournaments');
       await AsyncStorage.setItem('tournaments', JSON.stringify(updatedTournaments));
+      console.log('Tournament saved to AsyncStorage successfully');
     } catch (error) {
       console.error('Error saving tournament to AsyncStorage:', error);
     }
@@ -142,9 +147,11 @@ export const useTournamentStore = create<TournamentStore>((set, get) => ({
     try {
       // Load from AsyncStorage
       const savedTournaments = await AsyncStorage.getItem('tournaments');
+      console.log('loadTournaments: savedTournaments from AsyncStorage:', savedTournaments);
       
       if (savedTournaments) {
         const parsedTournaments = JSON.parse(savedTournaments);
+        console.log('loadTournaments: parsed tournaments:', parsedTournaments);
         // Convert date strings back to Date objects
         const tournamentsWithDates = parsedTournaments.map((tournament: any) => ({
           ...tournament,
@@ -159,9 +166,13 @@ export const useTournamentStore = create<TournamentStore>((set, get) => ({
           index === self.findIndex(t => t.id === tournament.id)
         );
         
+        console.log('loadTournaments: setting tournaments to state:', uniqueTournaments);
+        console.log('loadTournaments: tournaments count after setting state:', uniqueTournaments.length);
         set({ tournaments: uniqueTournaments, isLoading: false });
       } else {
-        // Load mock data if no saved tournaments
+        console.log('loadTournaments: no saved tournaments, loading mock data');
+        // Load mock data if no saved tournaments (only for demo purposes)
+        // In production, this would be removed
         const mockTournaments: Tournament[] = [
           {
             id: '1',
@@ -281,7 +292,11 @@ export const useTournamentStore = create<TournamentStore>((set, get) => ({
 
   getTournamentById: (id) => {
     const { tournaments } = get();
-    return tournaments.find((tournament) => tournament.id === id);
+    console.log('getTournamentById called with:', id);
+    console.log('Available tournaments:', tournaments.map(t => ({ id: t.id, name: t.name, currentParticipants: t.currentParticipants, players: t.players.length })));
+    const found = tournaments.find((tournament) => tournament.id === id);
+    console.log('Found tournament:', found);
+    return found;
   },
 
   getTournamentsByUser: (userId) => {

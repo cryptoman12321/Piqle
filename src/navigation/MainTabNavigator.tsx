@@ -5,6 +5,7 @@ import { Platform } from 'react-native';
 import { useThemeStore } from '../stores/themeStore';
 import HomeScreen from '../screens/HomeScreen';
 import SimpleMapScreen from '../screens/SimpleMapScreen';
+import DataInitializer from '../components/DataInitializer';
 
 import ChatStackNavigator from './ChatStackNavigator';
 
@@ -21,7 +22,9 @@ const MainTabNavigator: React.FC = () => {
   const theme = getCurrentTheme();
 
   return (
-    <Tab.Navigator
+    <>
+      <DataInitializer />
+      <Tab.Navigator
       initialRouteName="Home"
       screenOptions={({ route }) => ({
         tabBarIcon: ({ focused, color, size }) => {
@@ -75,7 +78,8 @@ const MainTabNavigator: React.FC = () => {
         <Tab.Screen name="Home" component={HomeScreen} options={{ title: 'Home' }} />
         <Tab.Screen name="Chat" component={ChatStackNavigator} options={{ title: 'Chat' }} />
         <Tab.Screen name="Profile" component={ProfileScreen} options={{ title: 'Profile' }} />
-    </Tab.Navigator>
+      </Tab.Navigator>
+    </>
   );
 };
 

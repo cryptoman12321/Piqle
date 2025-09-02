@@ -690,6 +690,18 @@ export const useClubsStore = create<ClubsStore>((set, get) => ({
               totalEvents: 38,
               totalGames: 95,
             },
+            {
+              userId: 'user3',
+              userName: 'Andrew Smith',
+              userPhoto: 'https://example.com/andrew.jpg',
+              role: 'MEMBER',
+              joinedAt: new Date('2023-03-01'),
+              isVerified: true,
+              lastActive: new Date(),
+              memberSince: new Date('2023-03-01'),
+              totalEvents: 25,
+              totalGames: 78,
+            },
           ],
           events: [
             {
@@ -715,7 +727,7 @@ export const useClubsStore = create<ClubsStore>((set, get) => ({
               },
               maxParticipants: 64,
               currentParticipants: 48,
-              participants: ['user1', 'user2', 'user3'],
+              participants: ['user1', 'user2', 'user3', 'user4'],
               isActive: true,
               createdBy: 'user1',
               createdAt: new Date('2024-01-15'),

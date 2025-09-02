@@ -310,6 +310,7 @@ export interface TournamentsStackParamList extends ParamListBase {
   TournamentsList: undefined;
   TournamentDetails: { tournamentId: string };
   CreateTournament: undefined;
+  SinglesRoundRobin: { tournamentId: string };
 }
 
 export interface FriendsStackParamList extends ParamListBase {

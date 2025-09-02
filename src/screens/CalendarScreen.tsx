@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import {
   View,
   Text,
@@ -16,6 +16,7 @@ import { useGameStore } from '../stores/gameStore';
 import { useTournamentStore } from '../stores/tournamentStore';
 import { useNavigation } from '@react-navigation/native';
 import { Game, Tournament } from '../types';
+import { isDateInDay, getDayDateString, getLocalWeekDays } from '../utils/dateUtils';
 
 const CalendarScreen: React.FC = () => {
   const { getCurrentTheme } = useThemeStore();
@@ -27,18 +28,34 @@ const CalendarScreen: React.FC = () => {
   
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [selectedTab, setSelectedTab] = useState<'GAMES' | 'TOURNAMENTS' | 'ALL'>('ALL');
+  const [isLoading, setIsLoading] = useState(true);
 
   const styles = createStyles(theme);
+
+  // Load data when component mounts
+  useEffect(() => {
+    const loadData = async () => {
+      setIsLoading(true);
+      try {
+        await Promise.all([
+          getUpcomingGames(),
+          getUpcomingTournaments()
+        ]);
+      } catch (error) {
+        console.error('Failed to load calendar data:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    loadData();
+  }, [getUpcomingGames, getUpcomingTournaments]);
 
   // Get events for the selected date
   const getEventsForDate = useCallback((date: string) => {
     const dateEvents = {
-      games: games.filter(game => 
-        game.startTime.toISOString().split('T')[0] === date
-      ),
-      tournaments: tournaments.filter(tournament => 
-        tournament.startDate.toISOString().split('T')[0] === date
-      ),
+      games: games.filter(game => isDateInDay(game.startTime, date)),
+      tournaments: tournaments.filter(tournament => isDateInDay(tournament.startDate, date)),
     };
     return dateEvents;
   }, [games, tournaments]);
@@ -47,22 +64,28 @@ const CalendarScreen: React.FC = () => {
   const getMarkedDates = useCallback(() => {
     const marked: any = {};
     
-    // Mark game dates
+    // Mark game dates - use direct date calculation for month view
     games.forEach(game => {
-      const date = game.startTime.toISOString().split('T')[0];
-      if (!marked[date]) {
-        marked[date] = { marked: true, dotColor: theme.colors.primary };
+      const gameDate = new Date(game.startTime);
+      // Convert to local date string (YYYY-MM-DD) for consistency
+      const localDateString = gameDate.toLocaleDateString('en-CA');
+      
+      if (!marked[localDateString]) {
+        marked[localDateString] = { marked: true, dotColor: theme.colors.primary };
       }
     });
     
-    // Mark tournament dates
+    // Mark tournament dates - use direct date calculation for month view
     tournaments.forEach(tournament => {
-      const date = tournament.startDate.toISOString().split('T')[0];
-      if (!marked[date]) {
-        marked[date] = { marked: true, dotColor: theme.colors.secondary };
+      const tournamentDate = new Date(tournament.startDate);
+      // Convert to local date string (YYYY-MM-DD) for consistency
+      const localDateString = tournamentDate.toLocaleDateString('en-CA');
+      
+      if (!marked[localDateString]) {
+        marked[localDateString] = { marked: true, dotColor: theme.colors.secondary };
       } else {
         // If both game and tournament on same date, use a different color
-        marked[date] = { marked: true, dotColor: theme.colors.warning };
+        marked[localDateString] = { marked: true, dotColor: theme.colors.warning };
       }
     });
     
@@ -176,6 +199,13 @@ const CalendarScreen: React.FC = () => {
           </View>
         </LinearGradient>
       </View>
+
+      {/* Loading Indicator */}
+      {isLoading && (
+        <View style={styles.loadingContainer}>
+          <Text style={styles.loadingText}>Loading calendar data...</Text>
+        </View>
+      )}
 
       {/* Calendar */}
       <View style={styles.calendarContainer}>
@@ -457,6 +487,16 @@ const createStyles = (theme: any) => StyleSheet.create({
     color: 'white',
     fontSize: 16,
     fontWeight: '600',
+  },
+  loadingContainer: {
+    alignItems: 'center',
+    paddingVertical: theme.spacing.xl,
+    gap: theme.spacing.md,
+  },
+  loadingText: {
+    fontSize: 16,
+    color: theme.colors.textSecondary,
+    textAlign: 'center',
   },
 });
 

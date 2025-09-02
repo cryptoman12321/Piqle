@@ -5,6 +5,7 @@ import { TournamentsStackParamList } from '../types';
 import TournamentsScreen from '../screens/TournamentsScreen';
 import TournamentDetailsScreen from '../screens/TournamentDetailsScreen';
 import CreateTournamentScreen from '../screens/CreateTournamentScreen';
+import SinglesRoundRobinScreen from '../screens/SinglesRoundRobinScreen';
 
 const TournamentsStack = createNativeStackNavigator<TournamentsStackParamList>();
 
@@ -37,6 +38,11 @@ const TournamentsStackNavigator: React.FC = () => {
         name="CreateTournament" 
         component={CreateTournamentScreen}
         options={{ title: 'Create Tournament' }}
+      />
+      <TournamentsStack.Screen 
+        name="SinglesRoundRobin" 
+        component={SinglesRoundRobinScreen}
+        options={{ title: 'Round Robin Tournament' }}
       />
     </TournamentsStack.Navigator>
   );

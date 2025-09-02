@@ -21,6 +21,8 @@ import { useAchievementsStore } from '../stores/achievementsStore';
 import { useGameStore } from '../stores/gameStore';
 import { SkillLevel } from '../types';
 import RatingChart from '../components/RatingChart';
+import ProfileView from '../components/ProfileView';
+import ProfileEdit from '../components/ProfileEdit';
 import { userService } from '../services/userService';
 
 const ProfileScreen: React.FC = () => {
@@ -325,102 +327,21 @@ const ProfileScreen: React.FC = () => {
         {/* Profile Form */}
         <View style={styles.form}>
           {/* Personal Information */}
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Personal Information</Text>
-            
-            <View style={styles.inputRow}>
-              <View style={[styles.inputGroup, { flex: 1, marginRight: 8 }]}>
-                <Text style={styles.label}>First Name *</Text>
-                <TextInput
-                  style={[styles.input, !isEditing && styles.inputDisabled]}
-                  value={profileData.firstName}
-                  onChangeText={(text) => setProfileData(prev => ({ ...prev, firstName: text }))}
-                  placeholder="Enter first name"
-                  placeholderTextColor={theme.colors.textSecondary}
-                  editable={isEditing}
-                />
-              </View>
-              
-              <View style={[styles.inputGroup, { flex: 1, marginLeft: 8 }]}>
-                <Text style={styles.label}>Last Name *</Text>
-                <TextInput
-                  style={[styles.input, !isEditing && styles.inputDisabled]}
-                  value={profileData.lastName}
-                  onChangeText={(text) => setProfileData(prev => ({ ...prev, lastName: text }))}
-                  placeholder="Enter last name"
-                  placeholderTextColor={theme.colors.textSecondary}
-                  editable={isEditing}
-                />
-              </View>
-            </View>
+          {isEditing ? (
+            <ProfileEdit
+              profileData={profileData}
+              setProfileData={setProfileData}
+              theme={theme}
+              getSkillLevelColor={getSkillLevelColor}
+            />
+          ) : (
+            <ProfileView
+              profileData={profileData}
+              theme={theme}
+            />
+          )}
 
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Email</Text>
-              <TextInput
-                style={[styles.input, styles.inputDisabled]}
-                value={profileData.email}
-                editable={false}
-                placeholderTextColor={theme.colors.textSecondary}
-              />
-              <Text style={styles.helpText}>Email cannot be changed</Text>
-            </View>
 
-            <View style={styles.inputRow}>
-              <View style={[styles.inputGroup, { flex: 1, marginRight: 8 }]}>
-                <Text style={styles.label}>City</Text>
-                <TextInput
-                  style={[styles.input, !isEditing && styles.inputDisabled]}
-                  value={profileData.city}
-                  onChangeText={(text) => setProfileData(prev => ({ ...prev, city: text }))}
-                  placeholder="Enter city"
-                  placeholderTextColor={theme.colors.textSecondary}
-                  editable={isEditing}
-                />
-              </View>
-              
-              <View style={[styles.inputGroup, { flex: 1, marginLeft: 8 }]}>
-                <Text style={styles.label}>Country</Text>
-                <TextInput
-                  style={[styles.input, !isEditing && styles.inputDisabled]}
-                  value={profileData.country}
-                  onChangeText={(text) => setProfileData(prev => ({ ...prev, country: text }))}
-                  placeholder="Enter country"
-                  placeholderTextColor={theme.colors.textSecondary}
-                  editable={isEditing}
-                />
-              </View>
-            </View>
-          </View>
-
-          {/* Game Preferences */}
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Game Preferences</Text>
-            
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Skill Level</Text>
-              <View style={styles.pickerContainer}>
-                {Object.values(SkillLevel).map((level) => (
-                  <TouchableOpacity
-                    key={level}
-                    style={[
-                      styles.skillLevelChip,
-                      profileData.skillLevel === level && { backgroundColor: getSkillLevelColor(level) }
-                    ]}
-                    onPress={() => isEditing && setProfileData(prev => ({ ...prev, skillLevel: level }))}
-                    disabled={!isEditing}
-                  >
-                    <Text style={[
-                      styles.skillLevelText,
-                      profileData.skillLevel === level && { color: 'white' }
-                    ]}>
-                      {level}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            </View>
-
-          </View>
 
           {/* Match History & Rating Progress */}
           <View style={styles.section}>

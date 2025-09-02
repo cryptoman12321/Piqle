@@ -54,6 +54,19 @@ const mockUsers: User[] = [
   },
   {
     id: 'user3',
+    email: '3',
+    firstName: 'Andrew',
+    lastName: 'Smith',
+    city: 'New York',
+    country: 'USA',
+    skillLevel: SkillLevel.INTERMEDIATE,
+    hand: Hand.RIGHT,
+    isOnline: true,
+    lastOnlineTime: new Date(),
+    createdAt: new Date('2024-01-01'),
+  },
+  {
+    id: 'user3',
     email: 'john@example.com',
     firstName: 'John',
     lastName: 'Doe',
@@ -103,6 +116,19 @@ const mockUsers: User[] = [
     isOnline: false,
     lastOnlineTime: new Date(Date.now() - 30 * 60 * 1000), // 30 minutes ago
     createdAt: new Date('2024-01-25'),
+  },
+  {
+    id: 'user7',
+    email: '3',
+    firstName: 'Andrew',
+    lastName: 'Smith',
+    city: 'New York',
+    country: 'USA',
+    skillLevel: SkillLevel.INTERMEDIATE,
+    hand: Hand.RIGHT,
+    isOnline: true,
+    lastOnlineTime: new Date(),
+    createdAt: new Date('2024-01-01'),
   },
 ];
 

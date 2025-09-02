@@ -268,7 +268,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
           id: 'conv_2',
           type: 'GROUP',
           participants: ['user1', 'user3', 'user4', 'user5'],
-          participantNames: ['John Smith', 'Mike Wilson', 'Lisa Brown', 'David Lee'],
+          participantNames: ['John Smith', 'Andrew Smith', 'Lisa Brown', 'David Lee'],
           participantPhotos: ['https://example.com/john.jpg', 'https://example.com/mike.jpg', 'https://example.com/lisa.jpg', 'https://example.com/david.jpg'],
           lastMessage: {
             id: 'msg_2',
