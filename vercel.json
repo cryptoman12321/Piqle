@@ -1,11 +1,8 @@
 {
-  "outputDirectory": "web",
   "framework": "static",
-  "installCommand": "npm install",
-  "devCommand": "npm run web",
   "builds": [
     {
-      "src": "web/**/*",
+      "src": "index.html",
       "use": "@vercel/static"
     }
   ],
