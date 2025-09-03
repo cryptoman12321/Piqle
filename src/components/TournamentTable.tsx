@@ -19,14 +19,151 @@ interface TournamentPlayer {
 }
 
 interface TournamentTableProps {
-  players: TournamentPlayer[];
+  tournament: any; // Турнир с матчами
   onDeletePlayer?: (playerId: string) => void;
   onViewProfile?: (playerId: string) => void;
   isCreator?: boolean;
 }
 
-const TournamentTable: React.FC<TournamentTableProps> = ({ players, onDeletePlayer, onViewProfile, isCreator }) => {
+const TournamentTable: React.FC<TournamentTableProps> = ({ tournament, onDeletePlayer, onViewProfile, isCreator }) => {
   const { theme } = useThemeStore();
+
+  // Функция для получения имени игрока
+  const getPlayerDisplayName = (playerId: string) => {
+    if (playerId.startsWith('testBot')) {
+      const botNumber = playerId.replace('testBot', '');
+      const botNames = [
+        'Alpha', 'Beta', 'Gamma', 'Delta', 'Epsilon', 'Zeta', 'Eta', 'Theta',
+        'Iota', 'Kappa', 'Lambda', 'Mu', 'Nu', 'Xi', 'Omicron', 'Pi'
+      ];
+      
+      if (botNumber) {
+        const index = parseInt(botNumber) - 1;
+        if (index >= 0 && index < botNames.length) {
+          return `Bot ${botNames[index]}`;
+        }
+      }
+      return `Bot ${botNumber || 'X'}`;
+    } else {
+      const knownUsers: { [key: string]: { firstName: string; lastName: string } } = {
+        'currentUser': { firstName: 'John', lastName: 'Doe' },
+        'user1': { firstName: 'Sol', lastName: 'Shats' },
+        'user2': { firstName: 'Vlad', lastName: 'Shetinin' },
+        'user3': { firstName: 'Alex', lastName: 'Johnson' },
+        'user4': { firstName: 'Maria', lastName: 'Garcia' },
+        'user5': { firstName: 'David', lastName: 'Brown' },
+        'user6': { firstName: 'Sarah', lastName: 'Wilson' },
+        'user7': { firstName: 'Michael', lastName: 'Davis' },
+        'user8': { firstName: 'Emma', lastName: 'Taylor' },
+      };
+      
+      const user = knownUsers[playerId];
+      if (user) {
+        return `${user.firstName} ${user.lastName}`;
+      }
+      return `${playerId} User`;
+    }
+  };
+
+  // Вычисляем статистику игроков из матчей турнира
+  const calculatePlayerStats = () => {
+    console.log('=== TOURNAMENT TABLE DEBUG START ===');
+    console.log('calculatePlayerStats called with tournament:', tournament);
+    
+    const playerStats: { [key: string]: TournamentPlayer } = {};
+    
+    if (!tournament) {
+      console.log('ERROR: No tournament provided');
+      console.log('=== TOURNAMENT TABLE DEBUG END ===');
+      return [];
+    }
+    
+    if (!tournament.brackets || tournament.brackets.length === 0) {
+      console.log('ERROR: No brackets in tournament');
+      console.log('=== TOURNAMENT TABLE DEBUG END ===');
+      return [];
+    }
+    
+    const bracket = tournament.brackets[0];
+    console.log('Bracket found:', bracket);
+    
+    if (!bracket.matches) {
+      console.log('ERROR: No matches in bracket');
+      console.log('=== TOURNAMENT TABLE DEBUG END ===');
+      return [];
+    }
+    
+    console.log('Players in tournament:', tournament.players);
+    console.log('Matches in bracket:', bracket.matches);
+    
+    // Инициализируем статистику для всех игроков
+    tournament.players.forEach((playerId: string) => {
+      playerStats[playerId] = {
+        id: playerId,
+        firstName: getPlayerDisplayName(playerId).split(' ')[0],
+        lastName: getPlayerDisplayName(playerId).split(' ')[1] || '',
+        matchesWon: 0,
+        matchesLost: 0,
+        pointsWon: 0,
+        pointsLost: 0,
+      };
+    });
+    
+    console.log('Initial player stats:', playerStats);
+    
+    // Подсчитываем статистику из матчей
+    console.log('=== PROCESSING MATCHES ===');
+    console.log('Total matches to process:', bracket.matches.length);
+    
+    bracket.matches.forEach((match: any, index: number) => {
+      console.log(`Match ${index + 1}:`, match);
+      console.log(`Match status: ${match.status}, score1: ${match.score1}, score2: ${match.score2}`);
+      
+      if ((match.status === 'completed' || match.status === 'COMPLETED') && match.score1 !== undefined && match.score2 !== undefined) {
+        console.log('✅ Match is completed, updating stats');
+        const player1 = playerStats[match.player1];
+        const player2 = playerStats[match.player2];
+        
+        if (player1 && player2) {
+          // Добавляем очки
+          player1.pointsWon += match.score1;
+          player1.pointsLost += match.score2;
+          player2.pointsWon += match.score2;
+          player2.pointsLost += match.score1;
+          
+          // Определяем победителя
+          if (match.score1 > match.score2) {
+            player1.matchesWon += 1;
+            player2.matchesLost += 1;
+            console.log(`🏆 ${match.player1} wins: ${match.score1}-${match.score2}`);
+          } else {
+            player2.matchesWon += 1;
+            player1.matchesLost += 1;
+            console.log(`🏆 ${match.player2} wins: ${match.score2}-${match.score1}`);
+          }
+          
+          console.log(`Updated stats - ${match.player1}: ${player1.matchesWon}W/${player1.matchesLost}L, ${player1.pointsWon}-${player1.pointsLost}`);
+          console.log(`Updated stats - ${match.player2}: ${player2.matchesWon}W/${player2.matchesLost}L, ${player2.pointsWon}-${player2.pointsLost}`);
+        } else {
+          console.log('❌ Player not found in playerStats:', match.player1, match.player2);
+        }
+      } else {
+        console.log('❌ Match not completed or missing scores:', match.status, match.score1, match.score2);
+      }
+    });
+    
+    console.log('=== FINAL PLAYER STATS ===');
+    Object.entries(playerStats).forEach(([playerId, stats]) => {
+      console.log(`${playerId}: ${stats.matchesWon}W/${stats.matchesLost}L, ${stats.pointsWon}-${stats.pointsLost}`);
+    });
+    
+    const result = Object.values(playerStats);
+    console.log('Final player stats:', result);
+    console.log('=== TOURNAMENT TABLE DEBUG END ===');
+    return result;
+  };
+
+  const players = calculatePlayerStats();
 
   // Умная сортировка по турнирным правилам
   const sortedPlayers = [...players].sort((a, b) => {
@@ -63,9 +200,13 @@ const TournamentTable: React.FC<TournamentTableProps> = ({ players, onDeletePlay
 
   const styles = createStyles(theme);
 
+
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Tournament Standings</Text>
+      
+
       
       {/* Header */}
       <View style={styles.headerRow}>
@@ -76,13 +217,19 @@ const TournamentTable: React.FC<TournamentTableProps> = ({ players, onDeletePlay
       </View>
 
       {/* Players */}
-      <SwipeListView
-        data={sortedPlayers}
-        keyExtractor={(item) => item.id}
-        renderItem={(data, index) => {
+      {sortedPlayers.length > 0 ? (
+        <SwipeListView
+          data={sortedPlayers}
+          keyExtractor={(item) => item.id}
+          renderItem={(data, index) => {
           const player = data.item;
           const matchesDiff = player.matchesWon - player.matchesLost;
           const pointsDiff = player.pointsWon - player.pointsLost;
+          
+          // Отладка для каждого игрока
+          console.log('Rendering player:', player.id, 'matches:', player.matchesWon, '-', player.matchesLost, 'points:', player.pointsWon, '-', player.pointsLost);
+          
+
           
           // Определяем позицию с учетом равных игроков
           let position = data.index + 1;
@@ -117,18 +264,23 @@ const TournamentTable: React.FC<TournamentTableProps> = ({ players, onDeletePlay
                   <Text style={styles.matchesText}>
                     {player.matchesWon}-{player.matchesLost}
                   </Text>
+
                   <Text style={styles.matchesDiff}>
                     {matchesDiff > 0 ? `+${matchesDiff}` : matchesDiff}
                   </Text>
+
+
                 </View>
                 
                 <View style={[styles.playerCell, styles.pointsCell]}>
                   <Text style={styles.pointsText}>
                     {player.pointsWon}-{player.pointsLost}
                   </Text>
+
                   <Text style={styles.pointsDiff}>
                     {pointsDiff > 0 ? `+${pointsDiff}` : pointsDiff}
                   </Text>
+
                 </View>
                 
                 <View style={[styles.playerCell, styles.handicapCell]}>
@@ -172,6 +324,11 @@ const TournamentTable: React.FC<TournamentTableProps> = ({ players, onDeletePlay
         closeOnRowOpen
         swipeToOpenPercent={30}
       />
+      ) : (
+        <View style={styles.emptyTable}>
+          <Text style={styles.emptyText}>No players to display</Text>
+        </View>
+      )}
     </View>
   );
 };
@@ -317,6 +474,15 @@ const createStyles = (theme: any) => StyleSheet.create({
     backgroundColor: theme.colors.surface,
     paddingRight: 16,
     height: '100%',
+  },
+  emptyTable: {
+    padding: 20,
+    alignItems: 'center',
+  },
+  emptyText: {
+    fontSize: 16,
+    color: theme.colors.textSecondary,
+    textAlign: 'center',
   },
 });
 

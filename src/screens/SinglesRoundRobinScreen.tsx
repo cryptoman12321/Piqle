@@ -16,7 +16,8 @@ import { useTournamentStore } from '../stores/tournamentStore';
 import { useAuthStore } from '../stores/authStore';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import TournamentTable from '../components/TournamentTable';
-import { Tournament, TournamentStatus } from '../types';
+import TournamentRounds from '../components/TournamentRounds';
+import { Tournament, TournamentStatus, BracketType, MatchStatus } from '../types';
 import { TournamentsStackParamList } from '../types';
 import Toast from '../components/Toast';
 import { useToast } from '../hooks/useToast';
@@ -36,6 +37,7 @@ const SinglesRoundRobinScreen: React.FC = () => {
 
   const [tournament, setTournament] = useState<Tournament | null>(null);
   const [isJoining, setIsJoining] = useState(false);
+  const [activeTab, setActiveTab] = useState<'standings' | 'rounds'>('standings'); // Активная вкладка
   const [testBots, setTestBots] = useState<any[]>([]);
   const [selectedPlayer, setSelectedPlayer] = useState<any>(null);
   const [showPlayerModal, setShowPlayerModal] = useState(false);
@@ -182,26 +184,89 @@ const SinglesRoundRobinScreen: React.FC = () => {
     console.log('Tournament before update:', tournament);
     
     try {
-      // Обновляем ТОЛЬКО статус турнира, не трогая остальные данные
-      console.log('Updating tournament status to IN_PROGRESS');
+      // Создаем все матчи для Round Robin турнира
+      const allMatches: any[] = [];
+      const players = tournament.players;
       
+      for (let i = 0; i < players.length; i++) {
+        for (let j = i + 1; j < players.length; j++) {
+          allMatches.push({
+            id: `match_${players[i]}_${players[j]}`,
+            player1: players[i],
+            player2: players[j],
+            score1: 0,
+            score2: 0,
+            status: 'pending',
+            winner: null,
+          });
+        }
+      }
+      
+      // Создаем bracket для Round Robin
+      const roundRobinBracket = {
+        id: 'round_robin_bracket',
+        name: 'Round Robin',
+        type: BracketType.ROUND_ROBIN,
+        participants: players,
+        matches: allMatches,
+        winner: undefined,
+      };
+      
+      // Обновляем турнир: статус + bracket с матчами
       updateTournament(tournament.id, {
         status: TournamentStatus.IN_PROGRESS,
+        brackets: [roundRobinBracket],
       });
       
       // Показываем успешное сообщение
       showSuccess('Tournament started successfully!');
       
-      // Переходим на экран матчей
-      setTimeout(() => {
-        (navigation as any).navigate('TournamentMatches', { 
-          tournamentId: tournament.id 
-        });
-      }, 1000);
+      // Показываем раунды вместо перехода на другой экран
+      setActiveTab('rounds');
       
     } catch (error) {
       console.error('Failed to start tournament:', error);
       showError('Failed to start tournament. Please try again.');
+    }
+  };
+
+  const handleUpdateScore = (matchId: string, scores: { game1: { score1: number; score2: number }[] }) => {
+    if (!tournament) return;
+    
+    const gameScores = scores.game1;
+    const totalScore1 = gameScores.reduce((sum, game) => sum + game.score1, 0);
+    const totalScore2 = gameScores.reduce((sum, game) => sum + game.score2, 0);
+    
+    try {
+      // Обновляем матч в bracket турнира
+      const updatedTournament = { ...tournament };
+      const bracket = updatedTournament.brackets?.[0];
+      
+      if (bracket && bracket.matches) {
+        const matchToUpdate = bracket.matches.find((m: any) => m.id === matchId);
+        
+        if (matchToUpdate) {
+          matchToUpdate.score1 = totalScore1;
+          matchToUpdate.score2 = totalScore2;
+          matchToUpdate.status = MatchStatus.COMPLETED;
+          matchToUpdate.winner = totalScore1 > totalScore2 ? matchToUpdate.player1 : matchToUpdate.player2;
+          
+          // Обновляем турнир в сторе
+          updateTournament(tournament.id, updatedTournament);
+          
+          // Обновляем локальное состояние
+          setTournament(updatedTournament);
+          
+          showSuccess(`Score updated: ${totalScore1} - ${totalScore2} (${gameScores.length} games)`);
+        } else {
+          showError('Match not found in tournament');
+        }
+      } else {
+        showError('Tournament bracket not found');
+      }
+    } catch (error) {
+      console.error('Failed to update match score:', error);
+      showError('Failed to update score. Please try again.');
     }
   };
 
@@ -640,8 +705,8 @@ const SinglesRoundRobinScreen: React.FC = () => {
             </TouchableOpacity>
           )}
 
-          {/* Start Tournament Button - show to creator if tournament can be started */}
-          {isCreator && tournament && tournament.status !== TournamentStatus.COMPLETED && tournament.status !== TournamentStatus.CANCELLED && (
+          {/* Start Tournament Button - show to creator only if tournament is still in registration */}
+          {isCreator && tournament && tournament.status === TournamentStatus.REGISTRATION_OPEN && (
             <TouchableOpacity
               style={[
                 styles.actionButton, 
@@ -694,23 +759,67 @@ const SinglesRoundRobinScreen: React.FC = () => {
           )}
         </View>
 
-        {/* Tournament Table */}
-        <View style={styles.tableSection}>
-          {demoPlayers.length > 0 ? (
-            <TournamentTable 
-              players={demoPlayers} 
-              onDeletePlayer={handleDeletePlayer}
-              onViewProfile={handleViewProfile}
-              isCreator={isCreator}
-            />
-          ) : (
-            <View style={styles.emptyTable}>
-              <Ionicons name="people-outline" size={48} color={theme.colors.text} />
-              <Text style={styles.emptyText}>No participants yet</Text>
-              <Text style={styles.emptySubtext}>Be the first to join!</Text>
-            </View>
-          )}
-        </View>
+        {/* Tournament Tabs */}
+        {tournament?.status === TournamentStatus.IN_PROGRESS && (
+          <View style={styles.tabsContainer}>
+            <TouchableOpacity
+              style={[
+                styles.tab,
+                activeTab === 'standings' && styles.activeTab
+              ]}
+              onPress={() => setActiveTab('standings')}
+            >
+              <Text style={[
+                styles.tabText,
+                activeTab === 'standings' && styles.activeTabText
+              ]}>
+                Standings
+              </Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity
+              style={[
+                styles.tab,
+                activeTab === 'rounds' && styles.activeTab
+              ]}
+              onPress={() => setActiveTab('rounds')}
+            >
+              <Text style={[
+                styles.tabText,
+                activeTab === 'rounds' && styles.activeTabText
+              ]}>
+                Rounds
+              </Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
+        {/* Tournament Content */}
+        {activeTab === 'rounds' && tournament?.status === TournamentStatus.IN_PROGRESS ? (
+          // Показываем раунды
+          <TournamentRounds 
+            tournament={tournament}
+            onUpdateScore={handleUpdateScore}
+          />
+        ) : activeTab === 'standings' ? (
+          // Показываем таблицу участников
+          <View style={styles.tableSection}>
+            {tournament && tournament.players && tournament.players.length > 0 ? (
+              <TournamentTable 
+                tournament={tournament}
+                onDeletePlayer={handleDeletePlayer}
+                onViewProfile={handleViewProfile}
+                isCreator={isCreator}
+              />
+            ) : (
+              <View style={styles.emptyTable}>
+                <Ionicons name="people-outline" size={48} color={theme.colors.text} />
+                <Text style={styles.emptyText}>No participants yet</Text>
+                <Text style={styles.emptySubtext}>Be the first to join!</Text>
+              </View>
+            )}
+          </View>
+        ) : null}
 
 
 
@@ -770,15 +879,7 @@ const SinglesRoundRobinScreen: React.FC = () => {
           )}
         </View>
 
-        {/* Debug Info */}
-        <View style={styles.debugSection}>
-          <Text style={styles.debugTitle}>Debug Info:</Text>
-          <Text style={styles.debugText}>Players: {tournament.players.length}</Text>
-          <Text style={styles.debugText}>Current: {tournament.currentParticipants}</Text>
-          <Text style={styles.debugText}>Max: {tournament.maxParticipants}</Text>
-          <Text style={styles.debugText}>Can Join: {canJoin ? 'Yes' : 'No'}</Text>
-          <Text style={styles.debugText}>Is Creator: {isCreator ? 'Yes' : 'No'}</Text>
-        </View>
+
               </ScrollView>
 
         {/* Player Management Modal */}
@@ -988,25 +1089,7 @@ const createStyles = (theme: any) => StyleSheet.create({
     color: theme.colors.textSecondary || theme.colors.text,
     opacity: 0.7,
   },
-  debugSection: {
-    backgroundColor: theme.colors.surface,
-    padding: 16,
-    borderRadius: 12,
-    marginBottom: 20,
-    borderWidth: 1,
-    borderColor: theme.colors.primary,
-  },
-  debugTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: theme.colors.primary,
-    marginBottom: 12,
-  },
-  debugText: {
-    fontSize: 14,
-    color: theme.colors.text,
-    marginBottom: 4,
-  },
+
   botManagementRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -1101,7 +1184,33 @@ const createStyles = (theme: any) => StyleSheet.create({
   disabledButton: {
     opacity: 0.6,
   },
-
+  // Tab styles
+  tabsContainer: {
+    flexDirection: 'row',
+    backgroundColor: theme.colors.surface,
+    borderRadius: 12,
+    marginHorizontal: 16,
+    marginBottom: 20,
+    padding: 4,
+  },
+  tab: {
+    flex: 1,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  activeTab: {
+    backgroundColor: theme.colors.primary,
+  },
+  tabText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: theme.colors.textSecondary,
+  },
+  activeTabText: {
+    color: 'white',
+  },
 });
 
 export default SinglesRoundRobinScreen;
