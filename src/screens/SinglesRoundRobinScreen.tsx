@@ -163,8 +163,7 @@ const SinglesRoundRobinScreen: React.FC = () => {
             style: 'destructive',
             onPress: () => {
               console.log('Starting tournament early...');
-              // TODO: Implement tournament start logic
-              Alert.alert('Tournament Started', 'The tournament has been started early!');
+              startTournamentAndNavigate();
             }
           }
         ]
@@ -172,8 +171,37 @@ const SinglesRoundRobinScreen: React.FC = () => {
     } else {
       // Tournament time has arrived - start normally
       console.log('Starting tournament on time...');
-      // TODO: Implement tournament start logic
-      Alert.alert('Tournament Started', 'The tournament has been started!');
+      startTournamentAndNavigate();
+    }
+  };
+
+  const startTournamentAndNavigate = () => {
+    if (!tournament) return;
+    
+    console.log('Starting tournament with players:', tournament.players);
+    console.log('Tournament before update:', tournament);
+    
+    try {
+      // Обновляем ТОЛЬКО статус турнира, не трогая остальные данные
+      console.log('Updating tournament status to IN_PROGRESS');
+      
+      updateTournament(tournament.id, {
+        status: TournamentStatus.IN_PROGRESS,
+      });
+      
+      // Показываем успешное сообщение
+      showSuccess('Tournament started successfully!');
+      
+      // Переходим на экран матчей
+      setTimeout(() => {
+        (navigation as any).navigate('TournamentMatches', { 
+          tournamentId: tournament.id 
+        });
+      }, 1000);
+      
+    } catch (error) {
+      console.error('Failed to start tournament:', error);
+      showError('Failed to start tournament. Please try again.');
     }
   };
 
@@ -276,25 +304,56 @@ const SinglesRoundRobinScreen: React.FC = () => {
   const allPlayers = tournament.players;
 
   // Bot management functions (Dev/Test Only)
-  const addTestBot = () => {
-    if (allPlayers.length + testBots.length >= tournament.maxParticipants) return;
+  const addTestBot = async () => {
+    if (!tournament) return;
+    if (allPlayers.length >= tournament.maxParticipants) return;
     
-    const newBot = {
-      id: `testBot${Date.now()}`,
-      firstName: `Test${testBots.length + 1}`,
-      lastName: 'Bot',
-      isBot: true,
-      matchesWon: 0,
-      matchesLost: 0,
-      pointsWon: 0,
-      pointsLost: 0,
-    };
+    const botNumber = getBotCount() + 1;
+    const newBotId = `testBot${Date.now()}_${botNumber}`;
     
-    setTestBots([...testBots, newBot]);
+    console.log('Adding bot with ID:', newBotId);
+    console.log('Current tournament players:', tournament.players);
+    console.log('Current participants:', tournament.currentParticipants);
+    
+    try {
+      // Добавляем бота в турнир
+      const updatedPlayers = [...tournament.players, newBotId];
+      const updatedCurrentParticipants = tournament.currentParticipants + 1;
+      
+      console.log('Updated players array:', updatedPlayers);
+      console.log('Updated participants count:', updatedCurrentParticipants);
+      
+      await updateTournament(tournament.id, {
+        players: updatedPlayers,
+        currentParticipants: updatedCurrentParticipants,
+      });
+      
+      console.log('Tournament updated in store');
+      
+      // Обновляем локальное состояние
+      setTournament({
+        ...tournament,
+        players: updatedPlayers,
+        currentParticipants: updatedCurrentParticipants,
+      });
+      
+      console.log('Local state updated');
+      
+      // Reload tournaments
+      await loadTournaments();
+      
+      console.log('Tournaments reloaded');
+      
+      showSuccess('Bot added successfully!');
+    } catch (error) {
+      console.error('Error adding bot:', error);
+      showError('Failed to add bot. Please try again.');
+    }
   };
 
   const getBotCount = () => {
-    return testBots.length;
+    // Считаем ботов по ID (начинаются с 'testBot')
+    return allPlayers.filter(playerId => playerId.startsWith('testBot')).length;
   };
 
   const handlePlayerPress = (player: any) => {
@@ -356,8 +415,25 @@ const SinglesRoundRobinScreen: React.FC = () => {
     setSelectedPlayer(null);
   };
   
-  const demoPlayers = [
-    ...allPlayers.map((playerId, index) => {
+  const demoPlayers = allPlayers.map((playerId, index) => {
+    // Проверяем, это бот или реальный игрок
+    const isBot = playerId.startsWith('testBot');
+    
+    if (isBot) {
+      // Для ботов создаем данные на основе ID
+      const botNumber = playerId.split('_')[1] || '1';
+      return {
+        id: playerId,
+        firstName: `Test${botNumber}`,
+        lastName: 'Bot',
+        isBot: true,
+        matchesWon: 0,
+        matchesLost: 0,
+        pointsWon: 0,
+        pointsLost: 0,
+      };
+    } else {
+      // Для реальных игроков берем данные из getPlayerData
       const playerData = getPlayerData(playerId);
       return {
         id: playerId,
@@ -369,9 +445,8 @@ const SinglesRoundRobinScreen: React.FC = () => {
         pointsWon: 0,
         pointsLost: 0,
       };
-    }),
-    ...testBots
-  ];
+    }
+  });
 
   const isUserJoined = tournament.players.includes(user?.id || '');
   const isCreator = tournament.createdBy === user?.id;
@@ -394,6 +469,13 @@ const SinglesRoundRobinScreen: React.FC = () => {
     canJoin,
     canLeave,
     isCreator
+  });
+  
+  console.log('Demo Players Debug:', {
+    demoPlayersLength: demoPlayers.length,
+    canStartTournament,
+    allPlayersLength: allPlayers.length,
+    demoPlayers: demoPlayers.map(p => ({ id: p.id, name: `${p.firstName} ${p.lastName}` }))
   });
   
   console.log('Button visibility:', {
@@ -431,7 +513,7 @@ const SinglesRoundRobinScreen: React.FC = () => {
         </LinearGradient>
       </View>
 
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView style={styles.content} showsVerticalScrollIndicator={false} nestedScrollEnabled={true}>
                   {/* Tournament Info */}
           <View style={styles.infoSection}>
             <View style={styles.infoRow}>
@@ -558,8 +640,8 @@ const SinglesRoundRobinScreen: React.FC = () => {
             </TouchableOpacity>
           )}
 
-          {/* Start Tournament Button - only show to creator if tournament hasn't started */}
-          {isCreator && tournament && tournament.status === TournamentStatus.REGISTRATION_OPEN && (
+          {/* Start Tournament Button - show to creator if tournament can be started */}
+          {isCreator && tournament && tournament.status !== TournamentStatus.COMPLETED && tournament.status !== TournamentStatus.CANCELLED && (
             <TouchableOpacity
               style={[
                 styles.actionButton, 
@@ -615,7 +697,12 @@ const SinglesRoundRobinScreen: React.FC = () => {
         {/* Tournament Table */}
         <View style={styles.tableSection}>
           {demoPlayers.length > 0 ? (
-            <TournamentTable players={demoPlayers} onPlayerPress={handlePlayerPress} />
+            <TournamentTable 
+              players={demoPlayers} 
+              onDeletePlayer={handleDeletePlayer}
+              onViewProfile={handleViewProfile}
+              isCreator={isCreator}
+            />
           ) : (
             <View style={styles.emptyTable}>
               <Ionicons name="people-outline" size={48} color={theme.colors.text} />

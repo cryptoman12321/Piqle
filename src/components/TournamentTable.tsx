@@ -3,9 +3,9 @@ import {
   View,
   Text,
   StyleSheet,
-  ScrollView,
   TouchableOpacity,
 } from 'react-native';
+import { SwipeListView } from 'react-native-swipe-list-view';
 import { useThemeStore } from '../stores/themeStore';
 
 interface TournamentPlayer {
@@ -20,14 +20,46 @@ interface TournamentPlayer {
 
 interface TournamentTableProps {
   players: TournamentPlayer[];
-  onPlayerPress?: (player: TournamentPlayer) => void;
+  onDeletePlayer?: (playerId: string) => void;
+  onViewProfile?: (playerId: string) => void;
+  isCreator?: boolean;
 }
 
-const TournamentTable: React.FC<TournamentTableProps> = ({ players, onPlayerPress }) => {
+const TournamentTable: React.FC<TournamentTableProps> = ({ players, onDeletePlayer, onViewProfile, isCreator }) => {
   const { theme } = useThemeStore();
 
-  // Простая сортировка по ID для отладки
-  const sortedPlayers = [...players].sort((a, b) => a.id.localeCompare(b.id));
+  // Умная сортировка по турнирным правилам
+  const sortedPlayers = [...players].sort((a, b) => {
+    // 1. Сортируем по разнице очков (по убыванию) - ОСНОВНОЙ КРИТЕРИЙ
+    const aDiff = a.pointsWon - a.pointsLost;
+    const bDiff = b.pointsWon - b.pointsLost;
+    if (aDiff !== bDiff) {
+      return bDiff - aDiff;
+    }
+    
+    // 2. При равной разнице - по выигранным матчам (по убыванию)
+    if (a.matchesWon !== b.matchesWon) {
+      return b.matchesWon - a.matchesWon;
+    }
+    
+    // 3. При равных матчах - по проигранным матчам (по возрастанию)
+    if (a.matchesLost !== b.matchesLost) {
+      return a.matchesLost - b.matchesLost;
+    }
+    
+    // 4. При равных матчах - по выигранным очкам (по убыванию)
+    if (a.pointsWon !== b.pointsWon) {
+      return b.pointsWon - a.pointsWon;
+    }
+    
+    // 5. При равных очках - по проигранным очкам (по возрастанию)
+    if (a.pointsLost !== b.pointsLost) {
+      return a.pointsLost - b.pointsLost;
+    }
+    
+    // 6. При абсолютном равенстве - игроки делят место (возвращаем 0)
+    return 0;
+  });
 
   const styles = createStyles(theme);
 
@@ -44,57 +76,102 @@ const TournamentTable: React.FC<TournamentTableProps> = ({ players, onPlayerPres
       </View>
 
       {/* Players */}
-      <ScrollView style={styles.playersContainer}>
-        {sortedPlayers.map((player, index) => {
+      <SwipeListView
+        data={sortedPlayers}
+        keyExtractor={(item) => item.id}
+        renderItem={(data, index) => {
+          const player = data.item;
           const matchesDiff = player.matchesWon - player.matchesLost;
           const pointsDiff = player.pointsWon - player.pointsLost;
           
+          // Определяем позицию с учетом равных игроков
+          let position = data.index + 1;
+          if (data.index > 0) {
+            const prevPlayer = sortedPlayers[data.index - 1];
+            const prevMatchesDiff = prevPlayer.matchesWon - prevPlayer.matchesLost;
+            const prevPointsDiff = prevPlayer.pointsWon - prevPlayer.pointsLost;
+            
+            // Если текущий игрок равен предыдущему по всем критериям, то позиция та же
+            if (pointsDiff === prevPointsDiff && 
+                player.matchesWon === prevPlayer.matchesWon && 
+                player.matchesLost === prevPlayer.matchesLost &&
+                player.pointsWon === prevPlayer.pointsWon &&
+                player.pointsLost === prevPlayer.pointsLost) {
+              position = data.index; // Та же позиция что и у предыдущего
+            }
+          }
+          
           return (
-            <TouchableOpacity 
-              key={player.id} 
-              style={styles.playerRow}
-              onPress={() => onPlayerPress?.(player)}
-              activeOpacity={0.7}
-            >
-              <View style={[styles.playerCell, styles.playerNameCell]}>
-                <Text style={styles.position}>#{index + 1}</Text>
-                <View style={styles.nameContainer}>
-                  <Text style={styles.playerName}>
-                    {player.firstName} {player.lastName}
+            <View style={styles.playerRow}>
+              <View style={styles.playerContent}>
+                <View style={[styles.playerCell, styles.playerNameCell]}>
+                  <Text style={styles.position}>#{position}</Text>
+                  <View style={styles.nameContainer}>
+                    <Text style={styles.playerName}>
+                      {player.firstName} {player.lastName}
+                    </Text>
+                  </View>
+                </View>
+                
+                <View style={[styles.playerCell, styles.matchesCell]}>
+                  <Text style={styles.matchesText}>
+                    {player.matchesWon}-{player.matchesLost}
+                  </Text>
+                  <Text style={styles.matchesDiff}>
+                    {matchesDiff > 0 ? `+${matchesDiff}` : matchesDiff}
+                  </Text>
+                </View>
+                
+                <View style={[styles.playerCell, styles.pointsCell]}>
+                  <Text style={styles.pointsText}>
+                    {player.pointsWon}-{player.pointsLost}
+                  </Text>
+                  <Text style={styles.pointsDiff}>
+                    {pointsDiff > 0 ? `+${pointsDiff}` : pointsDiff}
+                  </Text>
+                </View>
+                
+                <View style={[styles.playerCell, styles.handicapCell]}>
+                  <Text style={[
+                    styles.handicapText,
+                    { color: pointsDiff > 0 ? theme.colors.success : pointsDiff < 0 ? theme.colors.error : theme.colors.text }
+                  ]}>
+                    {pointsDiff > 0 ? `+${pointsDiff}` : pointsDiff}
                   </Text>
                 </View>
               </View>
-              
-              <View style={[styles.playerCell, styles.matchesCell]}>
-                <Text style={styles.matchesText}>
-                  {player.matchesWon}-{player.matchesLost}
-                </Text>
-                <Text style={styles.matchesDiff}>
-                  {matchesDiff > 0 ? `+${matchesDiff}` : matchesDiff}
-                </Text>
-              </View>
-              
-              <View style={[styles.playerCell, styles.pointsCell]}>
-                <Text style={styles.pointsText}>
-                  {player.pointsWon}-{player.pointsLost}
-                </Text>
-                <Text style={styles.pointsDiff}>
-                  {pointsDiff > 0 ? `+${pointsDiff}` : pointsDiff}
-                </Text>
-              </View>
-              
-              <View style={[styles.playerCell, styles.handicapCell]}>
-                <Text style={[
-                  styles.handicapText,
-                  { color: pointsDiff > 0 ? theme.colors.success : pointsDiff < 0 ? theme.colors.error : theme.colors.text }
-                ]}>
-                  {pointsDiff > 0 ? `+${pointsDiff}` : pointsDiff}
-                </Text>
-              </View>
-            </TouchableOpacity>
+            </View>
           );
-        })}
-      </ScrollView>
+        }}
+        renderHiddenItem={(data, index) => {
+          const player = data.item;
+          return (
+            <View style={styles.hiddenItem}>
+              <TouchableOpacity
+                style={styles.profileButton}
+                onPress={() => onViewProfile?.(player.id)}
+              >
+                <Text style={styles.profileButtonText}>Profile</Text>
+              </TouchableOpacity>
+              
+              {isCreator && (
+                <TouchableOpacity
+                  style={styles.deleteButton}
+                  onPress={() => onDeletePlayer?.(player.id)}
+                >
+                  <Text style={styles.deleteButtonText}>Delete</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+          );
+        }}
+        rightOpenValue={-120}
+        disableRightSwipe
+        closeOnRowPress
+        closeOnScroll
+        closeOnRowOpen
+        swipeToOpenPercent={30}
+      />
     </View>
   );
 };
@@ -201,6 +278,45 @@ const createStyles = (theme: any) => StyleSheet.create({
   handicapText: {
     fontSize: 18,
     fontWeight: 'bold',
+  },
+  playerContent: {
+    flex: 1,
+    flexDirection: 'row',
+  },
+  actionButtons: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  profileButton: {
+    backgroundColor: theme.colors.primary,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 6,
+  },
+  profileButtonText: {
+    color: 'white',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  deleteButton: {
+    backgroundColor: theme.colors.error || '#ff4444',
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 6,
+  },
+  deleteButtonText: {
+    color: 'white',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  hiddenItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    backgroundColor: theme.colors.surface,
+    paddingRight: 16,
+    height: '100%',
   },
 });
 
