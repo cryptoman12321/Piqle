@@ -1,8 +1,8 @@
-import { AppRegistry } from 'react-native';
-import App from './App';
+import React from 'react';
+import { createRoot } from 'react-dom/client';
+import App from './src/App.web';
 
-AppRegistry.registerComponent('main', () => App);
-AppRegistry.runApplication('main', {
-  rootTag: document.getElementById('root')
-});
+const container = document.getElementById('root');
+const root = createRoot(container);
+root.render(<App />);
 

@@ -1,22 +1,16 @@
 const createExpoWebpackConfigAsync = require('@expo/webpack-config');
+const HtmlWebpackPlugin = require('html-webpack-plugin');
 
 module.exports = async function (env, argv) {
   const config = await createExpoWebpackConfigAsync(env, argv);
-  
-  // Add React Native Web alias
-  config.resolve.alias = {
-    ...config.resolve.alias,
-    'react-native$': 'react-native-web',
 
-  };
-
-  // Add fallbacks for Node.js modules
-  config.resolve.fallback = {
-    ...config.resolve.fallback,
-    "crypto": require.resolve("crypto-browserify"),
-    "stream": require.resolve("stream-browserify"),
-    "buffer": require.resolve("buffer"),
-  };
+  // Add HtmlWebpackPlugin
+  config.plugins.push(
+    new HtmlWebpackPlugin({
+      template: './web/index.html',
+      filename: 'index.html',
+    })
+  );
 
   return config;
 };

@@ -1,0 +1,22 @@
+{
+  "buildCommand": "npm run build:web",
+  "outputDirectory": "web-build",
+  "framework": "expo",
+  "installCommand": "npm install",
+  "devCommand": "npm run web",
+  "builds": [
+    {
+      "src": "package.json",
+      "use": "@vercel/static-build",
+      "config": {
+        "distDir": "web-build"
+      }
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "/index.html"
+    }
+  ]
+}
