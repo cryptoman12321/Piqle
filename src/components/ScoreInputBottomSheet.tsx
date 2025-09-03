@@ -16,6 +16,7 @@ interface ScoreInputBottomSheetProps {
   onClose: () => void;
   onSave: (matchId: string, scores: { game1: { score1: number; score2: number }[] }) => void;
   match: any;
+  tournament: any;
   getPlayerDisplayName: (playerId: string) => string;
 }
 
@@ -24,6 +25,7 @@ const ScoreInputBottomSheet: React.FC<ScoreInputBottomSheetProps> = ({
   onClose,
   onSave,
   match,
+  tournament,
   getPlayerDisplayName,
 }) => {
   const { theme } = useThemeStore();
@@ -117,7 +119,10 @@ const ScoreInputBottomSheet: React.FC<ScoreInputBottomSheetProps> = ({
         >
           {/* Заголовок */}
           <View style={styles.header}>
-            <Text style={styles.title}>Update Score</Text>
+            <Text style={styles.title}>
+              {tournament?.status === 'COMPLETED' ? 'View Results' : 
+               match.status === 'completed' || match.status === 'COMPLETED' ? 'Edit Score' : 'Update Score'}
+            </Text>
             <TouchableOpacity onPress={onClose} style={styles.closeButton}>
               <Ionicons name="close" size={24} color={theme.colors.text} />
             </TouchableOpacity>

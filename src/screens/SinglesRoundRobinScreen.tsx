@@ -270,6 +270,46 @@ const SinglesRoundRobinScreen: React.FC = () => {
     }
   };
 
+  const handleEditScore = (matchId: string, scores: { game1: { score1: number; score2: number }[] }) => {
+    if (!tournament) return;
+    
+    const gameScores = scores.game1;
+    const totalScore1 = gameScores.reduce((sum, game) => sum + game.score1, 0);
+    const totalScore2 = gameScores.reduce((sum, game) => sum + game.score2, 0);
+    
+    try {
+      // Обновляем матч в bracket турнира
+      const updatedTournament = { ...tournament };
+      const bracket = updatedTournament.brackets?.[0];
+      
+      if (bracket && bracket.matches) {
+        const matchToUpdate = bracket.matches.find((m: any) => m.id === matchId);
+        
+        if (matchToUpdate) {
+          matchToUpdate.score1 = totalScore1;
+          matchToUpdate.score2 = totalScore2;
+          matchToUpdate.status = MatchStatus.COMPLETED;
+          matchToUpdate.winner = totalScore1 > totalScore2 ? matchToUpdate.player1 : matchToUpdate.player2;
+          
+          // Обновляем турнир в сторе
+          updateTournament(tournament.id, updatedTournament);
+          
+          // Обновляем локальное состояние
+          setTournament(updatedTournament);
+          
+          showSuccess(`Score edited: ${totalScore1} - ${totalScore2} (${gameScores.length} games)`);
+        } else {
+          showError('Match not found in tournament');
+        }
+      } else {
+        showError('Tournament bracket not found');
+      }
+    } catch (error) {
+      console.error('Failed to edit match score:', error);
+      showError('Failed to edit score. Please try again.');
+    }
+  };
+
   const handleLeaveTournament = async () => {
     if (!tournament || !user) return;
 
@@ -760,7 +800,7 @@ const SinglesRoundRobinScreen: React.FC = () => {
         </View>
 
         {/* Tournament Tabs */}
-        {tournament?.status === TournamentStatus.IN_PROGRESS && (
+        {(tournament?.status === TournamentStatus.IN_PROGRESS || tournament?.status === TournamentStatus.COMPLETED) && (
           <View style={styles.tabsContainer}>
             <TouchableOpacity
               style={[
@@ -795,11 +835,12 @@ const SinglesRoundRobinScreen: React.FC = () => {
         )}
 
         {/* Tournament Content */}
-        {activeTab === 'rounds' && tournament?.status === TournamentStatus.IN_PROGRESS ? (
+        {activeTab === 'rounds' && (tournament?.status === TournamentStatus.IN_PROGRESS || tournament?.status === TournamentStatus.COMPLETED) ? (
           // Показываем раунды
           <TournamentRounds 
             tournament={tournament}
             onUpdateScore={handleUpdateScore}
+            onEditScore={handleEditScore}
           />
         ) : activeTab === 'standings' ? (
           // Показываем таблицу участников
@@ -841,6 +882,58 @@ const SinglesRoundRobinScreen: React.FC = () => {
               </LinearGradient>
             </TouchableOpacity>
           )}
+          
+          {isCreator && tournament?.status === TournamentStatus.IN_PROGRESS && (() => {
+            // Проверяем завершены ли все матчи
+            const allMatchesCompleted = tournament?.brackets?.[0]?.matches?.every((match: any) => 
+              match.status === 'COMPLETED' || match.status === 'completed'
+            ) || false;
+            
+            // Показываем кнопку только если все матчи завершены
+            if (!allMatchesCompleted) return null;
+            
+            return (
+              <TouchableOpacity
+                style={[styles.bottomActionButton, styles.finishButton]}
+                onPress={() => {
+                  Alert.alert(
+                    'Finish Tournament',
+                    'Are you sure you want to finish this tournament? This action cannot be undone.',
+                    [
+                      { text: 'Cancel', style: 'cancel' },
+                      {
+                        text: 'Finish',
+                        style: 'default',
+                        onPress: async () => {
+                          try {
+                            await updateTournament(tournament.id, {
+                              status: TournamentStatus.COMPLETED,
+                            });
+                            showSuccess('Tournament finished successfully!');
+                            // Обновляем локальное состояние
+                            setTournament({
+                              ...tournament,
+                              status: TournamentStatus.COMPLETED,
+                            });
+                          } catch (error) {
+                            showError('Failed to finish tournament. Please try again.');
+                          }
+                        }
+                      }
+                    ]
+                  );
+                }}
+              >
+                <LinearGradient
+                  colors={[theme.colors.success || '#10B981', '#059669']}
+                  style={styles.buttonGradient}
+                >
+                  <Ionicons name="trophy" size={20} color="white" />
+                  <Text style={styles.buttonText}>Finish Tournament</Text>
+                </LinearGradient>
+              </TouchableOpacity>
+            );
+          })()}
           
           {isCreator && (
             <TouchableOpacity
@@ -1024,6 +1117,9 @@ const createStyles = (theme: any) => StyleSheet.create({
   },
   bottomDeleteButton: {
     // Default styles
+  },
+  finishButton: {
+    backgroundColor: theme.colors.success || '#10B981',
   },
   buttonGradient: {
     flexDirection: 'row',

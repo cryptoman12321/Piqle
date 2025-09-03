@@ -13,11 +13,13 @@ import ScoreInputBottomSheet from './ScoreInputBottomSheet';
 interface TournamentRoundsProps {
   tournament: any;
   onUpdateScore: (matchId: string, scores: { game1: { score1: number; score2: number }[] }) => void;
+  onEditScore: (matchId: string, scores: { game1: { score1: number; score2: number }[] }) => void;
 }
 
 const TournamentRounds: React.FC<TournamentRoundsProps> = ({ 
   tournament, 
-  onUpdateScore 
+  onUpdateScore,
+  onEditScore
 }) => {
   const { theme } = useThemeStore();
   const [expandedRounds, setExpandedRounds] = useState<Set<number>>(new Set([1])); // Первый раунд открыт по умолчанию
@@ -87,12 +89,12 @@ const TournamentRounds: React.FC<TournamentRoundsProps> = ({
     
     // Заполняем раунды по одному
     for (let round = 1; round <= totalRounds; round++) {
-      // Создаем раунд
+      // Создаем раунд (статус будет установлен после заполнения матчами)
       rounds[round - 1] = {
         roundNumber: round,
         matches: [],
-        status: round === 1 ? 'in_progress' : 'pending',
-        isActive: round === 1,
+        status: 'pending', // Временно pending, обновим после
+        isActive: false,   // Временно false, обновим после
       };
       
       // Ищем матчи для текущего раунда
@@ -153,6 +155,40 @@ const TournamentRounds: React.FC<TournamentRoundsProps> = ({
             matchesInRound++;
           }
         }
+      }
+      
+      // После заполнения раунда матчами, определяем его статус
+      const roundMatches = rounds[round - 1].matches;
+      if (roundMatches.length > 0) {
+        const completedMatches = roundMatches.filter((match: any) => 
+          match.status === 'completed' || match.status === 'COMPLETED'
+        );
+        const totalMatches = roundMatches.length;
+        
+        if (completedMatches.length === totalMatches) {
+          // Все матчи завершены
+          rounds[round - 1].status = 'completed';
+          rounds[round - 1].isActive = false;
+        } else if (completedMatches.length > 0) {
+          // Есть завершенные матчи, но не все
+          rounds[round - 1].status = 'in_progress';
+          rounds[round - 1].isActive = true;
+        } else {
+          // Ни одного завершенного матча
+          rounds[round - 1].status = 'pending';
+          rounds[round - 1].isActive = false;
+        }
+      }
+    }
+    
+    // Определяем активный раунд (первый с pending или in_progress статусом)
+    let activeRoundFound = false;
+    for (let i = 0; i < rounds.length; i++) {
+      if (!activeRoundFound && (rounds[i].status === 'pending' || rounds[i].status === 'in_progress')) {
+        rounds[i].isActive = true;
+        activeRoundFound = true;
+      } else {
+        rounds[i].isActive = false;
       }
     }
 
@@ -217,7 +253,9 @@ const TournamentRounds: React.FC<TournamentRoundsProps> = ({
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Tournament Rounds</Text>
+      <Text style={styles.title}>
+        {tournament?.status === 'COMPLETED' ? 'Tournament Results' : 'Tournament Rounds'}
+      </Text>
       
       <ScrollView style={styles.roundsContainer} showsVerticalScrollIndicator={false}>
         {rounds.map((round) => (
@@ -233,12 +271,14 @@ const TournamentRounds: React.FC<TournamentRoundsProps> = ({
                 <Text style={[
                   styles.roundStatus,
                   { 
-                    color: round.status === 'completed' ? theme.colors.success : 
+                    color: round.isActive ? theme.colors.primary : 
+                           round.status === 'completed' ? theme.colors.success : 
                            round.status === 'in_progress' ? theme.colors.warning : 
                            theme.colors.textSecondary 
                   }
                 ]}>
-                  {round.status === 'completed' ? 'Completed' :
+                  {round.isActive ? 'Active' :
+                   round.status === 'completed' ? 'Completed' :
                    round.status === 'in_progress' ? 'In Progress' : 'Pending'}
                 </Text>
               </View>
@@ -291,7 +331,7 @@ const TournamentRounds: React.FC<TournamentRoundsProps> = ({
                          match.status === 'in_progress' ? 'In Progress' : 'Pending'}
                       </Text>
                       
-                      {match.status === 'pending' && (
+                      {match.status === 'pending' && tournament?.status !== 'COMPLETED' && (
                         <TouchableOpacity
                           style={styles.updateScoreButton}
                           onPress={() => {
@@ -301,6 +341,26 @@ const TournamentRounds: React.FC<TournamentRoundsProps> = ({
                         >
                           <Text style={styles.updateScoreButtonText}>Update Score</Text>
                         </TouchableOpacity>
+                      )}
+                      
+                      {(match.status === 'completed' || match.status === 'COMPLETED') && tournament?.status !== 'COMPLETED' && (
+                        <TouchableOpacity
+                          style={[styles.updateScoreButton, { backgroundColor: theme.colors.warning || '#F59E0B' }]}
+                          onPress={() => {
+                            setSelectedMatch(match);
+                            setShowScoreSheet(true);
+                          }}
+                        >
+                          <Text style={styles.updateScoreButtonText}>Edit Score</Text>
+                        </TouchableOpacity>
+                      )}
+                      
+                      {tournament?.status === 'COMPLETED' && (
+                        <View style={styles.completedMatchInfo}>
+                          <Text style={[styles.statusText, { color: theme.colors.success }]}>
+                            Final Result
+                          </Text>
+                        </View>
                       )}
                     </View>
                   </View>
@@ -319,9 +379,20 @@ const TournamentRounds: React.FC<TournamentRoundsProps> = ({
           setSelectedMatch(null);
         }}
         onSave={(matchId, scores) => {
-          onUpdateScore(matchId, scores);
+          // Если турнир завершен, используем onEditScore, иначе onUpdateScore
+          if (tournament?.status === 'COMPLETED') {
+            onEditScore(matchId, scores);
+          } else {
+            // Для активного турнира: если матч уже завершен, используем onEditScore
+            if (selectedMatch && (selectedMatch.status === 'completed' || selectedMatch.status === 'COMPLETED')) {
+              onEditScore(matchId, scores);
+            } else {
+              onUpdateScore(matchId, scores);
+            }
+          }
         }}
         match={selectedMatch}
+        tournament={tournament}
         getPlayerDisplayName={getPlayerDisplayName}
       />
     </View>
@@ -446,6 +517,10 @@ const createStyles = (theme: any) => StyleSheet.create({
     color: 'white',
     fontSize: 12,
     fontWeight: '600',
+  },
+  completedMatchInfo: {
+    alignItems: 'center',
+    paddingVertical: 4,
   },
 
 });

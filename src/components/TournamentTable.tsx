@@ -49,7 +49,7 @@ const TournamentTable: React.FC<TournamentTableProps> = ({ tournament, onDeleteP
         'currentUser': { firstName: 'John', lastName: 'Doe' },
         'user1': { firstName: 'Sol', lastName: 'Shats' },
         'user2': { firstName: 'Vlad', lastName: 'Shetinin' },
-        'user3': { firstName: 'Alex', lastName: 'Johnson' },
+        'user3': { firstName: 'Andrew', lastName: 'Smith' },
         'user4': { firstName: 'Maria', lastName: 'Garcia' },
         'user5': { firstName: 'David', lastName: 'Brown' },
         'user6': { firstName: 'Sarah', lastName: 'Wilson' },
