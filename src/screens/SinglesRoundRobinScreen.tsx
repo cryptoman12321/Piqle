@@ -310,6 +310,104 @@ const SinglesRoundRobinScreen: React.FC = () => {
     }
   };
 
+  // Функция для отображения имени игрока
+  const getPlayerDisplayName = (playerId: string) => {
+    if (playerId.startsWith('testBot')) {
+      // Извлекаем номер из ID бота
+      const botNumber = playerId.replace('testBot', '');
+      const botNames = [
+        'Alpha', 'Beta', 'Gamma', 'Delta', 'Epsilon', 'Zeta', 'Eta', 'Theta',
+        'Iota', 'Kappa', 'Lambda', 'Mu', 'Nu', 'Xi', 'Omicron', 'Pi'
+      ];
+      
+      if (botNumber) {
+        const index = parseInt(botNumber) - 1;
+        if (index >= 0 && index < botNames.length) {
+          return `Bot ${botNames[index]}`;
+        }
+      }
+      return `Bot ${botNumber || 'X'}`;
+    } else {
+      // Для реальных игроков используем те же данные что и в TournamentRounds
+      const knownUsers: { [key: string]: { firstName: string; lastName: string } } = {
+        'currentUser': { firstName: 'John', lastName: 'Doe' },
+        'user1': { firstName: 'Sol', lastName: 'Shats' },
+        'user2': { firstName: 'Vlad', lastName: 'Shetinin' },
+        'user3': { firstName: 'Andrew', lastName: 'Smith' },
+        'user4': { firstName: 'Maria', lastName: 'Garcia' },
+        'user5': { firstName: 'David', lastName: 'Brown' },
+        'user6': { firstName: 'Sarah', lastName: 'Wilson' },
+        'user7': { firstName: 'Michael', lastName: 'Davis' },
+        'user8': { firstName: 'Emma', lastName: 'Taylor' },
+      };
+      
+      const user = knownUsers[playerId];
+      if (user) {
+        return `${user.firstName} ${user.lastName}`;
+      }
+      
+      // Fallback для неизвестных пользователей
+      return `${playerId} User`;
+    }
+  };
+
+  // Функция для перевода игрока из waiting list в основной список
+  const handlePromoteFromWaitingList = (playerId: string) => {
+    if (!tournament) return;
+    
+    try {
+      const updatedTournament = { ...tournament };
+      
+      // Убираем игрока из waiting list
+      updatedTournament.waitingList = updatedTournament.waitingList.filter(id => id !== playerId);
+      
+      // Добавляем игрока в основной список
+      updatedTournament.players.push(playerId);
+      updatedTournament.currentParticipants = updatedTournament.players.length;
+      
+      // Обновляем турнир
+      updateTournament(tournament.id, updatedTournament);
+      setTournament(updatedTournament);
+      
+      showSuccess(`${getPlayerDisplayName(playerId)} promoted from waiting list!`);
+    } catch (error) {
+      console.error('Failed to promote player:', error);
+      showError('Failed to promote player. Please try again.');
+    }
+  };
+
+  // Функция для присоединения к waiting list
+  const handleJoinWaitingList = () => {
+    if (!tournament || !user) return;
+    
+    try {
+      const updatedTournament = { ...tournament };
+      
+      // Инициализируем waiting list если его нет
+      if (!updatedTournament.waitingList) {
+        updatedTournament.waitingList = [];
+      }
+      
+      // Проверяем, не находится ли пользователь уже в waiting list
+      if (updatedTournament.waitingList.includes(user.id)) {
+        showError('You are already on the waiting list!');
+        return;
+      }
+      
+      // Добавляем пользователя в waiting list
+      updatedTournament.waitingList.push(user.id);
+      
+      // Обновляем турнир
+      updateTournament(tournament.id, updatedTournament);
+      setTournament(updatedTournament);
+      
+      showSuccess('You have been added to the waiting list!');
+    } catch (error) {
+      console.error('Failed to join waiting list:', error);
+      showError('Failed to join waiting list. Please try again.');
+    }
+  };
+
   const handleLeaveTournament = async () => {
     if (!tournament || !user) return;
 
@@ -411,7 +509,6 @@ const SinglesRoundRobinScreen: React.FC = () => {
   // Bot management functions (Dev/Test Only)
   const addTestBot = async () => {
     if (!tournament) return;
-    if (allPlayers.length >= tournament.maxParticipants) return;
     
     const botNumber = getBotCount() + 1;
     const newBotId = `testBot${Date.now()}_${botNumber}`;
@@ -421,35 +518,29 @@ const SinglesRoundRobinScreen: React.FC = () => {
     console.log('Current participants:', tournament.currentParticipants);
     
     try {
-      // Добавляем бота в турнир
-      const updatedPlayers = [...tournament.players, newBotId];
-      const updatedCurrentParticipants = tournament.currentParticipants + 1;
+      let updatedTournament = { ...tournament };
       
-      console.log('Updated players array:', updatedPlayers);
-      console.log('Updated participants count:', updatedCurrentParticipants);
+      if (allPlayers.length < tournament.maxParticipants) {
+        // Если есть место в основном списке, добавляем туда
+        updatedTournament.players = [...tournament.players, newBotId];
+        updatedTournament.currentParticipants = tournament.currentParticipants + 1;
+      } else {
+        // Если основное место заполнено, добавляем в waiting list
+        if (!updatedTournament.waitingList) {
+          updatedTournament.waitingList = [];
+        }
+        updatedTournament.waitingList.push(newBotId);
+        showSuccess(`Bot added to waiting list! (${updatedTournament.waitingList.length} in queue)`);
+      }
       
-      await updateTournament(tournament.id, {
-        players: updatedPlayers,
-        currentParticipants: updatedCurrentParticipants,
-      });
+      await updateTournament(tournament.id, updatedTournament);
+      setTournament(updatedTournament);
       
-      console.log('Tournament updated in store');
+      console.log('Updated tournament:', updatedTournament);
       
-      // Обновляем локальное состояние
-      setTournament({
-        ...tournament,
-        players: updatedPlayers,
-        currentParticipants: updatedCurrentParticipants,
-      });
-      
-      console.log('Local state updated');
-      
-      // Reload tournaments
-      await loadTournaments();
-      
-      console.log('Tournaments reloaded');
-      
-      showSuccess('Bot added successfully!');
+      if (allPlayers.length < tournament.maxParticipants) {
+        showSuccess('Bot added successfully!');
+      }
     } catch (error) {
       console.error('Error adding bot:', error);
       showError('Failed to add bot. Please try again.');
@@ -476,36 +567,25 @@ const SinglesRoundRobinScreen: React.FC = () => {
     }
 
     try {
-      // Проверяем, это бот или реальный игрок
-      const isBot = testBots.some(bot => bot.id === playerId);
+      const updatedTournament = { ...tournament };
       
-      if (isBot) {
-        // Удаляем бота из локального состояния
-        const updatedTestBots = testBots.filter(bot => bot.id !== playerId);
-        setTestBots(updatedTestBots);
-        showSuccess('Bot removed successfully!');
-      } else {
-        // Убираем реального игрока из турнира
-        const updatedPlayers = tournament.players.filter(id => id !== playerId);
-        const updatedCurrentParticipants = tournament.currentParticipants - 1;
-
-        await updateTournament(tournament.id, {
-          players: updatedPlayers,
-          currentParticipants: updatedCurrentParticipants,
-        });
-
-        // Обновляем локальное состояние
-        setTournament({
-          ...tournament,
-          players: updatedPlayers,
-          currentParticipants: updatedCurrentParticipants,
-        });
-
-        // Reload tournaments
-        await loadTournaments();
-        showSuccess('Player removed from tournament successfully!');
+      // Убираем игрока из основного списка
+      updatedTournament.players = tournament.players.filter(id => id !== playerId);
+      updatedTournament.currentParticipants = updatedTournament.players.length;
+      
+      // Если есть игроки в waiting list, переводим первого в основной список
+      if (updatedTournament.waitingList && updatedTournament.waitingList.length > 0) {
+        const promotedPlayer = updatedTournament.waitingList.shift()!;
+        updatedTournament.players.push(promotedPlayer);
+        updatedTournament.currentParticipants = updatedTournament.players.length;
+        
+        showSuccess(`${getPlayerDisplayName(promotedPlayer)} promoted from waiting list!`);
       }
-
+      
+      await updateTournament(tournament.id, updatedTournament);
+      setTournament(updatedTournament);
+      
+      showSuccess('Player removed successfully!');
       setShowPlayerModal(false);
       setSelectedPlayer(null);
     } catch (error) {
@@ -624,7 +704,7 @@ const SinglesRoundRobinScreen: React.FC = () => {
             <View style={styles.infoRow}>
               <Ionicons name="people" size={20} color={theme.colors.primary} />
               <Text style={styles.infoText}>
-                {tournament.currentParticipants}/{tournament.maxParticipants} participants
+                {tournament.currentParticipants}/{tournament.maxParticipants} registered
               </Text>
             </View>
             
@@ -696,6 +776,38 @@ const SinglesRoundRobinScreen: React.FC = () => {
               {tournament.location.city}
             </Text>
           </View>
+          
+          {/* Join Waiting List Button - показываем если турнир полный И пользователь НЕ в турнире */}
+          {tournament.players.length >= tournament.maxParticipants && !tournament.players.includes(user?.id || '') && (
+            <View style={styles.joinWaitingListSection}>
+              <View style={styles.joinWaitingListHeader}>
+                <Ionicons name="time-outline" size={20} color={theme.colors.warning} />
+                <Text style={styles.joinWaitingListTitle}>Tournament is Full</Text>
+              </View>
+              <Text style={styles.joinWaitingListSubtitle}>
+                All {tournament.maxParticipants} spots are taken. Join the waiting list to be notified when a spot opens up.
+              </Text>
+              <TouchableOpacity
+                style={styles.joinWaitingListButton}
+                onPress={() => handleJoinWaitingList()}
+              >
+                <Ionicons name="add-circle" size={20} color="white" />
+                <Text style={styles.joinWaitingListButtonText}>Join Waiting List</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+          
+          {/* Already on Waiting List - показываем если пользователь уже в Waiting List */}
+          {tournament.waitingList && tournament.waitingList.includes(user?.id || '') && (
+            <View style={[styles.joinWaitingListSection, styles.alreadyOnWaitingListSection]}>
+              <View style={styles.joinWaitingListHeader}>
+                <Ionicons name="checkmark-circle" size={20} color={theme.colors.success} />
+                <Text style={styles.joinWaitingListSubtitle}>
+                  You are currently #{tournament.waitingList.indexOf(user?.id || '') + 1} in the waiting list.
+                </Text>
+              </View>
+            </View>
+          )}
           
           <View style={styles.infoRow}>
             <Ionicons name="basketball" size={20} color={theme.colors.primary} />
@@ -842,14 +954,38 @@ const SinglesRoundRobinScreen: React.FC = () => {
             onUpdateScore={handleUpdateScore}
             onEditScore={handleEditScore}
           />
-        ) : activeTab === 'standings' ? (
-          // Показываем таблицу участников
+        ) : activeTab === 'standings' && (tournament?.status === TournamentStatus.IN_PROGRESS || tournament?.status === TournamentStatus.COMPLETED) ? (
+          // Показываем таблицу результатов для запущенного турнира
+          <View style={styles.tableSection}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Tournament Standings</Text>
+              <Text style={styles.sectionSubtitle}>Final results</Text>
+            </View>
+            {tournament && tournament.players && tournament.players.length > 0 ? (
+              <TournamentTable 
+                tournament={tournament}
+                onDeletePlayer={handleDeletePlayer}
+                onViewProfile={handleViewProfile}
+                onPromoteFromWaitingList={handlePromoteFromWaitingList}
+                isCreator={isCreator}
+              />
+            ) : (
+              <View style={styles.emptyTable}>
+                <Ionicons name="people-outline" size={48} color={theme.colors.text} />
+                <Text style={styles.emptyText}>No players to display</Text>
+                <Text style={styles.emptySubtext}>Tournament has no participants</Text>
+              </View>
+            )}
+          </View>
+        ) : tournament?.status === TournamentStatus.REGISTRATION_OPEN ? (
+          // Показываем таблицу участников до запуска турнира
           <View style={styles.tableSection}>
             {tournament && tournament.players && tournament.players.length > 0 ? (
               <TournamentTable 
                 tournament={tournament}
                 onDeletePlayer={handleDeletePlayer}
                 onViewProfile={handleViewProfile}
+                onPromoteFromWaitingList={handlePromoteFromWaitingList}
                 isCreator={isCreator}
               />
             ) : (
@@ -1306,6 +1442,113 @@ const createStyles = (theme: any) => StyleSheet.create({
   },
   activeTabText: {
     color: 'white',
+  },
+  // Waiting List styles
+  waitingListSection: {
+    marginTop: 16,
+    padding: 16,
+    backgroundColor: theme.colors.surface,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+  },
+  waitingListHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  waitingListTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: theme.colors.text,
+    marginLeft: 8,
+  },
+  waitingListContent: {
+    gap: 8,
+  },
+  waitingListPlayer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 12,
+    backgroundColor: theme.colors.background,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+  },
+  waitingListPosition: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: theme.colors.primary,
+    minWidth: 30,
+  },
+  waitingListPlayerName: {
+    flex: 1,
+    fontSize: 16,
+    color: theme.colors.text,
+    marginLeft: 12,
+  },
+  promoteButton: {
+    backgroundColor: theme.colors.success,
+    padding: 8,
+    borderRadius: 6,
+  },
+  // Join Waiting List styles
+  joinWaitingListSection: {
+    marginTop: 16,
+    padding: 16,
+    backgroundColor: theme.colors.warning + '20',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: theme.colors.warning,
+  },
+  joinWaitingListHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  joinWaitingListTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: theme.colors.warning,
+    marginLeft: 8,
+  },
+  joinWaitingListSubtitle: {
+    fontSize: 14,
+    color: theme.colors.textSecondary,
+    marginBottom: 16,
+    lineHeight: 20,
+  },
+  joinWaitingListButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: theme.colors.warning,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    gap: 8,
+  },
+  joinWaitingListButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  // Already on Waiting List styles
+  alreadyOnWaitingListSection: {
+    backgroundColor: theme.colors.success + '20',
+    borderColor: theme.colors.success,
+  },
+  // Section header styles
+  sectionHeader: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.colors.border,
+  },
+
+  sectionSubtitle: {
+    fontSize: 14,
+    color: theme.colors.textSecondary,
   },
 });
 

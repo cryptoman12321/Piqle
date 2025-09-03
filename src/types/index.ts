@@ -98,6 +98,7 @@ export interface Tournament {
   maxParticipants: number;
   currentParticipants: number;
   players: string[]; // Array of user IDs who are registered
+  waitingList: string[]; // Array of user IDs in waiting list
   skillLevel: SkillLevel;
   entryFee?: number;
   prizes?: Prize[];

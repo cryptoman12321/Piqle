@@ -254,6 +254,7 @@ const CreateTournamentScreen: React.FC = () => {
         maxParticipants: tournamentData.maxParticipants,
         currentParticipants: 0, // Creator is NOT automatically added
         players: [], // Creator is NOT automatically added
+        waitingList: [], // Empty waiting list initially
         skillLevel: tournamentData.skillLevel,
         entryFee: tournamentData.entryFee ? parseFloat(tournamentData.entryFee) : undefined,
         prizes: tournamentData.prizes,

@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import { SwipeListView } from 'react-native-swipe-list-view';
+import { Ionicons } from '@expo/vector-icons';
 import { useThemeStore } from '../stores/themeStore';
 
 interface TournamentPlayer {
@@ -18,14 +19,22 @@ interface TournamentPlayer {
   pointsLost: number;
 }
 
+interface WaitingListPlayer {
+  id: string;
+  firstName: string;
+  lastName: string;
+  position: number;
+}
+
 interface TournamentTableProps {
   tournament: any; // Турнир с матчами
   onDeletePlayer?: (playerId: string) => void;
   onViewProfile?: (playerId: string) => void;
+  onPromoteFromWaitingList?: (playerId: string) => void;
   isCreator?: boolean;
 }
 
-const TournamentTable: React.FC<TournamentTableProps> = ({ tournament, onDeletePlayer, onViewProfile, isCreator }) => {
+const TournamentTable: React.FC<TournamentTableProps> = ({ tournament, onDeletePlayer, onViewProfile, onPromoteFromWaitingList, isCreator }) => {
   const { theme } = useThemeStore();
 
   // Функция для получения имени игрока
@@ -78,10 +87,19 @@ const TournamentTable: React.FC<TournamentTableProps> = ({ tournament, onDeleteP
       return [];
     }
     
-    if (!tournament.brackets || tournament.brackets.length === 0) {
-      console.log('ERROR: No brackets in tournament');
+    // Если турнир еще не запущен, показываем только список участников
+    if (tournament.status === 'REGISTRATION_OPEN' || !tournament.brackets || tournament.brackets.length === 0) {
+      console.log('Tournament not started yet, showing participants list');
       console.log('=== TOURNAMENT TABLE DEBUG END ===');
-      return [];
+      return tournament.players.map((playerId: string) => ({
+        id: playerId,
+        firstName: getPlayerDisplayName(playerId).split(' ')[0],
+        lastName: getPlayerDisplayName(playerId).split(' ')[1] || '',
+        matchesWon: 0,
+        matchesLost: 0,
+        pointsWon: 0,
+        pointsLost: 0,
+      }));
     }
     
     const bracket = tournament.brackets[0];
@@ -204,16 +222,31 @@ const TournamentTable: React.FC<TournamentTableProps> = ({ tournament, onDeleteP
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Tournament Standings</Text>
+      <Text style={styles.title}>
+        {tournament.status === 'REGISTRATION_OPEN' ? 'Tournament Participants' : 'Tournament Standings'}
+      </Text>
       
-
+      {/* Main Participants Section */}
+      <View style={styles.sectionHeader}>
+        <Text style={styles.sectionTitle}>Main Roster</Text>
+        <Text style={styles.sectionSubtitle}>{tournament.players.length}/{tournament.maxParticipants} registered</Text>
+      </View>
       
       {/* Header */}
       <View style={styles.headerRow}>
         <Text style={[styles.headerCell, styles.nameCell]}>Player</Text>
-        <Text style={[styles.headerCell, styles.matchesCell]}>Matches</Text>
-        <Text style={[styles.headerCell, styles.pointsCell]}>Points</Text>
-        <Text style={[styles.headerCell, styles.handicapCell]}>Diff</Text>
+        {tournament.status === 'REGISTRATION_OPEN' ? (
+          <>
+            <Text style={[styles.headerCell, styles.matchesCell]}>Status</Text>
+            <Text style={[styles.headerCell, styles.pointsCell]}>Actions</Text>
+          </>
+        ) : (
+          <>
+            <Text style={[styles.headerCell, styles.matchesCell]}>Matches</Text>
+            <Text style={[styles.headerCell, styles.pointsCell]}>Points</Text>
+            <Text style={[styles.headerCell, styles.handicapCell]}>Diff</Text>
+          </>
+        )}
       </View>
 
       {/* Players */}
@@ -260,37 +293,46 @@ const TournamentTable: React.FC<TournamentTableProps> = ({ tournament, onDeleteP
                   </View>
                 </View>
                 
-                <View style={[styles.playerCell, styles.matchesCell]}>
-                  <Text style={styles.matchesText}>
-                    {player.matchesWon}-{player.matchesLost}
-                  </Text>
-
-                  <Text style={styles.matchesDiff}>
-                    {matchesDiff > 0 ? `+${matchesDiff}` : matchesDiff}
-                  </Text>
-
-
-                </View>
-                
-                <View style={[styles.playerCell, styles.pointsCell]}>
-                  <Text style={styles.pointsText}>
-                    {player.pointsWon}-{player.pointsLost}
-                  </Text>
-
-                  <Text style={styles.pointsDiff}>
-                    {pointsDiff > 0 ? `+${pointsDiff}` : pointsDiff}
-                  </Text>
-
-                </View>
-                
-                <View style={[styles.playerCell, styles.handicapCell]}>
-                  <Text style={[
-                    styles.handicapText,
-                    { color: pointsDiff > 0 ? theme.colors.success : pointsDiff < 0 ? theme.colors.error : theme.colors.text }
-                  ]}>
-                    {pointsDiff > 0 ? `+${pointsDiff}` : pointsDiff}
-                  </Text>
-                </View>
+                {tournament.status === 'REGISTRATION_OPEN' ? (
+                  <>
+                    <View style={[styles.playerCell, styles.matchesCell]}>
+                      <Text style={styles.statusText}>Registered</Text>
+                    </View>
+                    
+                    <View style={[styles.playerCell, styles.pointsCell]}>
+                      <Text style={styles.actionText}>Swipe →</Text>
+                    </View>
+                  </>
+                ) : (
+                  <>
+                    <View style={[styles.playerCell, styles.matchesCell]}>
+                      <Text style={styles.matchesText}>
+                        {player.matchesWon}-{player.matchesLost}
+                      </Text>
+                      <Text style={styles.matchesDiff}>
+                        {matchesDiff > 0 ? `+${matchesDiff}` : matchesDiff}
+                      </Text>
+                    </View>
+                    
+                    <View style={[styles.playerCell, styles.pointsCell]}>
+                      <Text style={styles.pointsText}>
+                        {player.pointsWon}-{player.pointsLost}
+                      </Text>
+                      <Text style={styles.pointsDiff}>
+                        {pointsDiff > 0 ? `+${pointsDiff}` : pointsDiff}
+                      </Text>
+                    </View>
+                    
+                    <View style={[styles.playerCell, styles.handicapCell]}>
+                      <Text style={[
+                        styles.handicapText,
+                        { color: pointsDiff > 0 ? theme.colors.success : pointsDiff < 0 ? theme.colors.error : theme.colors.text }
+                      ]}>
+                        {pointsDiff > 0 ? `+${pointsDiff}` : pointsDiff}
+                      </Text>
+                    </View>
+                  </>
+                )}
               </View>
             </View>
           );
@@ -329,6 +371,90 @@ const TournamentTable: React.FC<TournamentTableProps> = ({ tournament, onDeleteP
           <Text style={styles.emptyText}>No players to display</Text>
         </View>
       )}
+      
+      {/* Waiting List Section */}
+      {tournament.waitingList && tournament.waitingList.length > 0 && (
+        <>
+          <View style={[styles.sectionHeader, styles.waitingListHeader]}>
+            <View style={styles.waitingListTitleRow}>
+              <Ionicons name="time" size={20} color={theme.colors.warning} />
+              <Text style={styles.sectionTitle}>Waiting List</Text>
+            </View>
+            <Text style={styles.sectionSubtitle}>{tournament.waitingList.length} players waiting</Text>
+          </View>
+          
+          {/* Waiting List Header */}
+          <View style={[styles.headerRow, styles.waitingListHeaderRow]}>
+            <Text style={[styles.waitingListHeaderCell, styles.nameCell]}>Player</Text>
+            <Text style={[styles.waitingListHeaderCell, styles.matchesCell]}>Position</Text>
+            <Text style={[styles.waitingListHeaderCell, styles.pointsCell]}>Actions</Text>
+          </View>
+          
+          {/* Waiting List Players */}
+          <SwipeListView
+            data={tournament.waitingList.map((playerId: string, index: number) => ({
+              id: playerId,
+              firstName: getPlayerDisplayName(playerId).split(' ')[0],
+              lastName: getPlayerDisplayName(playerId).split(' ')[1] || '',
+              position: index + 1,
+            }))}
+            keyExtractor={(item) => item.id}
+            renderItem={(data: { item: WaitingListPlayer }) => {
+              const player = data.item;
+              return (
+                <View style={[styles.playerRow, styles.waitingListRow]}>
+                  <View style={styles.playerContent}>
+                    <View style={[styles.playerCell, styles.playerNameCell]}>
+                      <Text style={styles.position}>#{player.position}</Text>
+                      <View style={styles.nameContainer}>
+                        <Text style={styles.playerName}>
+                          {player.firstName} {player.lastName}
+                        </Text>
+                      </View>
+                    </View>
+                    
+                    <View style={[styles.playerCell, styles.matchesCell]}>
+                      <Text style={styles.waitingListPositionText}>#{player.position}</Text>
+                    </View>
+                    
+                    <View style={[styles.playerCell, styles.pointsCell]}>
+                      <Text style={styles.actionText}>Swipe →</Text>
+                    </View>
+                  </View>
+                </View>
+              );
+            }}
+            renderHiddenItem={(data: { item: WaitingListPlayer }) => {
+              const player = data.item;
+              return (
+                <View style={styles.hiddenItem}>
+                  <TouchableOpacity
+                    style={styles.profileButton}
+                    onPress={() => onViewProfile?.(player.id)}
+                  >
+                    <Text style={styles.profileButtonText}>Profile</Text>
+                  </TouchableOpacity>
+                  
+                  {isCreator && (
+                    <TouchableOpacity
+                      style={styles.promoteButton}
+                      onPress={() => onPromoteFromWaitingList?.(player.id)}
+                    >
+                      <Text style={styles.promoteButtonText}>Promote</Text>
+                    </TouchableOpacity>
+                  )}
+                </View>
+              );
+            }}
+            rightOpenValue={-120}
+            disableRightSwipe
+            closeOnRowPress
+            closeOnScroll
+            closeOnRowOpen
+            swipeToOpenPercent={30}
+          />
+        </>
+      )}
     </View>
   );
 };
@@ -356,6 +482,14 @@ const createStyles = (theme: any) => StyleSheet.create({
   headerCell: {
     flex: 1,
     color: 'white',
+    fontWeight: 'bold',
+    textAlign: 'center',
+    fontSize: 14,
+  },
+  // Специальный стиль для заголовка Waiting List
+  waitingListHeaderCell: {
+    flex: 1,
+    color: theme.colors.text,
     fontWeight: 'bold',
     textAlign: 'center',
     fontSize: 14,
@@ -436,6 +570,77 @@ const createStyles = (theme: any) => StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
   },
+  statusText: {
+    fontSize: 14,
+    color: theme.colors.success,
+    fontWeight: '600',
+  },
+  actionText: {
+    fontSize: 12,
+    color: theme.colors.textSecondary,
+    fontStyle: 'italic',
+  },
+  // Section header styles
+  sectionHeader: {
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.colors.border,
+    backgroundColor: theme.colors.surface,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: theme.colors.text,
+    marginBottom: 4,
+  },
+  sectionSubtitle: {
+    fontSize: 14,
+    color: theme.colors.textSecondary,
+  },
+  // Waiting List specific styles
+  waitingListHeader: {
+    backgroundColor: theme.colors.warning + '20',
+    borderColor: theme.colors.warning,
+    marginTop: 20,
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+  waitingListTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  waitingListHeaderRow: {
+    backgroundColor: theme.colors.warning + '80',
+    borderRadius: 8,
+    marginHorizontal: 16,
+    marginVertical: 4,
+  },
+  waitingListRow: {
+    backgroundColor: theme.colors.surface,
+    borderColor: theme.colors.warning + '40',
+    borderWidth: 1,
+    borderRadius: 8,
+    marginHorizontal: 16,
+    marginVertical: 4,
+  },
+  waitingListPositionText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: theme.colors.warning,
+  },
+  promoteButton: {
+    backgroundColor: theme.colors.success,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 6,
+  },
+  promoteButtonText: {
+    color: 'white',
+    fontSize: 12,
+    fontWeight: '600',
+  },
   playerContent: {
     flex: 1,
     flexDirection: 'row',
@@ -474,6 +679,11 @@ const createStyles = (theme: any) => StyleSheet.create({
     backgroundColor: theme.colors.surface,
     paddingRight: 16,
     height: '100%',
+    position: 'absolute',
+    right: 0,
+    top: 0,
+    bottom: 0,
+    width: 120,
   },
   emptyTable: {
     padding: 20,
