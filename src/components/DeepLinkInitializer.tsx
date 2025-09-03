@@ -7,3 +7,4 @@ const DeepLinkInitializer: React.FC = () => {
 };
 
 export default DeepLinkInitializer;
+

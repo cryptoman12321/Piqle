@@ -28,14 +28,15 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.piqle.app",
-
+      "package": "com.piqle.app"
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/favicon.png",
+      "bundler": "webpack"
     },
-    "scheme": "piqle",
+    "platforms": ["ios", "android", "web"],
     "plugins": [
+
       "expo-image-picker",
       "expo-notifications"
     ]

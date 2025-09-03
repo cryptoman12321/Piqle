@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Piqle 2.0 - Tournament Management</title>
+    <title>Piqle - Tournament Management Platform</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         * {
             margin: 0;
@@ -12,115 +13,526 @@
         }
         
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            overflow-x: hidden;
         }
         
-        .container {
-            background: white;
-            padding: 40px;
-            border-radius: 20px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
-            text-align: center;
-            max-width: 500px;
-            width: 90%;
+        /* Header */
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 1000;
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
         }
         
         .logo {
-            font-size: 3rem;
-            margin-bottom: 20px;
-        }
-        
-        h1 {
-            color: #2c3e50;
-            font-size: 2.5rem;
-            margin-bottom: 15px;
-            font-weight: bold;
-        }
-        
-        .subtitle {
-            color: #7f8c8d;
-            font-size: 1.2rem;
-            margin-bottom: 30px;
-        }
-        
-        .status {
-            background: #27ae60;
-            color: white;
-            padding: 15px 30px;
-            border-radius: 25px;
-            display: inline-block;
-            font-size: 1.1rem;
-            margin-bottom: 30px;
-        }
-        
-        .features {
-            background: #f8f9fa;
-            padding: 20px;
-            border-radius: 10px;
-            text-align: left;
-        }
-        
-        .feature {
-            margin: 10px 0;
-            color: #333;
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #6366f1;
             display: flex;
             align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .nav-buttons {
+            display: flex;
+            gap: 1rem;
+        }
+        
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .btn-secondary {
+            background: transparent;
+            color: #6366f1;
+            border: 2px solid #6366f1;
+        }
+        
+        .btn-secondary:hover {
+            background: #6366f1;
+            color: white;
+        }
+        
+        .btn-primary {
+            background: #6366f1;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #4f46e5;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(99, 102, 241, 0.3);
+        }
+        
+        /* Hero Section */
+        .hero {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 8rem 2rem 6rem;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="50" cy="50" r="1" fill="white" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+            opacity: 0.3;
+        }
+        
+        .hero-content {
+            position: relative;
+            z-index: 2;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .hero h1 {
+            font-size: 3.5rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            line-height: 1.2;
+        }
+        
+        .hero p {
+            font-size: 1.25rem;
+            margin-bottom: 2rem;
+            opacity: 0.9;
+        }
+        
+        .hero-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        /* Section Styles */
+        .section {
+            padding: 5rem 2rem;
+        }
+        
+        .section:nth-child(even) {
+            background: #f8fafc;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .section-header {
+            text-align: center;
+            margin-bottom: 4rem;
+        }
+        
+        .section-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            color: #1e293b;
+        }
+        
+        .section-subtitle {
+            font-size: 1.25rem;
+            color: #64748b;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        /* Features Grid */
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+        
+        .feature-card {
+            background: white;
+            padding: 2rem;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+            border: 1px solid #e2e8f0;
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12);
         }
         
         .feature-icon {
-            margin-right: 10px;
-            font-size: 1.2rem;
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            display: block;
         }
         
-        .deployment-info {
-            margin-top: 20px;
-            padding: 15px;
-            background: #e3f2fd;
-            border-radius: 8px;
-            color: #1976d2;
-            font-size: 0.9rem;
+        .feature-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: #1e293b;
+        }
+        
+        .feature-description {
+            color: #64748b;
+            line-height: 1.6;
+        }
+        
+        /* AI Coach Section */
+        .ai-coach {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            text-align: center;
+        }
+        
+        .ai-coach .section-title,
+        .ai-coach .section-subtitle {
+            color: white;
+        }
+        
+        .ai-coach .section-subtitle {
+            opacity: 0.9;
+        }
+        
+        .ai-features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+        
+        .ai-feature {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 2rem;
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .ai-feature-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .ai-feature-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+        
+        .ai-feature-description {
+            opacity: 0.9;
+            font-size: 0.95rem;
+        }
+        
+        /* Footer */
+        .footer {
+            background: #1e293b;
+            color: white;
+            padding: 3rem 2rem;
+            text-align: center;
+        }
+        
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .footer-logo {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #6366f1;
+            margin-bottom: 1rem;
+        }
+        
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+        
+        .footer-link {
+            color: #94a3b8;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+        
+        .footer-link:hover {
+            color: white;
+        }
+        
+        .footer-bottom {
+            border-top: 1px solid #334155;
+            padding-top: 2rem;
+            color: #94a3b8;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+            
+            .section-title {
+                font-size: 2rem;
+            }
+            
+            .hero-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .ai-features {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        /* Animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .fade-in-up {
+            animation: fadeInUp 0.8s ease-out;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="logo">🎾</div>
-        <h1>Piqle 2.0</h1>
-        <p class="subtitle">Tournament Management App</p>
-        
-        <div class="status">
-            ✅ Web version is working!
+    <!-- Header -->
+    <header class="header">
+        <div class="logo">
+            🎾 Piqle
         </div>
-        
-        <div class="features">
-            <div class="feature">
-                <span class="feature-icon">🚀</span>
-                Successfully deployed on Vercel
-            </div>
-            <div class="feature">
-                <span class="feature-icon">⚡</span>
-                Fast CDN hosting worldwide
-            </div>
-            <div class="feature">
-                <span class="feature-icon">🔒</span>
-                Automatic HTTPS security
-            </div>
-            <div class="feature">
-                <span class="feature-icon">🌐</span>
-                Global edge network
+        <nav class="nav-buttons">
+            <a href="#signup" class="btn btn-secondary">Sign Up</a>
+            <a href="#login" class="btn btn-primary">Login</a>
+        </nav>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="hero-content">
+            <h1>Revolutionize Your Tournaments</h1>
+            <p>Piqle is the ultimate platform for creating, managing, and participating in competitive tournaments. From casual friend groups to professional leagues, we've got you covered.</p>
+            <div class="hero-buttons">
+                <a href="#tournaments" class="btn btn-primary">Start Tournament</a>
+                <a href="#features" class="btn btn-secondary">Learn More</a>
             </div>
         </div>
-        
-        <div class="deployment-info">
-            <strong>Deployment Status:</strong> ✅ Ready<br>
-            <strong>Framework:</strong> Static HTML<br>
-            <strong>CDN:</strong> Vercel Edge Network
+    </section>
+
+    <!-- Best Tournament Software Section -->
+    <section class="section" id="features">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">The Best Software for Tournaments</h2>
+                <p class="section-subtitle">Everything you need to run successful tournaments, from registration to final results</p>
+            </div>
+            
+            <div class="features-grid">
+                <div class="feature-card fade-in-up">
+                    <span class="feature-icon">🏆</span>
+                    <h3 class="feature-title">Smart Bracket Generation</h3>
+                    <p class="feature-description">Automatically create round-robin tournaments with intelligent match scheduling and fair player distribution.</p>
+                </div>
+                
+                <div class="feature-card fade-in-up">
+                    <span class="feature-icon">👥</span>
+                    <h3 class="feature-title">Player Management</h3>
+                    <p class="feature-description">Easy registration, waiting lists, and player promotion. Never lose a participant again.</p>
+                </div>
+                
+                <div class="feature-card fade-in-up">
+                    <span class="feature-icon">📊</span>
+                    <h3 class="feature-title">Real-time Scoring</h3>
+                    <p class="feature-description">Live score updates, standings, and statistics. Keep everyone engaged throughout the tournament.</p>
+                </div>
+                
+                <div class="feature-card fade-in-up">
+                    <span class="feature-icon">📱</span>
+                    <h3 class="feature-title">Cross-platform Access</h3>
+                    <p class="feature-description">Access your tournaments from anywhere - mobile app, web browser, or tablet. Seamless experience across all devices.</p>
+                </div>
+                
+                <div class="feature-card fade-in-up">
+                    <span class="feature-icon">⚡</span>
+                    <h3 class="feature-title">Instant Updates</h3>
+                    <p class="feature-description">Real-time notifications, live standings, and instant match results. No more waiting or confusion.</p>
+                </div>
+                
+                <div class="feature-card fade-in-up">
+                    <span class="feature-icon">🔒</span>
+                    <h3 class="feature-title">Secure & Reliable</h3>
+                    <p class="feature-description">Your tournament data is safe with enterprise-grade security and 99.9% uptime guarantee.</p>
+                </div>
+            </div>
         </div>
-    </div>
+    </section>
+
+    <!-- Create Teams & Play with Friends Section -->
+    <section class="section">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Create Teams & Play with Friends</h2>
+                <p class="section-subtitle">Build your community, organize friendly matches, and turn every gathering into an epic tournament</p>
+            </div>
+            
+            <div class="features-grid">
+                <div class="feature-card fade-in-up">
+                    <span class="feature-icon">👨‍👩‍👧‍👦</span>
+                    <h3 class="feature-title">Community Building</h3>
+                    <p class="feature-description">Create private tournaments for your friend group, club, or organization. Build lasting connections through competition.</p>
+                </div>
+                
+                <div class="feature-card fade-in-up">
+                    <span class="feature-icon">🎯</span>
+                    <h3 class="feature-title">Flexible Formats</h3>
+                    <p class="feature-description">Support for singles, doubles, team events, and custom tournament structures. Adapt to any sport or game.</p>
+                </div>
+                
+                <div class="feature-card fade-in-up">
+                    <span class="feature-icon">📅</span>
+                    <h3 class="feature-title">Easy Scheduling</h3>
+                    <p class="feature-description">Flexible match scheduling, automatic reminders, and calendar integration. Focus on playing, not planning.</p>
+                </div>
+                
+                <div class="feature-card fade-in-up">
+                    <span class="feature-icon">🏅</span>
+                    <h3 class="feature-title">Achievement System</h3>
+                    <p class="feature-description">Track progress, celebrate milestones, and compete for leaderboard positions. Make every match count.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- AI Coach Section -->
+    <section class="section ai-coach">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">AI Coach - Your Personal Training Partner</h2>
+                <p class="section-subtitle">Get personalized insights, strategy recommendations, and performance analysis powered by advanced AI</p>
+            </div>
+            
+            <div class="ai-features">
+                <div class="ai-feature fade-in-up">
+                    <div class="ai-feature-icon">🤖</div>
+                    <h3 class="ai-feature-title">Performance Analysis</h3>
+                    <p class="ai-feature-description">AI-powered insights into your playing patterns, strengths, and areas for improvement.</p>
+                </div>
+                
+                <div class="ai-feature fade-in-up">
+                    <div class="ai-feature-icon">🎯</div>
+                    <h3 class="ai-feature-title">Strategy Recommendations</h3>
+                    <p class="ai-feature-description">Get personalized tips and strategies based on your opponents and playing style.</p>
+                </div>
+                
+                <div class="ai-feature fade-in-up">
+                    <div class="ai-feature-icon">📈</div>
+                    <h3 class="ai-feature-title">Progress Tracking</h3>
+                    <p class="ai-feature-description">Monitor your improvement over time with detailed analytics and trend analysis.</p>
+                </div>
+                
+                <div class="ai-feature fade-in-up">
+                    <div class="ai-feature-icon">💡</div>
+                    <h3 class="ai-feature-title">Smart Insights</h3>
+                    <p class="ai-feature-description">Discover hidden patterns and opportunities to enhance your competitive edge.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-logo">🎾 Piqle</div>
+            <div class="footer-links">
+                <a href="#features" class="footer-link">Features</a>
+                <a href="#pricing" class="footer-link">Pricing</a>
+                <a href="#support" class="footer-link">Support</a>
+                <a href="#about" class="footer-link">About</a>
+                <a href="#contact" class="footer-link">Contact</a>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2024 Piqle. All rights reserved. Built with ❤️ for tournament organizers worldwide.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Simple scroll animation
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, observerOptions);
+
+        // Observe all feature cards
+        document.querySelectorAll('.feature-card, .ai-feature').forEach(card => {
+            card.style.opacity = '0';
+            card.style.transform = 'translateY(30px)';
+            card.style.transition = 'all 0.6s ease-out';
+            observer.observe(card);
+        });
+
+        // Smooth scrolling for navigation links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+    </script>
 </body>
 </html>

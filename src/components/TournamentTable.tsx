@@ -223,15 +223,12 @@ const TournamentTable: React.FC<TournamentTableProps> = ({ tournament, onDeleteP
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>
-        {tournament.status === 'REGISTRATION_OPEN' ? 'Tournament Participants' : 'Tournament Standings'}
-      </Text>
+      {/* Показываем заголовок только для завершенных турниров */}
+      {tournament.status === 'COMPLETED' && (
+        <Text style={styles.title}>Tournament Standings</Text>
+      )}
       
-      {/* Main Participants Section */}
-      <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>Main Roster</Text>
-        <Text style={styles.sectionSubtitle}>{tournament.players.length}/{tournament.maxParticipants} registered</Text>
-      </View>
+      {/* Убираем подложку Main Roster - она не нужна */}
       
       {/* Header */}
       <View style={styles.headerRow}>
@@ -240,6 +237,12 @@ const TournamentTable: React.FC<TournamentTableProps> = ({ tournament, onDeleteP
           <>
             <Text style={[styles.headerCell, styles.matchesCell]}>Status</Text>
             <Text style={[styles.headerCell, styles.pointsCell]}>Actions</Text>
+          </>
+        ) : tournament.status === 'COMPLETED' ? (
+          <>
+            <Text style={[styles.headerCell, styles.matchesCell]}>Matches</Text>
+            <Text style={[styles.headerCell, styles.pointsCell]}>Points</Text>
+            <Text style={[styles.headerCell, styles.handicapCell]}>Diff</Text>
           </>
         ) : (
           <>
@@ -284,6 +287,11 @@ const TournamentTable: React.FC<TournamentTableProps> = ({ tournament, onDeleteP
             }
           }
           
+          // Для REGISTRATION_OPEN - просто последовательная нумерация
+          if (tournament.status === 'REGISTRATION_OPEN') {
+            position = data.index + 1;
+          }
+          
           return (
             <View style={styles.playerRow}>
               <View style={styles.playerContent}>
@@ -306,14 +314,14 @@ const TournamentTable: React.FC<TournamentTableProps> = ({ tournament, onDeleteP
                       <Text style={styles.actionText}>Swipe →</Text>
                     </View>
                   </>
-                ) : (
+                ) : tournament.status === 'COMPLETED' ? (
                   <>
                     <View style={[styles.playerCell, styles.matchesCell]}>
                       <Text style={styles.matchesText}>
                         {player.matchesWon}-{player.matchesLost}
                       </Text>
                       <Text style={styles.matchesDiff}>
-                        {matchesDiff > 0 ? `+${matchesDiff}` : matchesDiff}
+                        {matchesDiff > 0 ? `+${matchesDiff}` : matchesDiff < 0 ? `${matchesDiff}` : '0'}
                       </Text>
                     </View>
                     
@@ -322,16 +330,45 @@ const TournamentTable: React.FC<TournamentTableProps> = ({ tournament, onDeleteP
                         {player.pointsWon}-{player.pointsLost}
                       </Text>
                       <Text style={styles.pointsDiff}>
-                        {pointsDiff > 0 ? `+${pointsDiff}` : pointsDiff}
+                        {pointsDiff > 0 ? `+${pointsDiff}` : pointsDiff < 0 ? `${pointsDiff}` : '0'}
                       </Text>
                     </View>
                     
                     <View style={[styles.playerCell, styles.handicapCell]}>
                       <Text style={[
                         styles.handicapText,
-                        { color: pointsDiff > 0 ? theme.colors.success : pointsDiff < 0 ? theme.colors.error : theme.colors.text }
+                        { color: pointsDiff > 0 ? theme.colors.success : pointsDiff < 0 ? theme.colors.error : theme.colors.textSecondary }
                       ]}>
-                        {pointsDiff > 0 ? `+${pointsDiff}` : pointsDiff}
+                        {pointsDiff > 0 ? `+${pointsDiff}` : pointsDiff < 0 ? `${pointsDiff}` : '0'}
+                      </Text>
+                    </View>
+                  </>
+                ) : (
+                  <>
+                    <View style={[styles.playerCell, styles.matchesCell]}>
+                      <Text style={styles.matchesText}>
+                        {player.matchesWon}-{player.matchesLost}
+                      </Text>
+                      <Text style={styles.matchesDiff}>
+                        {matchesDiff > 0 ? `+${matchesDiff}` : matchesDiff < 0 ? `${matchesDiff}` : '0'}
+                      </Text>
+                    </View>
+                    
+                    <View style={[styles.playerCell, styles.pointsCell]}>
+                      <Text style={styles.pointsText}>
+                        {player.pointsWon}-{player.pointsLost}
+                      </Text>
+                      <Text style={styles.pointsDiff}>
+                        {pointsDiff > 0 ? `+${pointsDiff}` : pointsDiff < 0 ? `${pointsDiff}` : '0'}
+                      </Text>
+                    </View>
+                    
+                    <View style={[styles.playerCell, styles.handicapCell]}>
+                      <Text style={[
+                        styles.handicapText,
+                        { color: pointsDiff > 0 ? theme.colors.success : pointsDiff < 0 ? theme.colors.error : theme.colors.textSecondary }
+                      ]}>
+                        {pointsDiff > 0 ? `+${pointsDiff}` : pointsDiff < 0 ? `${pointsDiff}` : '0'}
                       </Text>
                     </View>
                   </>
@@ -528,12 +565,17 @@ const createStyles = (theme: any) => StyleSheet.create({
     flexDirection: 'row',
     backgroundColor: theme.colors.surface,
     marginHorizontal: 16,
-    marginVertical: 4,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderRadius: 8,
+    marginVertical: 6,
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    borderRadius: 12,
     borderLeftWidth: 4,
     borderLeftColor: theme.colors.primary,
+    shadowColor: theme.colors.shadow || '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
   playerCell: {
     flex: 1,
@@ -545,14 +587,21 @@ const createStyles = (theme: any) => StyleSheet.create({
     alignItems: 'flex-start',
   },
   position: {
-    fontSize: 12,
-    color: theme.colors.textSecondary,
-    marginBottom: 2,
+    fontSize: 14,
+    fontWeight: '700',
+    color: theme.colors.primary,
+    marginBottom: 4,
+    backgroundColor: theme.colors.primary + '20',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 6,
+    overflow: 'hidden',
   },
   playerName: {
     fontSize: 16,
     fontWeight: '600',
     color: theme.colors.text,
+    lineHeight: 20,
   },
   nameContainer: {
     flexDirection: 'row',
@@ -562,23 +611,29 @@ const createStyles = (theme: any) => StyleSheet.create({
 
   matchesText: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: '700',
     color: theme.colors.text,
+    textAlign: 'center',
   },
   matchesDiff: {
     fontSize: 12,
     color: theme.colors.textSecondary,
-    marginTop: 2,
+    marginTop: 4,
+    textAlign: 'center',
+    fontWeight: '500',
   },
   pointsText: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: '700',
     color: theme.colors.text,
+    textAlign: 'center',
   },
   pointsDiff: {
     fontSize: 12,
     color: theme.colors.textSecondary,
-    marginTop: 2,
+    marginTop: 4,
+    textAlign: 'center',
+    fontWeight: '500',
   },
   handicapText: {
     fontSize: 18,

@@ -7,7 +7,7 @@ module.exports = async function (env, argv) {
   // Add HtmlWebpackPlugin
   config.plugins.push(
     new HtmlWebpackPlugin({
-      template: './web/index.html',
+      template: './index.html',
       filename: 'index.html',
     })
   );
