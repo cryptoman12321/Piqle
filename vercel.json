@@ -1,27 +1,12 @@
 {
-  "buildCommand": "npm run build:web",
-  "outputDirectory": "web-build",
-  "framework": "expo",
+  "outputDirectory": "web",
+  "framework": "static",
   "installCommand": "npm install",
   "devCommand": "npm run web",
-  "headers": [
-    {
-      "source": "/(.*)",
-      "headers": [
-        {
-          "key": "Content-Security-Policy",
-          "value": "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline' cdn.cr-relay.com *.vercel.com vercel.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data: https:; connect-src 'self' https: wss:;"
-        }
-      ]
-    }
-  ],
   "builds": [
     {
-      "src": "package.json",
-      "use": "@vercel/static-build",
-      "config": {
-        "distDir": "web-build"
-      }
+      "src": "web/**/*",
+      "use": "@vercel/static"
     }
   ],
   "routes": [
