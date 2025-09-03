@@ -1,5 +1,9 @@
 {
   "framework": "static",
+  "buildCommand": "",
+  "outputDirectory": "",
+  "installCommand": "",
+  "devCommand": "",
   "builds": [
     {
       "src": "index.html",
