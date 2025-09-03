@@ -31,10 +31,11 @@ interface TournamentTableProps {
   onDeletePlayer?: (playerId: string) => void;
   onViewProfile?: (playerId: string) => void;
   onPromoteFromWaitingList?: (playerId: string) => void;
+  onDemoteToWaitingList?: (playerId: string) => void;
   isCreator?: boolean;
 }
 
-const TournamentTable: React.FC<TournamentTableProps> = ({ tournament, onDeletePlayer, onViewProfile, onPromoteFromWaitingList, isCreator }) => {
+const TournamentTable: React.FC<TournamentTableProps> = ({ tournament, onDeletePlayer, onViewProfile, onPromoteFromWaitingList, onDemoteToWaitingList, isCreator }) => {
   const { theme } = useThemeStore();
 
   // Функция для получения имени игрока
@@ -266,7 +267,9 @@ const TournamentTable: React.FC<TournamentTableProps> = ({ tournament, onDeleteP
           
           // Определяем позицию с учетом равных игроков
           let position = data.index + 1;
-          if (data.index > 0) {
+          
+          // Для турниров в процессе - учитываем равные позиции
+          if (tournament.status !== 'REGISTRATION_OPEN' && data.index > 0) {
             const prevPlayer = sortedPlayers[data.index - 1];
             const prevMatchesDiff = prevPlayer.matchesWon - prevPlayer.matchesLost;
             const prevPointsDiff = prevPlayer.pointsWon - prevPlayer.pointsLost;
@@ -349,17 +352,28 @@ const TournamentTable: React.FC<TournamentTableProps> = ({ tournament, onDeleteP
               </TouchableOpacity>
               
               {isCreator && (
-                <TouchableOpacity
-                  style={styles.deleteButton}
-                  onPress={() => onDeletePlayer?.(player.id)}
-                >
-                  <Text style={styles.deleteButtonText}>Delete</Text>
-                </TouchableOpacity>
+                <>
+                  <TouchableOpacity
+                    style={styles.deleteButton}
+                    onPress={() => onDeletePlayer?.(player.id)}
+                  >
+                    <Text style={styles.deleteButtonText}>Delete</Text>
+                  </TouchableOpacity>
+                  
+                  {tournament.status === 'REGISTRATION_OPEN' && onDemoteToWaitingList && (
+                    <TouchableOpacity
+                      style={styles.demoteButton}
+                      onPress={() => onDemoteToWaitingList(player.id)}
+                    >
+                      <Text style={styles.demoteButtonText}>Demote</Text>
+                    </TouchableOpacity>
+                  )}
+                </>
               )}
             </View>
           );
         }}
-        rightOpenValue={-120}
+        rightOpenValue={-180}
         disableRightSwipe
         closeOnRowPress
         closeOnScroll
@@ -446,12 +460,12 @@ const TournamentTable: React.FC<TournamentTableProps> = ({ tournament, onDeleteP
                 </View>
               );
             }}
-            rightOpenValue={-120}
-            disableRightSwipe
-            closeOnRowPress
-            closeOnScroll
-            closeOnRowOpen
-            swipeToOpenPercent={30}
+                      rightOpenValue={-180}
+          disableRightSwipe
+          closeOnRowPress
+          closeOnScroll
+          closeOnRowOpen
+          swipeToOpenPercent={30}
           />
         </>
       )}
@@ -672,6 +686,17 @@ const createStyles = (theme: any) => StyleSheet.create({
     fontSize: 12,
     fontWeight: '600',
   },
+  demoteButton: {
+    backgroundColor: theme.colors.warning,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 6,
+  },
+  demoteButtonText: {
+    color: 'white',
+    fontSize: 12,
+    fontWeight: '600',
+  },
   hiddenItem: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -683,7 +708,7 @@ const createStyles = (theme: any) => StyleSheet.create({
     right: 0,
     top: 0,
     bottom: 0,
-    width: 120,
+    width: 180,
   },
   emptyTable: {
     padding: 20,

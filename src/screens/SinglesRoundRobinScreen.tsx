@@ -355,6 +355,12 @@ const SinglesRoundRobinScreen: React.FC = () => {
   const handlePromoteFromWaitingList = (playerId: string) => {
     if (!tournament) return;
     
+    // Проверяем, не превысит ли добавление игрока лимит участников
+    if (tournament.players.length >= tournament.maxParticipants) {
+      showError('Tournament is already full! Cannot promote more players.');
+      return;
+    }
+    
     try {
       const updatedTournament = { ...tournament };
       
@@ -373,6 +379,36 @@ const SinglesRoundRobinScreen: React.FC = () => {
     } catch (error) {
       console.error('Failed to promote player:', error);
       showError('Failed to promote player. Please try again.');
+    }
+  };
+
+  // Функция для перемещения игрока из основного списка в waiting list
+  const handleDemoteToWaitingList = (playerId: string) => {
+    if (!tournament) return;
+    
+    try {
+      const updatedTournament = { ...tournament };
+      
+      // Убираем игрока из основного списка
+      updatedTournament.players = updatedTournament.players.filter(id => id !== playerId);
+      updatedTournament.currentParticipants = updatedTournament.players.length;
+      
+      // Инициализируем waiting list если его нет
+      if (!updatedTournament.waitingList) {
+        updatedTournament.waitingList = [];
+      }
+      
+      // Добавляем игрока в waiting list
+      updatedTournament.waitingList.push(playerId);
+      
+      // Обновляем турнир
+      updateTournament(tournament.id, updatedTournament);
+      setTournament(updatedTournament);
+      
+      showSuccess(`${getPlayerDisplayName(playerId)} moved to waiting list!`);
+    } catch (error) {
+      console.error('Failed to demote player:', error);
+      showError('Failed to move player to waiting list. Please try again.');
     }
   };
 
@@ -967,6 +1003,7 @@ const SinglesRoundRobinScreen: React.FC = () => {
                 onDeletePlayer={handleDeletePlayer}
                 onViewProfile={handleViewProfile}
                 onPromoteFromWaitingList={handlePromoteFromWaitingList}
+                onDemoteToWaitingList={handleDemoteToWaitingList}
                 isCreator={isCreator}
               />
             ) : (
@@ -986,6 +1023,7 @@ const SinglesRoundRobinScreen: React.FC = () => {
                 onDeletePlayer={handleDeletePlayer}
                 onViewProfile={handleViewProfile}
                 onPromoteFromWaitingList={handlePromoteFromWaitingList}
+                onDemoteToWaitingList={handleDemoteToWaitingList}
                 isCreator={isCreator}
               />
             ) : (
